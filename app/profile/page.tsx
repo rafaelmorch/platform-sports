@@ -1,0 +1,11 @@
+import BottomNavbar from '@/components/BottomNavbar';
+
+export default function Page() {
+  return (
+    <main style={{ padding: 24, paddingBottom: 96, fontFamily: 'Arial' }}>
+      <h1 style={{ fontSize: 24, marginBottom: 12 }}>Perfil</h1>
+      <p style={{ opacity: 0.8 }}>Placeholder — vamos replicar o website aqui.</p>
+      <BottomNavbar />
+    </main>
+  );
+}
