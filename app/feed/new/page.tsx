@@ -1,3 +1,4 @@
+// app/feed/new/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -58,8 +59,7 @@ export default function NewFeedPostPage() {
         const meta: any = user.user_metadata || {};
         const nameFromMeta = meta.full_name || meta.name || null;
 
-        const finalName =
-          nameFromProfile || nameFromMeta || user.email || "Atleta";
+        const finalName = nameFromProfile || nameFromMeta || user.email || "Atleta";
 
         setAuthorName(finalName);
       } catch (err) {
@@ -88,18 +88,14 @@ export default function NewFeedPostPage() {
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = fileName;
 
-    const { error: uploadError } = await supabase.storage
-      .from("feed-images")
-      .upload(filePath, imageFile);
+    const { error: uploadError } = await supabase.storage.from("feed-images").upload(filePath, imageFile);
 
     if (uploadError) {
       console.error("Erro ao fazer upload da imagem:", uploadError);
       throw new Error("Não foi possível enviar a imagem.");
     }
 
-    const { data: publicData } = supabase.storage
-      .from("feed-images")
-      .getPublicUrl(filePath);
+    const { data: publicData } = supabase.storage.from("feed-images").getPublicUrl(filePath);
 
     return publicData?.publicUrl ?? null;
   };
@@ -167,7 +163,7 @@ export default function NewFeedPostPage() {
         paddingBottom: "24px",
       }}
     >
-      {/* Top bar com seta */}
+      {/* Top bar com Back (padrão) */}
       <div
         style={{
           maxWidth: 600,
@@ -178,32 +174,36 @@ export default function NewFeedPostPage() {
           marginBottom: 12,
         }}
       >
+        {/* ✅ PADRÃO: contorno + "Back" */}
         <button
           type="button"
           onClick={() => router.back()}
-          aria-label="Voltar"
+          aria-label="Back"
           style={{
-            width: 38,
-            height: 38,
+            height: 36,
+            padding: "0 12px",
             borderRadius: 999,
-            border: "1px solid rgba(55,65,81,0.9)",
-            background: "#020617",
+            border: "1px solid rgba(148,163,184,0.35)",
+            background: "rgba(2,6,23,0.65)",
             color: "#e5e7eb",
             cursor: "pointer",
-            display: "flex",
+            display: "inline-flex",
             alignItems: "center",
-            justifyContent: "center",
-            fontSize: 18,
-            lineHeight: 1,
+            gap: 8,
+            fontSize: 12,
+            fontWeight: 900,
+            letterSpacing: "0.02em",
+            boxShadow: "0 10px 22px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04)",
+            flex: "0 0 auto",
+            whiteSpace: "nowrap",
           }}
         >
-          ←
+          <span style={{ fontSize: 16, lineHeight: 1, marginTop: -1 }}>←</span>
+          <span>Back</span>
         </button>
 
-        <div>
-          <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>
-            Nova postagem
-          </h1>
+        <div style={{ minWidth: 0 }}>
+          <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Nova postagem</h1>
           <p style={{ fontSize: 12, color: "#9ca3af", margin: 0, marginTop: 2 }}>
             Compartilhe um treino, uma conquista ou um recado com o seu grupo.
           </p>
@@ -218,10 +218,7 @@ export default function NewFeedPostPage() {
           </span>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          style={{ display: "flex", flexDirection: "column", gap: 12 }}
-        >
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -274,16 +271,10 @@ export default function NewFeedPostPage() {
               </div>
             )}
 
-            <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>
-              Formatos suportados: JPG, PNG, etc.
-            </p>
+            <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>Formatos suportados: JPG, PNG, etc.</p>
           </div>
 
-          {errorMsg && (
-            <p style={{ fontSize: 12, color: "#fca5a5", margin: 0 }}>
-              {errorMsg}
-            </p>
-          )}
+          {errorMsg && <p style={{ fontSize: 12, color: "#fca5a5", margin: 0 }}>{errorMsg}</p>}
 
           <button
             type="submit"
@@ -308,4 +299,3 @@ export default function NewFeedPostPage() {
     </main>
   );
 }
-
