@@ -25,7 +25,7 @@ export default function LoginPage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        router.replace("/dashboard");
+        router.replace("/activities");
       }
     });
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setErrorMsg("E-mail ou senha inválidos.");
+      setErrorMsg("Invalid email or password.");
       setLoading(false);
       return;
     }
@@ -56,12 +56,12 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
     if (error) {
-      setErrorMsg("Erro ao conectar com Google.");
+      setErrorMsg("Failed to connect with Google.");
       setLoadingGoogle(false);
     }
   }
@@ -108,7 +108,7 @@ export default function LoginPage() {
             marginBottom: 16,
           }}
         >
-          Entrar
+          Sign in
         </h1>
 
         {errorMsg && (
@@ -131,7 +131,7 @@ export default function LoginPage() {
         >
           <input
             type="email"
-            placeholder="E-mail"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -147,7 +147,7 @@ export default function LoginPage() {
 
           <input
             type={showPassword ? "text" : "password"}
-            placeholder="Senha"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -173,7 +173,7 @@ export default function LoginPage() {
               cursor: "pointer",
             }}
           >
-            {showPassword ? "Esconder senha" : "Mostrar senha"}
+            {showPassword ? "Hide password" : "Show password"}
           </button>
 
           <button
@@ -191,7 +191,7 @@ export default function LoginPage() {
               opacity: loading ? 0.8 : 1,
             }}
           >
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? "Signing in..." : "Sign in"}
           </button>
 
           <button
@@ -208,15 +208,30 @@ export default function LoginPage() {
               marginTop: 6,
               cursor: "pointer",
               opacity: loadingGoogle ? 0.8 : 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
             }}
           >
-            {loadingGoogle ? "Conectando..." : "Continuar com Google"}
+            {loadingGoogle ? (
+              "Connecting..."
+            ) : (
+              <>
+                <img
+                  src="/google_logo.png"
+                  alt="Google"
+                  style={{ width: 45, height: 45 }}
+                />
+                Continue with Google
+              </>
+            )}
           </button>
 
           <div style={{ marginTop: 14, textAlign: "center", fontSize: 13 }}>
-            <span style={{ color: "#9ca3af" }}>Ainda não tem conta? </span>
+            <span style={{ color: "#9ca3af" }}>Don&apos;t have an account? </span>
             <Link href="/signup" style={{ color: "#ffffff", fontWeight: 700 }}>
-              Criar conta
+              Create account
             </Link>
           </div>
         </form>
@@ -224,4 +239,3 @@ export default function LoginPage() {
     </main>
   );
 }
-

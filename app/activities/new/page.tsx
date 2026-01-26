@@ -1,10 +1,7 @@
-// app/activities/new/page.tsx
 "use client";
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import BottomNavbar from "@/components/BottomNavbar";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 export const dynamic = "force-dynamic";
@@ -21,14 +18,64 @@ function toCents(usdText: string): number | null {
 function datetimeLocalToIso(dtLocal: string): string | null {
   const v = (dtLocal ?? "").trim();
   if (!v) return null;
-  const d = new Date(v); // interpreta como local
+  const d = new Date(v); // interprets as local
   if (Number.isNaN(d.getTime())) return null;
   return d.toISOString();
+}
+
+/* ================= Small UI ================= */
+
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "8px 12px",
+        borderRadius: 999,
+        border: "1px solid rgba(148,163,184,0.35)",
+        background: "rgba(2,6,23,0.55)",
+        color: "#e5e7eb",
+        cursor: "pointer",
+        fontSize: 12,
+        fontWeight: 900,
+        lineHeight: 1,
+        boxShadow: "0 10px 26px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
+        whiteSpace: "nowrap",
+      }}
+      aria-label="Back"
+    >
+      <span style={{ fontSize: 14, lineHeight: 1, opacity: 0.95 }}>←</span>
+      <span style={{ letterSpacing: "0.02em" }}>Back</span>
+    </button>
+  );
+}
+
+function CalendarIcon() {
+  // white, ~20% bigger than “normal”
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M7 3v2M17 3v2M4 8h16M6 5h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.95"
+      />
+    </svg>
+  );
 }
 
 export default function NewActivityPage() {
   const supabase = useMemo(() => supabaseBrowser, []);
   const router = useRouter();
+
+  // ✅ auth guard
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const [title, setTitle] = useState("");
   const [sport, setSport] = useState("");
@@ -39,12 +86,12 @@ export default function NewActivityPage() {
   const [city, setCity] = useState("");
   const [stateUS, setStateUS] = useState("");
 
-  const [capacity, setCapacity] = useState("");
-  const [waitlist, setWaitlist] = useState(""); // opcional
+  const [capacity, setCapacity] = useState(""); // optional => unlimited
+  const [waitlist, setWaitlist] = useState(""); // optional
   const [priceUsd, setPriceUsd] = useState("");
 
-  const [whatsapp, setWhatsapp] = useState("");
-  const [description, setDescription] = useState("");
+  const [whatsapp, setWhatsapp] = useState(""); // optional
+  const [description, setDescription] = useState(""); // required
 
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -52,13 +99,51 @@ export default function NewActivityPage() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabaseBrowser.auth.getSession();
+
+        if (!session) {
+          router.replace("/login");
+          return;
+        }
+      } finally {
+        if (!cancelled) setCheckingAuth(false);
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  // back: try history; fallback list
+  function handleBack() {
+    try {
+      if (typeof window !== "undefined" && window.history.length > 1) {
+        router.back();
+        return;
+      }
+    } catch {}
+    router.push("/activities");
+  }
+
   const labelStyle: React.CSSProperties = {
     fontSize: 12,
     color: "#60a5fa",
     margin: 0,
+    display: "block",
   };
 
+  // ✅ box sizing prevents border overlap / “stacking”
   const inputStyle: React.CSSProperties = {
+    boxSizing: "border-box",
     width: "100%",
     marginTop: 6,
     padding: "10px 12px",
@@ -84,6 +169,23 @@ export default function NewActivityPage() {
     });
   }
 
+  // ✅ “Pick” helper (abre o picker quando suportado)
+  function openPicker(idx: number) {
+    const el = document.getElementById(`dt-${idx}`) as HTMLInputElement | null;
+    if (!el) return;
+
+    // showPicker is supported in Chromium-based browsers
+    const anyEl = el as any;
+    if (typeof anyEl.showPicker === "function") {
+      anyEl.showPicker();
+      return;
+    }
+
+    // fallback
+    el.focus();
+    el.click();
+  }
+
   async function handleCreate() {
     setBusy(true);
     setError(null);
@@ -92,7 +194,7 @@ export default function NewActivityPage() {
     try {
       const { data: userRes } = await supabase.auth.getUser();
       const user = userRes.user;
-      if (!user) throw new Error("Você precisa estar logado para criar atividade.");
+      if (!user) throw new Error("You must be logged in to create an activity.");
 
       const t = title.trim();
       const sp = sport.trim();
@@ -100,85 +202,95 @@ export default function NewActivityPage() {
       const ci = city.trim();
       const st = stateUS.trim();
       const wa = whatsapp.trim();
+      const desc = description.trim();
 
-      if (t.length < 3) throw new Error("Title * é obrigatório.");
-      if (sp.length < 2) throw new Error("Sport * é obrigatório.");
+      if (t.length < 3) throw new Error("Title * is required.");
+      if (sp.length < 2) throw new Error("Sport * is required.");
 
       const cleanDates = dates.map((d) => (d ?? "").trim()).filter(Boolean);
-      if (cleanDates.length === 0) throw new Error("Adicione pelo menos 1 Date & Time *.");
+      if (cleanDates.length === 0) throw new Error("Add at least 1 Date & Time *.");
 
       const uniqueDates = Array.from(new Set(cleanDates));
       if (uniqueDates.length !== cleanDates.length) {
-        throw new Error("Você adicionou datas repetidas. Remova as duplicadas.");
+        throw new Error("You added duplicate dates. Remove the duplicates.");
       }
 
-      if (ad.length < 5) throw new Error("Address (texto completo) * é obrigatório.");
-      if (ci.length < 2) throw new Error("City * é obrigatório.");
-      if (st.length < 2) throw new Error("State * é obrigatório.");
+      if (ad.length < 5) throw new Error("Address * is required.");
+      if (ci.length < 2) throw new Error("City * is required.");
+      if (st.length < 2) throw new Error("State * is required.");
 
-      if (!capacity.trim()) throw new Error("Capacity * é obrigatório.");
-      const capN = Number(capacity);
-      if (!Number.isFinite(capN) || capN <= 0) throw new Error("Capacity deve ser um número > 0.");
+      // ✅ Capacity optional => null means unlimited
+      let capN: number | null = null;
+      if (capacity.trim()) {
+        const n = Number(capacity);
+        if (!Number.isFinite(n) || n <= 0) throw new Error("Capacity must be empty (unlimited) or a number > 0.");
+        capN = n;
+      }
 
       let waitN = 0;
       if (waitlist.trim()) {
         const wn = Number(waitlist);
-        if (!Number.isFinite(wn) || wn < 0) throw new Error("Waitlist deve ser vazio ou número >= 0.");
+        if (!Number.isFinite(wn) || wn < 0) throw new Error("Waitlist must be empty or a number >= 0.");
         waitN = wn;
       }
 
-      if (!priceUsd.trim()) throw new Error("Price (USD) * é obrigatório.");
+      if (!priceUsd.trim()) throw new Error("Price (USD) * is required.");
       const cents = toCents(priceUsd);
-      if (cents == null) throw new Error("Price (USD) inválido.");
+      if (cents == null) throw new Error("Invalid Price (USD).");
 
-      if (wa.length < 6) throw new Error("WhatsApp do organizador * é obrigatório.");
+      // ✅ Description required
+      if (desc.length < 10) throw new Error("Description * is required (please add a bit more detail).");
 
-      // upload opcional de imagem (reusa o bucket "event-images")
+      // ✅ WhatsApp optional
+      const whatsappValue = wa.length ? wa : null;
+
+      // upload optional image (bucket: event-images)
       let imagePath: string | null = null;
       if (imageFile) {
-        if (!imageFile.type.startsWith("image/")) throw new Error("Arquivo inválido. Envie uma imagem.");
+        if (!imageFile.type.startsWith("image/")) throw new Error("Invalid file. Please upload an image.");
 
         const ext = imageFile.name.split(".").pop() || "jpg";
         const fileName = `${crypto.randomUUID()}.${ext}`;
 
-        const { error: upErr } = await supabase.storage
-          .from("event-images")
-          .upload(fileName, imageFile, { cacheControl: "3600", upsert: false, contentType: imageFile.type });
+        const { error: upErr } = await supabase.storage.from("event-images").upload(fileName, imageFile, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: imageFile.type,
+        });
 
-        if (upErr) throw new Error(upErr.message || "Falha no upload da imagem.");
+        if (upErr) throw new Error(upErr.message || "Image upload failed.");
 
         imagePath = fileName;
       }
 
-      // ✅ cria 1 linha por data (repetitivo)
+      // ✅ create 1 row per date
       const rows = uniqueDates.map((dtLocal) => {
         const iso = datetimeLocalToIso(dtLocal);
-        if (!iso) throw new Error("Uma das datas está inválida.");
+        if (!iso) throw new Error("One of the dates is invalid.");
 
         return {
-          // dono / RLS
           created_by: user.id,
-          organizer_id: user.id, // ✅ bom ter preenchido
+          organizer_id: user.id,
 
           title: t,
           sport: sp,
-          activity_type: sp, // obrigatório (você pode mudar depois pra outro campo)
+          activity_type: sp,
 
-          description: description.trim() || null,
+          description: desc,
 
-          start_date: iso, // ✅ correto (UTC)
+          start_date: iso,
 
           address_text: ad,
-          location_text: ad, // opcional
+          location_text: ad,
 
           city: ci,
           state: st,
 
-          capacity: capN,
+          capacity: capN, // ✅ nullable => unlimited
           waitlist_capacity: waitN,
           price_cents: cents,
 
-          organizer_whatsapp: wa,
+          organizer_whatsapp: whatsappValue, // ✅ nullable
 
           image_path: imagePath,
 
@@ -191,14 +303,42 @@ export default function NewActivityPage() {
       if (insErr) throw new Error(insErr.message);
 
       const created = (data ?? []) as { id: string }[];
-      setInfo(`Atividades publicadas: ${created.length}`);
+      setInfo(`Published activities: ${created.length}`);
       router.push("/activities");
-    } catch (e: any) {
-      setError(e?.message ?? "Falha ao criar atividade.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to create activity.";
+      setError(msg);
     } finally {
       setBusy(false);
     }
   }
+
+  if (checkingAuth) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#020617",
+          color: "#e5e7eb",
+          padding: "16px",
+          paddingBottom: "24px",
+        }}
+      >
+        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  const descriptionSuggestion =
+    `Suggested details:\n` +
+    `• Duration: (e.g., 60 minutes)\n` +
+    `• What to bring: water bottle, towel, etc.\n` +
+    `• Clothing: running shoes / comfortable clothes\n` +
+    `• Minimum age: (e.g., 12+)\n` +
+    `• Meeting point / check-in instructions\n` +
+    `• Any special notes (pace groups, warm-up, cooldown, etc.)`;
 
   return (
     <main
@@ -207,34 +347,41 @@ export default function NewActivityPage() {
         backgroundColor: "#020617",
         color: "#e5e7eb",
         padding: "16px",
-        paddingBottom: "80px",
+        paddingBottom: "24px",
       }}
     >
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-        <header style={{ marginBottom: 20, display: "flex", flexDirection: "column", gap: 6 }}>
-          <p
-            style={{
-              fontSize: 11,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color: "#64748b",
-              margin: 0,
-            }}
-          >
-            Atividades
-          </p>
+        <header style={{ marginBottom: 20, display: "flex", flexDirection: "column", gap: 8 }}>
+          {/* ✅ standardized back button (NOT alone) */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <BackButton onClick={handleBack} />
 
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Criar atividade</h1>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "#64748b", margin: 0 }}>
+                Activities
+              </p>
 
-            <Link href="/activities" style={{ fontSize: 12, color: "#93c5fd", textDecoration: "underline", whiteSpace: "nowrap" }}>
-              Voltar
-            </Link>
+              <h1 style={{ fontSize: 24, fontWeight: 700, margin: "6px 0 0 0" }}>Create activity</h1>
+
+              <p style={{ fontSize: 13, color: "#9ca3af", margin: "6px 0 0 0" }}>
+                Fields marked with <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span> are required.
+              </p>
+            </div>
+
+            {/* ✅ LOGO no lado direito */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/Platform_Logo.png"
+              alt="Platform Sports"
+              style={{
+                height: 56,
+                width: "auto",
+                objectFit: "contain",
+                display: "block",
+                marginLeft: "auto",
+              }}
+            />
           </div>
-
-          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
-            Campos com <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span> são obrigatórios.
-          </p>
         </header>
 
         {error ? <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>{error}</p> : null}
@@ -253,14 +400,14 @@ export default function NewActivityPage() {
         >
           <label style={labelStyle}>
             Title <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
-            <input style={inputStyle} placeholder="Ex: Run club" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input style={inputStyle} placeholder="e.g., Run club" value={title} onChange={(e) => setTitle(e.target.value)} />
           </label>
 
           <label style={labelStyle}>
             Sport <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
             <input
               style={inputStyle}
-              placeholder="Ex: Running, Cycling, Functional..."
+              placeholder="e.g., Running, Cycling, Functional..."
               value={sport}
               onChange={(e) => setSport(e.target.value)}
             />
@@ -268,18 +415,64 @@ export default function NewActivityPage() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <p style={{ ...labelStyle, marginBottom: 0 }}>
-              Date & Time <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>{" "}
-              <span style={{ color: "#9ca3af", fontWeight: 400 }}>(adicione várias datas se for repetitivo)</span>
+              Date &amp; Time <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>{" "}
+              <span style={{ color: "#9ca3af", fontWeight: 400 }}>(add multiple dates if recurring)</span>
             </p>
 
             {dates.map((d, idx) => (
               <div key={idx} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <input
-                  style={{ ...inputStyle, marginTop: 0, flex: "1 1 260px" }}
-                  type="datetime-local"
-                  value={d}
-                  onChange={(e) => updateDateAt(idx, e.target.value)}
-                />
+                {/* ✅ input with our calendar icon + Pick */}
+                <div style={{ position: "relative", flex: "1 1 260px", minWidth: 260 }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 12,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      pointerEvents: "none",
+                      opacity: 0.95,
+                    }}
+                  >
+                    <CalendarIcon />
+                  </div>
+
+                  <input
+                    id={`dt-${idx}`}
+                    style={{
+                      ...inputStyle,
+                      marginTop: 0,
+                      paddingLeft: 42, // space for icon
+                      paddingRight: 92, // space for Pick button
+                    }}
+                    type="datetime-local"
+                    value={d}
+                    onChange={(e) => updateDateAt(idx, e.target.value)}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => openPicker(idx)}
+                    style={{
+                      position: "absolute",
+                      right: 8,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      fontSize: 12,
+                      padding: "8px 12px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(148,163,184,0.35)",
+                      background: "rgba(2,6,23,0.65)",
+                      color: "#e5e7eb",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                      lineHeight: 1,
+                      boxShadow: "0 10px 26px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Pick
+                  </button>
+                </div>
 
                 <button
                   type="button"
@@ -297,7 +490,7 @@ export default function NewActivityPage() {
                     opacity: dates.length <= 1 ? 0.6 : 1,
                   }}
                 >
-                  Remover
+                  Remove
                 </button>
               </div>
             ))}
@@ -317,50 +510,56 @@ export default function NewActivityPage() {
                   cursor: "pointer",
                 }}
               >
-                + Adicionar outra data
+                + Add another date
               </button>
             </div>
           </div>
 
           <label style={labelStyle}>
-            Address (texto completo) <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
+            Address <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
             <input
               style={inputStyle}
-              placeholder="Ex: 3516 President Barack Obama Pkwy"
+              placeholder="e.g., 3516 President Barack Obama Pkwy"
               value={addressText}
               onChange={(e) => setAddressText(e.target.value)}
             />
           </label>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <label style={{ ...labelStyle, flex: "1 1 220px" }}>
+            <label style={{ ...labelStyle, flex: "1 1 220px", minWidth: 220 }}>
               City <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
-              <input style={inputStyle} placeholder="Ex: Orlando" value={city} onChange={(e) => setCity(e.target.value)} />
+              <input style={inputStyle} placeholder="e.g., Orlando" value={city} onChange={(e) => setCity(e.target.value)} />
             </label>
 
-            <label style={{ ...labelStyle, flex: "1 1 140px" }}>
+            <label style={{ ...labelStyle, flex: "1 1 140px", minWidth: 140 }}>
               State <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
-              <input style={inputStyle} placeholder="Ex: FL" value={stateUS} onChange={(e) => setStateUS(e.target.value)} />
+              <input style={inputStyle} placeholder="e.g., FL" value={stateUS} onChange={(e) => setStateUS(e.target.value)} />
             </label>
           </div>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <label style={{ ...labelStyle, flex: "1 1 180px" }}>
-              Capacity <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
-              <input style={inputStyle} inputMode="numeric" placeholder="Ex: 20" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+            <label style={{ ...labelStyle, flex: "1 1 180px", minWidth: 180 }}>
+              Capacity (optional)
+              <input
+                style={inputStyle}
+                inputMode="numeric"
+                placeholder="Leave empty for unlimited"
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+              />
             </label>
 
-            <label style={{ ...labelStyle, flex: "1 1 180px" }}>
-              Waitlist (opcional)
-              <input style={inputStyle} inputMode="numeric" placeholder="Ex: 10" value={waitlist} onChange={(e) => setWaitlist(e.target.value)} />
+            <label style={{ ...labelStyle, flex: "1 1 180px", minWidth: 180 }}>
+              Waitlist (optional)
+              <input style={inputStyle} inputMode="numeric" placeholder="e.g., 10" value={waitlist} onChange={(e) => setWaitlist(e.target.value)} />
             </label>
 
-            <label style={{ ...labelStyle, flex: "1 1 180px" }}>
+            <label style={{ ...labelStyle, flex: "1 1 180px", minWidth: 180 }}>
               Price (USD) <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
               <input
                 style={inputStyle}
                 inputMode="decimal"
-                placeholder="Ex: 15.00 (0 = Free)"
+                placeholder="e.g., 15.00 (0 = Free)"
                 value={priceUsd}
                 onChange={(e) => setPriceUsd(e.target.value)}
               />
@@ -368,33 +567,38 @@ export default function NewActivityPage() {
           </div>
 
           <label style={labelStyle}>
-            WhatsApp do organizador <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
-            <input style={inputStyle} placeholder="Ex: +1 407 555 1234" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+            Organizer WhatsApp (optional)
+            <input
+              style={inputStyle}
+              placeholder="e.g., +1 407 555 1234"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+            />
           </label>
 
           <label style={labelStyle}>
-            Description (opcional)
+            Description <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
             <textarea
-              style={{ ...inputStyle, minHeight: 110, resize: "vertical" }}
-              placeholder="Descreva a atividade..."
+              style={{ ...inputStyle, minHeight: 130, resize: "vertical" }}
+              placeholder={descriptionSuggestion}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </label>
 
           <label style={labelStyle}>
-            Imagem (opcional)
+            Image (optional)
             <input
               style={inputStyle}
               type="file"
               accept="image/png,image/jpeg,image/jpg"
               onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
             />
-            <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "#9ca3af" }}>Dica: use uma imagem horizontal.</span>
+            <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "#9ca3af" }}>Tip: use a horizontal image.</span>
           </label>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 10, flexWrap: "wrap", marginTop: 6 }}>
-            <p style={{ fontSize: 12, color: "#60a5fa", margin: 0 }}>Ao publicar, será criada 1 atividade para cada data informada.</p>
+            <p style={{ fontSize: 12, color: "#60a5fa", margin: 0 }}>When publishing, it will create 1 activity per date.</p>
 
             <button
               onClick={handleCreate}
@@ -408,15 +612,14 @@ export default function NewActivityPage() {
                 color: "#e0f2fe",
                 cursor: busy ? "not-allowed" : "pointer",
                 fontWeight: 800,
+                opacity: busy ? 0.8 : 1,
               }}
             >
-              {busy ? "Publicando..." : "Publicar"}
+              {busy ? "Publishing..." : "Publish"}
             </button>
           </div>
         </section>
       </div>
-
-      <BottomNavbar />
     </main>
   );
 }

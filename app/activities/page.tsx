@@ -11,7 +11,7 @@ type ActivityRow = {
   id: string;
   title: string | null;
   sport: string | null;
-  description: string | null;
+  description: string |null;
 
   start_date: string | null;
 
@@ -67,7 +67,7 @@ function buildAddress(e: ActivityRow): string {
   return parts.join(" • ") || "Location TBD";
 }
 
-// ✅ manter consistente com /activities/new (que faz upload em event-images)
+// ✅ keep consistent with /activities/new (uploads to event-images)
 function getPublicImageUrl(path: string | null): string | null {
   if (!path) return null;
   const { data } = supabaseBrowser.storage.from("event-images").getPublicUrl(path);
@@ -87,23 +87,31 @@ export default function ActivitiesPage() {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
-        .from("app_activities")
-        .select(
-          "id,title,sport,description,start_date,address_text,city,state,capacity,waitlist_capacity,price_cents,image_path,image_url,published"
-        )
-        .order("start_date", { ascending: true });
+      try {
+        const nowIso = new Date().toISOString();
 
-      if (cancelled) return;
+        const { data, error } = await supabase
+          .from("app_activities")
+          .select("id,title,sport,description,start_date,address_text,city,state,capacity,waitlist_capacity,price_cents,image_path,image_url,published")
+          .eq("published", true)
+          .gte("start_date", nowIso)
+          .order("start_date", { ascending: true });
 
-      if (error) {
-        setError(error.message || "Failed to load activities.");
+        if (cancelled) return;
+
+        if (error) {
+          setError(error.message || "Failed to load activities.");
+          setActivities([]);
+        } else {
+          setActivities((data as ActivityRow[]) ?? []);
+        }
+      } catch (err: any) {
+        if (cancelled) return;
+        setError("Failed to load activities.");
         setActivities([]);
-      } else {
-        setActivities((data as ActivityRow[]) ?? []);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      setLoading(false);
     }
 
     load();
@@ -133,7 +141,7 @@ export default function ActivitiesPage() {
               margin: 0,
             }}
           >
-            Atividades
+            Activities
           </p>
 
           <div
@@ -146,7 +154,7 @@ export default function ActivitiesPage() {
               flexWrap: "wrap",
             }}
           >
-            <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>Atividades</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>Activities</h1>
 
             <Link
               href="/activities/new"
@@ -161,21 +169,23 @@ export default function ActivitiesPage() {
                 fontWeight: 800,
               }}
             >
-              Criar atividade
+              Create activity
             </Link>
           </div>
 
-          <p style={{ fontSize: 13, color: "#9ca3af", margin: "8px 0 0 0" }}>
-            Crie sua atividade e compartilhe com a comunidade.
-          </p>
+          <p style={{ fontSize: 13, color: "#9ca3af", margin: "8px 0 0 0" }}>Create your activity and share it with the community.</p>
         </header>
 
-        {error ? <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>{error}</p> : null}
+        {error ? (
+          <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>
+            {error}
+          </p>
+        ) : null}
 
         {loading ? (
-          <p style={{ fontSize: 13, color: "#9ca3af" }}>Carregando...</p>
+          <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</p>
         ) : activities.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#9ca3af" }}>Nenhuma atividade ainda.</p>
+          <p style={{ fontSize: 13, color: "#9ca3af" }}>No upcoming published activities yet.</p>
         ) : (
           <div style={{ display: "grid", gap: 12 }}>
             {activities.map((a) => {
@@ -186,11 +196,7 @@ export default function ActivitiesPage() {
               const where = buildAddress(a);
 
               return (
-                <Link
-                  key={a.id}
-                  href={`/activities/${a.id}`}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
+                <Link key={a.id} href={`/activities/${a.id}`} style={{ textDecoration: "none", color: "inherit" }}>
                   <article
                     style={{
                       cursor: "pointer",
@@ -218,10 +224,15 @@ export default function ActivitiesPage() {
                       }}
                     >
                       {img ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={img}
                           alt={a.title ?? "activity image"}
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
                         />
                       ) : (
                         <span style={{ fontSize: 12, color: "#9ca3af" }}>No image</span>
@@ -229,7 +240,14 @@ export default function ActivitiesPage() {
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 10,
+                          alignItems: "flex-start",
+                        }}
+                      >
                         <div style={{ minWidth: 0 }}>
                           <h2
                             style={{
@@ -241,7 +259,7 @@ export default function ActivitiesPage() {
                               textOverflow: "ellipsis",
                             }}
                           >
-                            {a.title ?? "Atividade"}
+                            {a.title ?? "Activity"}
                           </h2>
 
                           <p
@@ -271,7 +289,14 @@ export default function ActivitiesPage() {
                           </p>
                         </div>
 
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            flexWrap: "wrap",
+                            justifyContent: "flex-end",
+                          }}
+                        >
                           <span
                             style={{
                               fontSize: 11,

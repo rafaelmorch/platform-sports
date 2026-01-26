@@ -25,6 +25,51 @@ type Comment = {
   created_at: string;
 };
 
+/* ================= Avatar helpers (same as Activities) ================= */
+
+function initialsFromProfile(fullName: string | null | undefined, fallbackId: string | null | undefined): string {
+  const name = (fullName ?? "").trim();
+  if (name) {
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    const a = parts[0].slice(0, 1);
+    const b = parts[parts.length - 1].slice(0, 1);
+    return `${a}${b}`.toUpperCase();
+  }
+
+  const uid = (fallbackId ?? "").trim();
+  if (uid.length >= 2) return uid.slice(0, 2).toUpperCase();
+  if (uid.length === 1) return uid.toUpperCase();
+  return "?";
+}
+
+function hashToHue(input: string): number {
+  let h = 0;
+  for (let i = 0; i < input.length; i++) {
+    h = (h * 31 + input.charCodeAt(i)) >>> 0;
+  }
+  return h % 360;
+}
+
+function avatarStyleFromId(id: string) {
+  const hue = hashToHue(id);
+
+  const base = `hsl(${hue} 60% 22%)`;
+  const light = `hsl(${hue} 70% 38%)`;
+  const highlight = `hsl(${hue} 80% 70% / 0.22)`;
+  const border = `hsl(${hue} 70% 55% / 0.55)`;
+
+  return {
+    background: `radial-gradient(circle at 30% 28%, ${highlight} 0%, transparent 38%), radial-gradient(circle at 30% 30%, ${light} 0%, ${base} 60%)`,
+    border: `1px solid ${border}`,
+    color: "rgba(255,255,255,0.94)",
+    boxShadow:
+      "inset 0 10px 16px rgba(255,255,255,0.08), inset 0 -10px 18px rgba(0,0,0,0.35), 0 10px 22px rgba(0,0,0,0.35)",
+  } as const;
+}
+
+/* ================= Page ================= */
+
 export default function FeedPage() {
   const router = useRouter();
 
@@ -34,49 +79,45 @@ export default function FeedPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
 
-  // posts que o usuário já curtiu
+  // posts the user already liked
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
 
-  // texto de comentário por post
+  // comment text per post
   const [commentText, setCommentText] = useState<Record<string, string>>({});
 
   const [likeLoadingPostId, setLikeLoadingPostId] = useState<string | null>(null);
   const [commentLoadingPostId, setCommentLoadingPostId] = useState<string | null>(null);
 
-  // comentários carregados por post
+  // loaded comments per post
   const [postComments, setPostComments] = useState<Record<string, Comment[]>>({});
-  // quais posts estão com comentários abertos
+  // which posts have comments open
   const [openComments, setOpenComments] = useState<Set<string>>(new Set());
   const [loadingCommentsPostId, setLoadingCommentsPostId] = useState<string | null>(null);
 
   async function loadPosts() {
     setLoading(true);
 
-    // ✅ 0) garante sessão (bloqueia a página)
+    // ✅ 0) ensure session (block page)
     const {
       data: { session },
       error: sessionError,
     } = await supabaseBrowser.auth.getSession();
 
     if (sessionError) {
-      console.error("Erro ao obter sessão:", sessionError);
+      console.error("Error getting session:", sessionError);
     }
 
     if (!session) {
       router.push("/login");
-      return; // ⛔ não continua
+      return; // ⛔ stop
     }
 
     const user = session.user;
 
     setUserId(user.id);
 
-    // 1) nome do usuário (perfil)
-    const { data: profile } = await supabaseBrowser
-      .from("profiles")
-      .select("full_name")
-      .eq("id", user.id)
-      .maybeSingle();
+    // 1) user name (profile)
+    const { data: profile } = await supabaseBrowser.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
 
     if (profile?.full_name) {
       setUserName(profile.full_name);
@@ -85,13 +126,10 @@ export default function FeedPage() {
     }
 
     // 2) posts
-    const { data: postsData, error: postsError } = await supabaseBrowser
-      .from("feed_posts")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data: postsData, error: postsError } = await supabaseBrowser.from("feed_posts").select("*").order("created_at", { ascending: false });
 
     if (postsError || !postsData) {
-      console.error("Erro ao carregar posts:", postsError);
+      console.error("Error loading posts:", postsError);
       setPosts([]);
       setLoading(false);
       return;
@@ -100,17 +138,14 @@ export default function FeedPage() {
     const rawPosts = postsData as Post[];
     const postIds = rawPosts.map((p) => p.id);
 
-    // mapas para likes e comentários
+    // maps for likes and comments
     const likeCountMap: Record<string, number> = {};
     const commentCountMap: Record<string, number> = {};
     const likedByCurrentUser = new Set<string>();
 
     if (postIds.length > 0) {
-      // 3) likes dos posts
-      const { data: likesData, error: likesError } = await supabaseBrowser
-        .from("feed_likes")
-        .select("post_id, user_id")
-        .in("post_id", postIds);
+      // 3) post likes
+      const { data: likesData, error: likesError } = await supabaseBrowser.from("feed_likes").select("post_id, user_id").in("post_id", postIds);
 
       if (!likesError && likesData) {
         (likesData as any[]).forEach((row) => {
@@ -123,11 +158,8 @@ export default function FeedPage() {
         });
       }
 
-      // 4) comentários dos posts
-      const { data: commentsData, error: commentsError } = await supabaseBrowser
-        .from("feed_comments")
-        .select("post_id")
-        .in("post_id", postIds);
+      // 4) post comments count
+      const { data: commentsData, error: commentsError } = await supabaseBrowser.from("feed_comments").select("post_id").in("post_id", postIds);
 
       if (!commentsError && commentsData) {
         (commentsData as any[]).forEach((row) => {
@@ -153,10 +185,10 @@ export default function FeedPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ---------- CURTIR / DESCURTIR (1 por usuário) ----------
+  // ---------- LIKE / UNLIKE (1 per user) ----------
   async function handleLike(postId: string) {
     if (!userId) {
-      alert("Faça login para curtir as postagens.");
+      alert("Please log in to like posts.");
       return;
     }
 
@@ -164,53 +196,41 @@ export default function FeedPage() {
     setLikeLoadingPostId(postId);
 
     if (alreadyLiked) {
-      // DESCURTIR
-      const { error } = await supabaseBrowser
-        .from("feed_likes")
-        .delete()
-        .eq("post_id", postId)
-        .eq("user_id", userId);
+      // UNLIKE
+      const { error } = await supabaseBrowser.from("feed_likes").delete().eq("post_id", postId).eq("user_id", userId);
 
       if (error) {
-        console.error("Erro ao remover curtida:", error);
+        console.error("Error removing like:", error);
       } else {
         setLikedPosts((prev) => {
           const copy = new Set(prev);
           copy.delete(postId);
           return copy;
         });
-        setPosts((current) =>
-          current.map((post) =>
-            post.id === postId ? { ...post, likes: Math.max(0, post.likes - 1) } : post
-          )
-        );
+        setPosts((current) => current.map((post) => (post.id === postId ? { ...post, likes: Math.max(0, post.likes - 1) } : post)));
       }
     } else {
-      // CURTIR
-      const { error } = await supabaseBrowser
-        .from("feed_likes")
-        .insert({ post_id: postId, user_id: userId });
+      // LIKE
+      const { error } = await supabaseBrowser.from("feed_likes").insert({ post_id: postId, user_id: userId });
 
       if (error) {
-        console.error("Erro ao registrar curtida:", error);
+        console.error("Error saving like:", error);
       } else {
         setLikedPosts((prev) => {
           const copy = new Set(prev);
           copy.add(postId);
           return copy;
         });
-        setPosts((current) =>
-          current.map((post) => (post.id === postId ? { ...post, likes: post.likes + 1 } : post))
-        );
+        setPosts((current) => current.map((post) => (post.id === postId ? { ...post, likes: post.likes + 1 } : post)));
       }
     }
 
     setLikeLoadingPostId(null);
   }
 
-  // ---------- CARREGAR / TOGGLE COMENTÁRIOS ----------
+  // ---------- LOAD / TOGGLE COMMENTS ----------
   async function toggleComments(postId: string) {
-    // se já estiver aberto, fecha
+    // if already open, close
     if (openComments.has(postId)) {
       setOpenComments((prev) => {
         const copy = new Set(prev);
@@ -220,7 +240,7 @@ export default function FeedPage() {
       return;
     }
 
-    // se já temos comentários carregados, só abre
+    // if already loaded, just open
     if (postComments[postId]) {
       setOpenComments((prev) => {
         const copy = new Set(prev);
@@ -230,17 +250,13 @@ export default function FeedPage() {
       return;
     }
 
-    // precisa carregar do Supabase
+    // load from Supabase
     setLoadingCommentsPostId(postId);
 
-    const { data, error } = await supabaseBrowser
-      .from("feed_comments")
-      .select("*")
-      .eq("post_id", postId)
-      .order("created_at", { ascending: true });
+    const { data, error } = await supabaseBrowser.from("feed_comments").select("*").eq("post_id", postId).order("created_at", { ascending: true });
 
     if (error) {
-      console.error("Erro ao carregar comentários:", error);
+      console.error("Error loading comments:", error);
     } else if (data) {
       setPostComments((prev) => ({
         ...prev,
@@ -256,13 +272,13 @@ export default function FeedPage() {
     setLoadingCommentsPostId(null);
   }
 
-  // ---------- COMENTAR ----------
+  // ---------- COMMENT ----------
   async function handleSubmitComment(postId: string) {
     const text = (commentText[postId] || "").trim();
 
     if (!text) return;
     if (!userId) {
-      alert("Faça login para comentar.");
+      alert("Please log in to comment.");
       return;
     }
 
@@ -280,24 +296,20 @@ export default function FeedPage() {
       .single();
 
     if (error) {
-      console.error("Erro ao salvar comentário:", error);
+      console.error("Error saving comment:", error);
     } else if (data) {
       const newComment = data as Comment;
 
-      // limpa campo
+      // clear input
       setCommentText((prev) => ({
         ...prev,
         [postId]: "",
       }));
 
-      // incrementa contador no post
-      setPosts((current) =>
-        current.map((post) =>
-          post.id === postId ? { ...post, comments_count: post.comments_count + 1 } : post
-        )
-      );
+      // increment counter
+      setPosts((current) => current.map((post) => (post.id === postId ? { ...post, comments_count: post.comments_count + 1 } : post)));
 
-      // se os comentários desse post já estão carregados, adiciona na lista
+      // if loaded, append
       setPostComments((prev) => ({
         ...prev,
         [postId]: [...(prev[postId] ?? []), newComment],
@@ -330,14 +342,12 @@ export default function FeedPage() {
               marginBottom: "12px",
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
+              alignItems: "flex-start",
               gap: "12px",
             }}
           >
-            <div>
-              <h1 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "4px" }}>
-                Feed de Treinos
-              </h1>
+            <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+              <h1 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "4px" }}>Training Feed</h1>
 
               <p
                 style={{
@@ -347,39 +357,50 @@ export default function FeedPage() {
                   fontWeight: 700,
                 }}
               >
-                Desafios te levam a um novo nível. Compartilhe o seu no esporte hoje.
+                Challenges push you to the next level. Share yours in sport today.
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => router.push("/feed/new")}
-              style={{
-                padding: "9px 14px",
-                borderRadius: "999px",
-                background: "#22c55e",
-                color: "#020617",
-                fontSize: "13px",
-                fontWeight: 700,
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Nova postagem
-            </button>
+            {/* ✅ Right side: button + logo (top-right) */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: "0 0 auto" }}>
+              <button
+                type="button"
+                onClick={() => router.push("/feed/new")}
+                style={{
+                  padding: "9px 14px",
+                  borderRadius: "999px",
+                  background: "#22c55e",
+                  color: "#020617",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                New post
+              </button>
+
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/ps.png"
+                alt="Platform Sports"
+                style={{
+                  height: 86,
+                  width: "auto",
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
+            </div>
           </div>
 
-          {loading && (
-            <p style={{ fontSize: "13px", color: "#64748b", marginTop: "8px" }}>
-              Carregando postagens…
-            </p>
-          )}
+          {loading && <p style={{ fontSize: "13px", color: "#64748b", marginTop: "8px" }}>Loading posts…</p>}
 
           {!loading && posts.length === 0 && (
             <p style={{ fontSize: "13px", color: "#64748b", marginTop: "8px" }}>
-              Nenhuma postagem ainda. Seja o primeiro a registrar seu treino.
+              No posts yet. Be the first to log your workout.
             </p>
           )}
 
@@ -395,6 +416,9 @@ export default function FeedPage() {
               const isLiked = likedPosts.has(post.id);
               const isCommentsOpen = openComments.has(post.id);
               const comments = postComments[post.id] ?? [];
+
+              // ⚠️ No author_user_id: use post.id as stable color seed
+              const postAvatarSeed = post.id;
 
               return (
                 <article
@@ -414,36 +438,29 @@ export default function FeedPage() {
                       marginBottom: "10px",
                     }}
                   >
+                    {/* ✅ Avatar same as Activities */}
                     <div
+                      title={post.author_name ?? ""}
                       style={{
                         width: "36px",
                         height: "36px",
                         borderRadius: "999px",
-                        background:
-                          "radial-gradient(circle at 30% 30%, #22c55e, #0f172a)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: "14px",
-                        fontWeight: 700,
-                        color: "#0b1120",
+                        fontSize: "13px",
+                        fontWeight: 900,
+                        letterSpacing: "0.04em",
+                        flexShrink: 0,
+                        ...avatarStyleFromId(postAvatarSeed),
                       }}
                     >
-                      {(post.author_name || "AT")
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .slice(0, 2)
-                        .toUpperCase()}
+                      {initialsFromProfile(post.author_name, postAvatarSeed)}
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                      <span style={{ fontSize: "13px", fontWeight: 600 }}>
-                        {post.author_name || "Atleta"}
-                      </span>
-                      <span style={{ fontSize: "11px", color: "#64748b" }}>
-                        {new Date(post.created_at).toLocaleString()}
-                      </span>
+                      <span style={{ fontSize: "13px", fontWeight: 600 }}>{post.author_name || "Athlete"}</span>
+                      <span style={{ fontSize: "11px", color: "#64748b" }}>{new Date(post.created_at).toLocaleString()}</span>
                     </div>
                   </div>
 
@@ -474,7 +491,7 @@ export default function FeedPage() {
                     >
                       <img
                         src={post.image_url}
-                        alt="Foto do treino"
+                        alt="Workout photo"
                         style={{
                           width: "100%",
                           height: "100%",
@@ -512,14 +529,12 @@ export default function FeedPage() {
                           opacity: likeLoadingPostId === post.id ? 0.7 : 1,
                         }}
                       >
-                        <span style={{ fontSize: "14px", lineHeight: 1 }}>
-                          {isLiked ? "💚" : "🤍"}
-                        </span>
-                        <span>{isLiked ? "Você curtiu" : "Curtir"}</span>
+                        <span style={{ fontSize: "14px", lineHeight: 1 }}>{isLiked ? "💚" : "🤍"}</span>
+                        <span>{isLiked ? "Liked" : "Like"}</span>
                       </button>
 
                       <span style={{ fontSize: "12px", color: "#64748b" }}>
-                        {post.likes} curtida{post.likes === 1 ? "" : "s"}
+                        {post.likes} like{post.likes === 1 ? "" : "s"}
                       </span>
                     </div>
 
@@ -539,9 +554,10 @@ export default function FeedPage() {
                       }}
                     >
                       {loadingCommentsPostId === post.id
-                        ? "Carregando comentários…"
+                        ? "Loading comments…"
                         : isCommentsOpen
-                        ? `Ocultar comentários (${post.comments_count})` : `Ver comentários (${post.comments_count})`}
+                        ? `Hide comments (${post.comments_count})`
+                        : `View comments (${post.comments_count})`}
                     </button>
                   </div>
 
@@ -555,7 +571,7 @@ export default function FeedPage() {
                     >
                       <input
                         type="text"
-                        placeholder="Escreva um comentário…"
+                        placeholder="Write a comment…"
                         value={commentText[post.id] ?? ""}
                         onChange={(e) =>
                           setCommentText((prev) => ({
@@ -589,7 +605,7 @@ export default function FeedPage() {
                           opacity: commentLoadingPostId === post.id ? 0.7 : 1,
                         }}
                       >
-                        {commentLoadingPostId === post.id ? "Enviando..." : "Enviar"}
+                        {commentLoadingPostId === post.id ? "Sending..." : "Send"}
                       </button>
                     </form>
                   </div>
@@ -606,7 +622,7 @@ export default function FeedPage() {
                     >
                       {comments.length === 0 ? (
                         <p style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>
-                          Ainda não há comentários neste post. Seja o primeiro a comentar.
+                          No comments yet. Be the first to comment.
                         </p>
                       ) : (
                         <ul
@@ -621,29 +637,26 @@ export default function FeedPage() {
                         >
                           {comments.map((c) => (
                             <li key={c.id} style={{ display: "flex", gap: "8px" }}>
+                              {/* ✅ Avatar same as Activities (uses c.user_id) */}
                               <div
+                                title={c.author_name ?? ""}
                                 style={{
                                   width: "22px",
                                   height: "22px",
                                   borderRadius: "999px",
-                                  background:
-                                    "radial-gradient(circle at 30% 30%, #38bdf8, #0f172a)",
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  fontSize: "11px",
-                                  fontWeight: 600,
-                                  color: "#0b1120",
+                                  fontSize: "10px",
+                                  fontWeight: 900,
+                                  letterSpacing: "0.04em",
                                   flexShrink: 0,
+                                  ...avatarStyleFromId(c.user_id),
                                 }}
                               >
-                                {(c.author_name || "AT")
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")
-                                  .slice(0, 2)
-                                  .toUpperCase()}
+                                {initialsFromProfile(c.author_name, c.user_id)}
                               </div>
+
                               <div style={{ flex: 1, fontSize: "12px", lineHeight: 1.4 }}>
                                 <div
                                   style={{
@@ -652,9 +665,7 @@ export default function FeedPage() {
                                     alignItems: "baseline",
                                   }}
                                 >
-                                  <span style={{ fontWeight: 600, color: "#e5e7eb" }}>
-                                    {c.author_name || "Atleta"}
-                                  </span>
+                                  <span style={{ fontWeight: 600, color: "#e5e7eb" }}>{c.author_name || "Athlete"}</span>
                                   <span
                                     style={{
                                       fontSize: "10px",
@@ -662,9 +673,9 @@ export default function FeedPage() {
                                       marginLeft: "8px",
                                     }}
                                   >
-                                    {new Date(c.created_at).toLocaleDateString("pt-BR", {
-                                      day: "2-digit",
+                                    {new Date(c.created_at).toLocaleDateString("en-US", {
                                       month: "2-digit",
+                                      day: "2-digit",
                                     })}
                                   </span>
                                 </div>

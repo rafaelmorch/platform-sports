@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 
 const tabs = [
   { href: '/feed', label: 'Feed' },
-  { href: '/events', label: 'Events' },
-  { href: '/activities', label: 'Group Activities' },
-  { href: '/profile', label: 'Profile' },
+  { href: '/events', label: 'Eventos' },
+  { href: '/activities', label: 'Atividades' },
+  { href: '/profile', label: 'Perfil' },
 ];
 
 function isActive(pathname: string, href: string) {

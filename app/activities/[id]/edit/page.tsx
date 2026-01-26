@@ -1,395 +1,195 @@
 // app/activities/[id]/edit/page.tsx
 "use client";
 
-import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import BottomNavbar from "@/components/BottomNavbar";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 export const dynamic = "force-dynamic";
 
-/* ================= Types ================= */
-
-type ActivityRow = {
-  id: string;
-  created_at: string;
-  created_by: string;
-
-  title: string | null;
-  sport: string | null;
-  activity_type: string | null;
-  description: string | null;
-
-  start_date: string | null;
-
-  address_text: string | null;
-  city: string | null;
-  state: string | null;
-
-  capacity: number | null;
-  waitlist_capacity: number | null;
-  price_cents: number | null;
-  organizer_whatsapp: string | null;
-
-  is_public: boolean | null;
-  published: boolean | null;
-
-  image_path: string | null;
-  image_url: string | null;
-
-  organizer_id: string | null;
-
-  // extras no schema (opcionais)
-  duration_minutes?: number | null;
-  distance_m?: number | null;
-  location_text?: string | null;
-  lat?: number | null;
-  lng?: number | null;
-};
-
 /* ================= Utils ================= */
 
-function centsFromUsd(usd: string): number | null {
-  const v = (usd ?? "").trim();
+function toCents(usdText: string): number | null {
+  const v = (usdText ?? "").trim();
   if (!v) return null;
   const n = Number(v);
   if (!Number.isFinite(n) || n < 0) return null;
   return Math.round(n * 100);
 }
 
-function usdFromCents(cents: number | null): string {
-  if (cents == null) return "";
+function centsToUsdText(cents: number | null): string {
+  if (cents == null || !Number.isFinite(cents)) return "";
   return (cents / 100).toFixed(2);
 }
 
-// Converte ISO (UTC) -> datetime-local (local)
-function isoToDatetimeLocal(iso: string | null): string {
-  if (!iso) return "";
-  try {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "";
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const yyyy = d.getFullYear();
-    const mm = pad(d.getMonth() + 1);
-    const dd = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const mi = pad(d.getMinutes());
-    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
-  } catch {
-    return "";
-  }
-}
-
-// Converte datetime-local (local) -> ISO UTC
+// ✅ datetime-local (local) -> ISO UTC
 function datetimeLocalToIso(dtLocal: string): string | null {
   const v = (dtLocal ?? "").trim();
   if (!v) return null;
-  const d = new Date(v); // interpreta como local
+  const d = new Date(v); // local
   if (Number.isNaN(d.getTime())) return null;
   return d.toISOString();
 }
 
-function getPublicImageUrl(path: string | null): string | null {
-  if (!path) return null;
-  const { data } = supabaseBrowser.storage.from("event-images").getPublicUrl(path);
-  return data?.publicUrl ?? null;
+// ISO UTC -> datetime-local string (YYYY-MM-DDTHH:mm)
+function isoToDatetimeLocal(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mi = pad(d.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
 }
+
+function errorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  return String(e);
+}
+
+function formatDatePreview(dtLocal: string): string {
+  const v = (dtLocal ?? "").trim();
+  if (!v) return "No date selected";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "Invalid date";
+  try {
+    return d.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return v;
+  }
+}
+
+/* ================= Small UI ================= */
+
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "8px 12px",
+        borderRadius: 999,
+        border: "1px solid rgba(148,163,184,0.35)",
+        background: "rgba(2,6,23,0.55)",
+        color: "#e5e7eb",
+        cursor: "pointer",
+        fontSize: 12,
+        fontWeight: 900,
+        lineHeight: 1,
+        boxShadow:
+          "0 10px 26px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
+        whiteSpace: "nowrap",
+      }}
+      aria-label="Back"
+    >
+      <span style={{ fontSize: 14, lineHeight: 1, opacity: 0.95 }}>←</span>
+      <span style={{ letterSpacing: "0.02em" }}>Back</span>
+    </button>
+  );
+}
+
+/* ================= Types ================= */
+
+type ActivityRow = {
+  id: string;
+  created_by: string;
+
+  title: string | null;
+  sport: string | null;
+  activity_type: string | null;
+
+  description: string | null;
+  start_date: string | null;
+
+  address_text: string | null;
+  city: string | null;
+  state: string | null;
+
+  capacity: number | null; // nullable => unlimited
+  waitlist_capacity: number | null;
+  price_cents: number | null;
+
+  organizer_whatsapp: string | null;
+
+  image_path: string | null;
+
+  // flags (some schemas have these)
+  is_public?: boolean | null;
+  published?: boolean | null;
+  organizer_id?: string | null;
+};
 
 /* ================= Page ================= */
 
 export default function EditActivityPage() {
-  const supabase = useMemo(() => supabaseBrowser, []);
   const router = useRouter();
   const { id: activityId } = useParams<{ id: string }>();
 
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [uploadBusy, setUploadBusy] = useState(false);
 
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [activity, setActivity] = useState<ActivityRow | null>(null);
 
-  // fields
+  // form
   const [title, setTitle] = useState("");
   const [sport, setSport] = useState("");
-  const [activityType, setActivityType] = useState("");
 
-  const [description, setDescription] = useState("");
-  const [startDate, setStartDate] = useState(""); // datetime-local
+  // ✅ SAME AS /new
+  const [dates, setDates] = useState<string[]>([""]); // datetime-local
 
   const [addressText, setAddressText] = useState("");
   const [city, setCity] = useState("");
   const [stateUS, setStateUS] = useState("");
 
-  const [capacity, setCapacity] = useState("");
-  const [waitlist, setWaitlist] = useState("");
+  const [capacity, setCapacity] = useState(""); // optional
+  const [waitlist, setWaitlist] = useState(""); // optional
   const [priceUsd, setPriceUsd] = useState("");
 
-  const [whatsapp, setWhatsapp] = useState("");
+  const [whatsapp, setWhatsapp] = useState(""); // optional
+  const [description, setDescription] = useState(""); // required
 
-  const [published, setPublished] = useState(true);
-  const [isPublic, setIsPublic] = useState(true);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // image
-  const [currentImagePath, setCurrentImagePath] = useState<string | null>(null);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
-  const [newFile, setNewFile] = useState<File | null>(null);
-  const [newPreviewUrl, setNewPreviewUrl] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!activityId) return;
+  const dateInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-    let cancelled = false;
-
-    (async () => {
-      setLoading(true);
-      setError(null);
-      setInfo(null);
-
-      const { data: userRes } = await supabase.auth.getUser();
-      const user = userRes.user;
-
-      if (!user) {
-        setError("Você precisa estar logado.");
-        setLoading(false);
+  // standardized back
+  function handleBack() {
+    try {
+      if (typeof window !== "undefined" && window.history.length > 1) {
+        router.back();
         return;
       }
-
-      const { data, error: e } = await supabase
-        .from("app_activities")
-        .select(
-          [
-            "id,created_at,created_by",
-            "title,sport,activity_type,description,start_date",
-            "address_text,city,state",
-            "capacity,waitlist_capacity,price_cents,organizer_whatsapp",
-            "published,is_public",
-            "image_path,image_url",
-            "organizer_id",
-          ].join(",")
-        )
-        .eq("id", activityId)
-        .single();
-
-      if (cancelled) return;
-
-      if (e) {
-        setError(e.message || "Falha ao carregar activity.");
-        setLoading(false);
-        return;
-      }
-
-      const a = data as ActivityRow;
-
-      // dono: created_by (principal) ou organizer_id (se existir)
-      const isOwner = a.created_by === user.id || (!!a.organizer_id && a.organizer_id === user.id);
-      if (!isOwner) {
-        setError("Você não é o dono desta activity.");
-        setLoading(false);
-        return;
-      }
-
-      setTitle(a.title ?? "");
-      setSport(a.sport ?? "");
-      setActivityType(a.activity_type ?? "");
-
-      setDescription(a.description ?? "");
-      setStartDate(isoToDatetimeLocal(a.start_date));
-
-      setAddressText(a.address_text ?? "");
-      setCity(a.city ?? "");
-      setStateUS(a.state ?? "");
-
-      setCapacity(a.capacity != null ? String(a.capacity) : "");
-      setWaitlist(a.waitlist_capacity != null ? String(a.waitlist_capacity) : "");
-      setPriceUsd(usdFromCents(a.price_cents));
-
-      setWhatsapp(a.organizer_whatsapp ?? "");
-
-      setPublished(a.published ?? true);
-      setIsPublic(a.is_public ?? true);
-
-      setCurrentImagePath(a.image_path ?? null);
-      const img = getPublicImageUrl(a.image_path ?? null) || a.image_url || null;
-      setCurrentImageUrl(img);
-
-      setLoading(false);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase, activityId]);
-
-  // preview local do file
-  useEffect(() => {
-    if (!newFile) {
-      setNewPreviewUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(newFile);
-    setNewPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [newFile]);
-
-  async function handleUploadImage() {
-    if (!activityId) return;
-    if (!newFile) {
-      setError("Selecione uma imagem primeiro.");
-      return;
-    }
-
-    setUploadBusy(true);
-    setError(null);
-    setInfo(null);
-
-    try {
-      const { data: userRes } = await supabase.auth.getUser();
-      const user = userRes.user;
-      if (!user) throw new Error("Você precisa estar logado.");
-
-      if (!newFile.type.startsWith("image/")) {
-        throw new Error("Arquivo inválido. Envie uma imagem.");
-      }
-
-      const safeName = newFile.name.replace(/\s+/g, "-");
-      const newPath = `activities/${activityId}/${Date.now()}-${safeName}`;
-
-      const { error: upErr } = await supabase.storage
-        .from("event-images")
-        .upload(newPath, newFile, { upsert: true, contentType: newFile.type });
-
-      if (upErr) throw new Error(upErr.message);
-
-      const { error: dbErr } = await supabase
-        .from("app_activities")
-        .update({ image_path: newPath })
-        .eq("id", activityId);
-
-      if (dbErr) throw new Error(dbErr.message);
-
-      // remove antiga (best-effort)
-      if (currentImagePath && currentImagePath !== newPath) {
-        await supabase.storage.from("event-images").remove([currentImagePath]);
-      }
-
-      setCurrentImagePath(newPath);
-      setCurrentImageUrl(getPublicImageUrl(newPath));
-      setNewFile(null);
-      setInfo("Imagem atualizada com sucesso!");
-    } catch (e: any) {
-      setError(e?.message ?? "Falha ao atualizar imagem.");
-    } finally {
-      setUploadBusy(false);
-    }
+    } catch {}
+    router.push(`/activities/${activityId}`);
   }
 
-  async function handleSave() {
-    if (!activityId) return;
+  const labelStyle: React.CSSProperties = {
+    fontSize: 12,
+    color: "#60a5fa",
+    margin: 0,
+    display: "block",
+  };
 
-    setBusy(true);
-    setError(null);
-    setInfo(null);
-
-    try {
-      const t = title.trim();
-      const sp = sport.trim();
-      const at = activityType.trim();
-      const ad = addressText.trim();
-      const ci = city.trim();
-      const st = stateUS.trim();
-      const wa = whatsapp.trim();
-
-      if (t.length < 3) throw new Error("Title é obrigatório (mín. 3).");
-      if (sp.length < 2) throw new Error("Sport é obrigatório.");
-
-      // Se activity_type ficou vazio, usa sport como fallback
-      const finalActivityType = at.length ? at : sp;
-
-      // start_date (opcional, mas seu /new pede. aqui vou exigir também)
-      if (!startDate.trim()) throw new Error("Date & Time é obrigatório.");
-      const startIso = datetimeLocalToIso(startDate);
-      if (!startIso) throw new Error("Date & Time inválido.");
-
-      if (ad.length < 5) throw new Error("Address é obrigatório.");
-      if (ci.length < 2) throw new Error("City é obrigatório.");
-      if (st.length < 2) throw new Error("State é obrigatório.");
-
-      if (!capacity.trim()) throw new Error("Capacity é obrigatória.");
-      const capN = Number(capacity);
-      if (!Number.isFinite(capN) || capN <= 0) throw new Error("Capacity deve ser um número > 0.");
-
-      let waitN = 0;
-      if (waitlist.trim()) {
-        const wn = Number(waitlist);
-        if (!Number.isFinite(wn) || wn < 0) throw new Error("Waitlist deve ser vazio ou número >= 0.");
-        waitN = wn;
-      }
-
-      if (!priceUsd.trim()) throw new Error("Price (USD) é obrigatório.");
-      const priceCents = centsFromUsd(priceUsd);
-      if (priceCents == null) throw new Error("Price (USD) inválido.");
-
-      if (wa && wa.length < 6) throw new Error("WhatsApp inválido (ex: +14075551234).");
-
-      const payload = {
-        title: t,
-        sport: sp,
-        activity_type: finalActivityType,
-        description: description.trim() || null,
-
-        start_date: startIso,
-
-        address_text: ad,
-        city: ci,
-        state: st,
-
-        capacity: Math.round(capN),
-        waitlist_capacity: Math.round(waitN),
-        price_cents: priceCents,
-
-        organizer_whatsapp: wa || null,
-
-        published: !!published,
-        is_public: !!isPublic,
-      };
-
-      const { error: upErr } = await supabase.from("app_activities").update(payload).eq("id", activityId);
-      if (upErr) throw new Error(upErr.message);
-
-      setInfo("Activity atualizada com sucesso!");
-    } catch (e: any) {
-      setError(e?.message ?? "Falha ao salvar.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleDelete() {
-    if (!activityId) return;
-
-    const ok = window.confirm("Tem certeza que deseja apagar esta activity? Isso não pode ser desfeito.");
-    if (!ok) return;
-
-    setBusy(true);
-    setError(null);
-    setInfo(null);
-
-    try {
-      const { error: delErr } = await supabase.from("app_activities").delete().eq("id", activityId);
-      if (delErr) throw new Error(delErr.message);
-
-      router.push("/activities");
-    } catch (e: any) {
-      setError(e?.message ?? "Falha ao apagar.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const labelStyle: React.CSSProperties = { fontSize: 12, color: "#60a5fa" };
   const inputStyle: React.CSSProperties = {
+    boxSizing: "border-box",
     width: "100%",
     marginTop: 6,
     padding: "10px 12px",
@@ -400,242 +200,715 @@ export default function EditActivityPage() {
     outline: "none",
   };
 
-  const cardStyle: React.CSSProperties = {
-    borderRadius: 18,
-    border: "1px solid rgba(148,163,184,0.35)",
-    background: "radial-gradient(circle at top left, #020617, #020617 50%, #000000 100%)",
-    padding: 14,
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
+  const pickButtonStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "10px 12px",
+    borderRadius: 12,
+    border: "1px solid rgba(148,163,184,0.25)",
+    background: "rgba(2,6,23,0.55)",
+    color: "#e5e7eb",
+    fontWeight: 900,
+    cursor: "pointer",
+    boxShadow:
+      "0 14px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
+    whiteSpace: "nowrap",
   };
 
-  return (
-    <main style={{ minHeight: "100vh", backgroundColor: "#020617", color: "#e5e7eb", padding: 16, paddingBottom: 80 }}>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <header style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-          <div>
-            <p style={{ fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "#64748b", margin: 0 }}>
-              Activities
-            </p>
-            <h1 style={{ fontSize: 24, fontWeight: 800, margin: "6px 0 0 0" }}>Editar activity</h1>
-          </div>
+  const descriptionSuggestion =
+    `Suggested details:\n` +
+    `• Duration: (e.g., 60 minutes)\n` +
+    `• What to bring: water bottle, towel, etc.\n` +
+    `• Clothing: running shoes / comfortable clothes\n` +
+    `• Minimum age: (e.g., 12+)\n` +
+    `• Meeting point / check-in instructions\n` +
+    `• Any special notes (pace groups, warm-up, cooldown, etc.)`;
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            <Link href="/activities" style={{ fontSize: 12, color: "#93c5fd", textDecoration: "underline" }}>
-              Voltar
-            </Link>
-            <Link href={`/activities/${activityId}`} style={{ fontSize: 12, color: "#93c5fd", textDecoration: "underline" }}>
-              Ver activity
-            </Link>
+  // ✅ SAME AS /new
+  function updateDateAt(idx: number, value: string) {
+    setDates((prev) => prev.map((d, i) => (i === idx ? value : d)));
+  }
+
+  function addDate() {
+    setDates((prev) => [...prev, ""]);
+  }
+
+  function removeDate(idx: number) {
+    setDates((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((_, i) => i !== idx);
+    });
+  }
+
+  function openNativePicker(idx: number) {
+    const el = dateInputRefs.current[idx];
+    if (!el) return;
+
+    // Chrome/Edge: opens picker programmatically
+    const maybeShowPicker = (el as HTMLInputElement & { showPicker?: () => void })
+      .showPicker;
+
+    if (typeof maybeShowPicker === "function") {
+      maybeShowPicker.call(el);
+      return;
+    }
+
+    // fallback
+    try {
+      el.focus();
+      el.click();
+    } catch {}
+  }
+
+  // Auth guard + load activity + owner check
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        setCheckingAuth(true);
+        setLoading(true);
+        setError(null);
+        setInfo(null);
+
+        const {
+          data: { session },
+        } = await supabaseBrowser.auth.getSession();
+
+        if (!session?.user?.id) {
+          router.replace("/login");
+          return;
+        }
+
+        const uid = session.user.id;
+        if (cancelled) return;
+        setUserId(uid);
+
+        const { data, error: fetchErr } = await supabaseBrowser
+          .from("app_activities")
+          .select(
+            "id,created_by,title,sport,activity_type,description,start_date,address_text,city,state,capacity,waitlist_capacity,price_cents,organizer_whatsapp,image_path,is_public,published,organizer_id"
+          )
+          .eq("id", activityId)
+          .single();
+
+        if (cancelled) return;
+
+        if (fetchErr) {
+          setError(fetchErr.message || "Failed to load activity.");
+          setActivity(null);
+          return;
+        }
+
+        const a = (data as ActivityRow) ?? null;
+        if (!a) {
+          setError("Activity not found.");
+          return;
+        }
+
+        // owner check
+        if (!a.created_by || a.created_by !== uid) {
+          router.replace(`/activities/${activityId}`);
+          return;
+        }
+
+        setActivity(a);
+
+        // hydrate form
+        setTitle(a.title ?? "");
+        setSport(a.sport ?? a.activity_type ?? "");
+
+        // ✅ initialize dates[] with existing start_date as first row
+        const first = isoToDatetimeLocal(a.start_date ?? null);
+        setDates([first || ""]);
+
+        setAddressText(a.address_text ?? "");
+        setCity(a.city ?? "");
+        setStateUS(a.state ?? "");
+
+        setCapacity(a.capacity == null ? "" : String(a.capacity));
+        setWaitlist(a.waitlist_capacity == null ? "" : String(a.waitlist_capacity));
+        setPriceUsd(centsToUsdText(a.price_cents ?? null));
+
+        setWhatsapp(a.organizer_whatsapp ?? "");
+        setDescription(a.description ?? "");
+      } catch (e: unknown) {
+        setError(errorMessage(e));
+      } finally {
+        if (!cancelled) {
+          setCheckingAuth(false);
+          setLoading(false);
+        }
+      }
+    };
+
+    if (activityId) run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router, activityId]);
+
+  async function handleSave() {
+    if (!activityId) return;
+
+    setBusy(true);
+    setError(null);
+    setInfo(null);
+
+    try {
+      if (!userId) {
+        router.replace("/login");
+        return;
+      }
+      if (!activity || activity.created_by !== userId) {
+        throw new Error("You do not have permission to edit this activity.");
+      }
+
+      const t = title.trim();
+      const sp = sport.trim();
+      const ad = addressText.trim();
+      const ci = city.trim();
+      const st = stateUS.trim();
+      const wa = whatsapp.trim();
+      const desc = description.trim();
+
+      if (t.length < 3) throw new Error("Title * is required.");
+      if (sp.length < 2) throw new Error("Sport * is required.");
+
+      // ✅ same rules as /new
+      const cleanDates = dates.map((d) => (d ?? "").trim()).filter(Boolean);
+      if (cleanDates.length === 0) throw new Error("Add at least 1 Date & Time *.");
+      const uniqueDates = Array.from(new Set(cleanDates));
+      if (uniqueDates.length !== cleanDates.length)
+        throw new Error("You added duplicate dates. Remove duplicates.");
+
+      const isoDates = uniqueDates.map((dt) => {
+        const iso = datetimeLocalToIso(dt);
+        if (!iso) throw new Error("One of the dates is invalid.");
+        return iso;
+      });
+
+      const firstIso = isoDates[0];
+
+      if (ad.length < 5) throw new Error("Address * is required.");
+      if (ci.length < 2) throw new Error("City * is required.");
+      if (st.length < 2) throw new Error("State * is required.");
+
+      // capacity optional => null = unlimited
+      let capN: number | null = null;
+      if (capacity.trim()) {
+        const n = Number(capacity);
+        if (!Number.isFinite(n) || n <= 0)
+          throw new Error("Capacity must be empty (unlimited) or a number > 0.");
+        capN = n;
+      }
+
+      let waitN: number | null = 0;
+      if (waitlist.trim()) {
+        const wn = Number(waitlist);
+        if (!Number.isFinite(wn) || wn < 0)
+          throw new Error("Waitlist must be empty or a number >= 0.");
+        waitN = wn;
+      }
+
+      if (!priceUsd.trim()) throw new Error("Price (USD) * is required.");
+      const cents = toCents(priceUsd);
+      if (cents == null) throw new Error("Invalid Price (USD).");
+
+      // description required
+      if (desc.length < 10)
+        throw new Error("Description * is required (please add a bit more detail).");
+
+      // whatsapp optional
+      const whatsappValue = wa.length ? wa : null;
+
+      // image optional (replace)
+      let newImagePath: string | null = activity.image_path ?? null;
+      const oldImagePath = activity.image_path ?? null;
+
+      if (imageFile) {
+        if (!imageFile.type.startsWith("image/"))
+          throw new Error("Invalid file. Please upload an image.");
+
+        const ext = imageFile.name.split(".").pop() || "jpg";
+        const fileName = `${crypto.randomUUID()}.${ext}`;
+
+        const { error: upErr } = await supabaseBrowser.storage
+          .from("event-images")
+          .upload(fileName, imageFile, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: imageFile.type,
+          });
+        if (upErr) throw new Error(upErr.message || "Image upload failed.");
+
+        newImagePath = fileName;
+      }
+
+      // Keep flags consistent (so list shows it)
+      const isPublic =
+        typeof activity.is_public === "boolean" ? activity.is_public : true;
+      const published =
+        typeof activity.published === "boolean" ? activity.published : true;
+
+      // 1) Update the current activity with the FIRST date
+      const updatePayload = {
+        title: t,
+        sport: sp,
+        activity_type: sp,
+
+        description: desc,
+        start_date: firstIso,
+
+        address_text: ad,
+        location_text: ad,
+
+        city: ci,
+        state: st,
+
+        capacity: capN,
+        waitlist_capacity: waitN,
+        price_cents: cents,
+
+        organizer_whatsapp: whatsappValue,
+
+        image_path: newImagePath,
+
+        is_public: isPublic,
+        published: published,
+      };
+
+      const { error: updErr } = await supabaseBrowser
+        .from("app_activities")
+        .update(updatePayload)
+        .eq("id", activityId);
+
+      if (updErr) throw new Error(updErr.message);
+
+      // 2) For extra dates, CREATE new activities (same as /new behavior)
+      const extraIsoDates = isoDates.slice(1);
+      if (extraIsoDates.length > 0) {
+        const rows = extraIsoDates.map((iso) => ({
+          created_by: userId,
+          organizer_id: userId,
+
+          title: t,
+          sport: sp,
+          activity_type: sp,
+
+          description: desc,
+
+          start_date: iso,
+
+          address_text: ad,
+          location_text: ad,
+
+          city: ci,
+          state: st,
+
+          capacity: capN,
+          waitlist_capacity: waitN,
+          price_cents: cents,
+
+          organizer_whatsapp: whatsappValue,
+
+          image_path: newImagePath,
+
+          is_public: isPublic,
+          published: published,
+        }));
+
+        const { error: insErr } = await supabaseBrowser.from("app_activities").insert(rows);
+        if (insErr) throw new Error(insErr.message);
+      }
+
+      // if image changed: delete old
+      if (imageFile && oldImagePath && oldImagePath !== newImagePath) {
+        await supabaseBrowser.storage.from("event-images").remove([oldImagePath]);
+      }
+
+      setInfo(
+        extraIsoDates.length
+          ? `Saved. Also created ${extraIsoDates.length} additional date(s).`
+          : "Saved."
+      );
+      router.push(`/activities/${activityId}`);
+    } catch (e: unknown) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (checkingAuth) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#020617",
+          color: "#e5e7eb",
+          padding: 16,
+          paddingBottom: 24,
+        }}
+      >
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#020617",
+        color: "#e5e7eb",
+        padding: 16,
+        paddingBottom: 24,
+      }}
+    >
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <header
+          style={{
+            marginBottom: 20,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <BackButton onClick={handleBack} />
+
+            <div style={{ minWidth: 0 }}>
+              <p
+                style={{
+                  fontSize: 11,
+                  letterSpacing: "0.16em",
+                  textTransform: "uppercase",
+                  color: "#64748b",
+                  margin: 0,
+                }}
+              >
+                Activities
+              </p>
+
+              <h1 style={{ fontSize: 24, fontWeight: 700, margin: "6px 0 0 0" }}>
+                Edit activity
+              </h1>
+
+              <p style={{ fontSize: 13, color: "#9ca3af", margin: "6px 0 0 0" }}>
+                Fields marked with{" "}
+                <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span> are required.
+              </p>
+            </div>
           </div>
         </header>
 
-        {error ? <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>{error}</p> : null}
-        {info ? <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#86efac" }}>{info}</p> : null}
+        {error ? (
+          <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>
+            {error}
+          </p>
+        ) : null}
+        {info ? (
+          <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#86efac" }}>
+            {info}
+          </p>
+        ) : null}
 
-        {/* IMAGEM */}
-        <section style={cardStyle}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Imagem</h2>
-
-          <div
-            style={{
-              width: "100%",
-              height: 220,
-              borderRadius: 14,
-              border: "1px solid rgba(148,163,184,0.25)",
-              overflow: "hidden",
-              background: "rgba(0,0,0,0.25)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {newPreviewUrl || currentImageUrl ? (
-              <img
-                src={newPreviewUrl || currentImageUrl || ""}
-                alt="activity image"
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              />
-            ) : (
-              <span style={{ fontSize: 12, color: "#9ca3af" }}>No image</span>
-            )}
-          </div>
-
+        <section
+          style={{
+            borderRadius: 18,
+            border: "1px solid rgba(148,163,184,0.35)",
+            background:
+              "radial-gradient(circle at top left, #020617, #020617 50%, #000000 100%)",
+            padding: "14px 14px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+          }}
+        >
           <label style={labelStyle}>
-            Trocar imagem
+            Title <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
             <input
               style={inputStyle}
-              type="file"
-              accept="image/*"
-              onChange={(e) => setNewFile(e.target.files?.[0] ?? null)}
-              disabled={loading || uploadBusy}
+              placeholder="e.g., Run club"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              disabled={loading || busy}
             />
           </label>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
+          <label style={labelStyle}>
+            Sport <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
+            <input
+              style={inputStyle}
+              placeholder="e.g., Running, Cycling, Functional..."
+              value={sport}
+              onChange={(e) => setSport(e.target.value)}
+              disabled={loading || busy}
+            />
+          </label>
+
+          {/* Date & Time (same as /new) BUT with visible button */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <p style={{ ...labelStyle, marginBottom: 0 }}>
+              Date &amp; Time <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>{" "}
+              <span style={{ color: "#9ca3af", fontWeight: 400 }}>
+                (add multiple dates if this is recurring)
+              </span>
+            </p>
+
+            {dates.map((d, idx) => (
+              <div
+                key={idx}
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                {/* Visible "picker button" */}
+                <button
+                  type="button"
+                  onClick={() => openNativePicker(idx)}
+                  disabled={loading || busy}
+                  style={{
+                    ...pickButtonStyle,
+                    flex: "1 1 260px",
+                    justifyContent: "space-between",
+                  }}
+                  aria-label="Pick date and time"
+                >
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 16, lineHeight: 1 }}>📅</span>
+                    <span style={{ fontSize: 13, fontWeight: 900 }}>
+                      {formatDatePreview(d)}
+                    </span>
+                  </span>
+                  <span style={{ fontSize: 12, color: "#93c5fd", fontWeight: 900 }}>
+                    Pick
+                  </span>
+                </button>
+
+                {/* Hidden native input (we open it via showPicker) */}
+                <input
+                  ref={(el) => {
+                    dateInputRefs.current[idx] = el;
+                  }}
+                  style={{
+                    position: "absolute",
+                    opacity: 0,
+                    width: 1,
+                    height: 1,
+                    pointerEvents: "none",
+                  }}
+                  type="datetime-local"
+                  value={d}
+                  onChange={(e) => updateDateAt(idx, e.target.value)}
+                  tabIndex={-1}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => removeDate(idx)}
+                  disabled={dates.length <= 1 || loading || busy}
+                  style={{
+                    fontSize: 12,
+                    padding: "10px 12px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(148,163,184,0.35)",
+                    background: "rgba(2,6,23,0.65)",
+                    color: "#e5e7eb",
+                    fontWeight: 800,
+                    cursor:
+                      dates.length <= 1 || loading || busy ? "not-allowed" : "pointer",
+                    opacity: dates.length <= 1 || loading || busy ? 0.6 : 1,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+
+            <div>
+              <button
+                type="button"
+                onClick={addDate}
+                disabled={loading || busy}
+                style={{
+                  fontSize: 12,
+                  padding: "10px 12px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(56,189,248,0.55)",
+                  background:
+                    "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
+                  color: "#e0f2fe",
+                  fontWeight: 900,
+                  cursor: loading || busy ? "not-allowed" : "pointer",
+                  opacity: loading || busy ? 0.75 : 1,
+                }}
+              >
+                + Add another date
+              </button>
+            </div>
+
+            <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
+              Save will update this activity with the first date and <b>create new activities</b>{" "}
+              for additional dates.
+            </p>
+          </div>
+
+          <label style={labelStyle}>
+            Address <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
+            <input
+              style={inputStyle}
+              placeholder="e.g., 3516 President Barack Obama Pkwy"
+              value={addressText}
+              onChange={(e) => setAddressText(e.target.value)}
+              disabled={loading || busy}
+            />
+          </label>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <label style={{ ...labelStyle, flex: "1 1 220px", minWidth: 220 }}>
+              City <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
+              <input
+                style={inputStyle}
+                placeholder="e.g., Orlando"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                disabled={loading || busy}
+              />
+            </label>
+
+            <label style={{ ...labelStyle, flex: "1 1 140px", minWidth: 140 }}>
+              State <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
+              <input
+                style={inputStyle}
+                placeholder="e.g., FL"
+                value={stateUS}
+                onChange={(e) => setStateUS(e.target.value)}
+                disabled={loading || busy}
+              />
+            </label>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <label style={{ ...labelStyle, flex: "1 1 180px", minWidth: 180 }}>
+              Capacity (optional)
+              <input
+                style={inputStyle}
+                inputMode="numeric"
+                placeholder="Leave empty for unlimited"
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+                disabled={loading || busy}
+              />
+            </label>
+
+            <label style={{ ...labelStyle, flex: "1 1 180px", minWidth: 180 }}>
+              Waitlist (optional)
+              <input
+                style={inputStyle}
+                inputMode="numeric"
+                placeholder="e.g., 10"
+                value={waitlist}
+                onChange={(e) => setWaitlist(e.target.value)}
+                disabled={loading || busy}
+              />
+            </label>
+
+            <label style={{ ...labelStyle, flex: "1 1 180px", minWidth: 180 }}>
+              Price (USD) <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
+              <input
+                style={inputStyle}
+                inputMode="decimal"
+                placeholder="e.g., 15.00 (0 = Free)"
+                value={priceUsd}
+                onChange={(e) => setPriceUsd(e.target.value)}
+                disabled={loading || busy}
+              />
+            </label>
+          </div>
+
+          <label style={labelStyle}>
+            Organizer WhatsApp (optional)
+            <input
+              style={inputStyle}
+              placeholder="e.g., +1 407 555 1234"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              disabled={loading || busy}
+            />
+          </label>
+
+          <label style={labelStyle}>
+            Description <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>
+            <textarea
+              style={{ ...inputStyle, minHeight: 130, resize: "vertical" }}
+              placeholder={descriptionSuggestion}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              disabled={loading || busy}
+            />
+          </label>
+
+          <label style={labelStyle}>
+            Image (optional)
+            <input
+              style={inputStyle}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+              disabled={loading || busy}
+            />
+            <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "#9ca3af" }}>
+              Tip: upload a horizontal image. Leave empty to keep current image.
+            </span>
+          </label>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              gap: 10,
+              flexWrap: "wrap",
+              marginTop: 6,
+            }}
+          >
+            <p style={{ fontSize: 12, color: "#60a5fa", margin: 0 }}>
+              {activity?.capacity == null
+                ? "Capacity is unlimited (because capacity is empty)."
+                : "Capacity is limited (because capacity has a number)."}
+            </p>
+
             <button
-              onClick={handleUploadImage}
-              disabled={loading || uploadBusy || !newFile}
+              onClick={handleSave}
+              disabled={busy || loading}
               style={{
                 fontSize: 12,
                 padding: "10px 12px",
                 borderRadius: 999,
                 border: "1px solid rgba(56,189,248,0.55)",
-                background: "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
+                background:
+                  "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
                 color: "#e0f2fe",
-                fontWeight: 900,
-                cursor: loading || uploadBusy || !newFile ? "not-allowed" : "pointer",
+                cursor: busy ? "not-allowed" : "pointer",
+                fontWeight: 800,
+                opacity: busy ? 0.8 : 1,
               }}
             >
-              {uploadBusy ? "Enviando..." : "Salvar imagem"}
+              {busy ? "Saving..." : "Save"}
             </button>
           </div>
         </section>
-
-        {/* FORM */}
-        <section style={{ ...cardStyle, marginTop: 12 }}>
-          {loading ? (
-            <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Carregando...</p>
-          ) : (
-            <>
-              <label style={labelStyle}>
-                Title *
-                <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} />
-              </label>
-
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <label style={{ ...labelStyle, flex: "1 1 220px" }}>
-                  Sport *
-                  <input style={inputStyle} value={sport} onChange={(e) => setSport(e.target.value)} />
-                </label>
-
-                <label style={{ ...labelStyle, flex: "1 1 220px" }}>
-                  Activity type (opcional)
-                  <input style={inputStyle} placeholder="Se vazio, vira igual ao Sport" value={activityType} onChange={(e) => setActivityType(e.target.value)} />
-                </label>
-              </div>
-
-              <label style={labelStyle}>
-                Date & Time *
-                <input style={inputStyle} type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              </label>
-
-              <label style={labelStyle}>
-                Address (texto completo) *
-                <input style={inputStyle} value={addressText} onChange={(e) => setAddressText(e.target.value)} />
-              </label>
-
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <label style={{ ...labelStyle, flex: "1 1 220px" }}>
-                  City *
-                  <input style={inputStyle} value={city} onChange={(e) => setCity(e.target.value)} />
-                </label>
-
-                <label style={{ ...labelStyle, flex: "1 1 140px" }}>
-                  State *
-                  <input style={inputStyle} value={stateUS} onChange={(e) => setStateUS(e.target.value)} />
-                </label>
-              </div>
-
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <label style={{ ...labelStyle, flex: "1 1 180px" }}>
-                  Capacity *
-                  <input style={inputStyle} inputMode="numeric" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
-                </label>
-
-                <label style={{ ...labelStyle, flex: "1 1 180px" }}>
-                  Waitlist (opcional)
-                  <input style={inputStyle} inputMode="numeric" value={waitlist} onChange={(e) => setWaitlist(e.target.value)} />
-                </label>
-
-                <label style={{ ...labelStyle, flex: "1 1 180px" }}>
-                  Price (USD) *
-                  <input style={inputStyle} inputMode="decimal" placeholder="Ex: 15.00 (0 = Free)" value={priceUsd} onChange={(e) => setPriceUsd(e.target.value)} />
-                </label>
-              </div>
-
-              <label style={labelStyle}>
-                WhatsApp do organizador (opcional)
-                <input style={inputStyle} placeholder="+14075551234" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
-              </label>
-
-              <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 4 }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#e5e7eb" }}>
-                  <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
-                  Published
-                </label>
-
-                <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#e5e7eb" }}>
-                  <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
-                  Public (aparece para todo mundo)
-                </label>
-              </div>
-
-              <label style={labelStyle}>
-                Description (opcional)
-                <textarea style={{ ...inputStyle, minHeight: 110, resize: "vertical" }} value={description} onChange={(e) => setDescription(e.target.value)} />
-              </label>
-
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                <button
-                  onClick={handleDelete}
-                  disabled={busy}
-                  style={{
-                    fontSize: 12,
-                    padding: "10px 12px",
-                    borderRadius: 999,
-                    border: "1px solid rgba(248,113,113,0.55)",
-                    background: "rgba(127,29,29,0.35)",
-                    color: "#fecaca",
-                    fontWeight: 900,
-                    cursor: busy ? "not-allowed" : "pointer",
-                  }}
-                >
-                  Apagar
-                </button>
-
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                  <button
-                    onClick={() => router.push("/activities")}
-                    style={{
-                      fontSize: 12,
-                      padding: "10px 12px",
-                      borderRadius: 999,
-                      border: "1px solid rgba(148,163,184,0.35)",
-                      background: "rgba(2,6,23,0.65)",
-                      color: "#e5e7eb",
-                      fontWeight: 800,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Cancelar
-                  </button>
-
-                  <button
-                    onClick={handleSave}
-                    disabled={busy}
-                    style={{
-                      fontSize: 12,
-                      padding: "10px 12px",
-                      borderRadius: 999,
-                      border: "1px solid rgba(56,189,248,0.55)",
-                      background: "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
-                      color: "#e0f2fe",
-                      fontWeight: 900,
-                      cursor: busy ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {busy ? "Salvando..." : "Salvar alterações"}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </section>
       </div>
-
-      <BottomNavbar />
     </main>
   );
 }

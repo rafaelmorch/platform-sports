@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
-// Cliente Supabase para o navegador usando as envs públicas
+// Supabase client for the browser using public env vars
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -37,13 +37,13 @@ export default function NewFeedPostPage() {
         } = await supabase.auth.getUser();
 
         if (userError) {
-          console.error("Erro ao buscar usuário:", userError);
-          setErrorMsg("Erro ao carregar usuário.");
+          console.error("Error fetching user:", userError);
+          setErrorMsg("Error loading user.");
           return;
         }
 
         if (!user) {
-          setErrorMsg("Você precisa estar logado para postar.");
+          setErrorMsg("You must be logged in to post.");
           return;
         }
 
@@ -53,18 +53,18 @@ export default function NewFeedPostPage() {
           .eq("id", user.id)
           .maybeSingle<Profile>();
 
-        if (profileError) console.error("Erro ao buscar perfil:", profileError);
+        if (profileError) console.error("Error fetching profile:", profileError);
 
         const nameFromProfile = profile?.full_name || null;
         const meta: any = user.user_metadata || {};
         const nameFromMeta = meta.full_name || meta.name || null;
 
-        const finalName = nameFromProfile || nameFromMeta || user.email || "Atleta";
+        const finalName = nameFromProfile || nameFromMeta || user.email || "Athlete";
 
         setAuthorName(finalName);
       } catch (err) {
-        console.error("Erro inesperado ao carregar perfil:", err);
-        setErrorMsg("Erro inesperado ao carregar perfil.");
+        console.error("Unexpected error loading profile:", err);
+        setErrorMsg("Unexpected error loading profile.");
       } finally {
         setLoadingAuthor(false);
       }
@@ -91,8 +91,8 @@ export default function NewFeedPostPage() {
     const { error: uploadError } = await supabase.storage.from("feed-images").upload(filePath, imageFile);
 
     if (uploadError) {
-      console.error("Erro ao fazer upload da imagem:", uploadError);
-      throw new Error("Não foi possível enviar a imagem.");
+      console.error("Error uploading image:", uploadError);
+      throw new Error("Could not upload the image.");
     }
 
     const { data: publicData } = supabase.storage.from("feed-images").getPublicUrl(filePath);
@@ -105,12 +105,12 @@ export default function NewFeedPostPage() {
     setErrorMsg(null);
 
     if (!authorName) {
-      setErrorMsg("Não foi possível carregar o nome do perfil.");
+      setErrorMsg("Could not load the profile name.");
       return;
     }
 
     if (!content.trim() && !imageFile) {
-      setErrorMsg("Escreva algo ou selecione uma imagem para postar.");
+      setErrorMsg("Write something or select an image to post.");
       return;
     }
 
@@ -123,7 +123,7 @@ export default function NewFeedPostPage() {
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        setErrorMsg("Você precisa estar logado para postar.");
+        setErrorMsg("You must be logged in to post.");
         setLoading(false);
         return;
       }
@@ -138,8 +138,8 @@ export default function NewFeedPostPage() {
       });
 
       if (insertError) {
-        console.error("Erro ao salvar post:", insertError);
-        setErrorMsg("Erro ao salvar a postagem.");
+        console.error("Error saving post:", insertError);
+        setErrorMsg("Error saving the post.");
         setLoading(false);
         return;
       }
@@ -147,8 +147,8 @@ export default function NewFeedPostPage() {
       setLoading(false);
       router.push("/feed");
     } catch (err: any) {
-      console.error("Erro inesperado ao salvar post:", err);
-      setErrorMsg(err.message || "Erro inesperado ao salvar a postagem.");
+      console.error("Unexpected error saving post:", err);
+      setErrorMsg(err.message || "Unexpected error saving the post.");
       setLoading(false);
     }
   };
@@ -163,7 +163,7 @@ export default function NewFeedPostPage() {
         paddingBottom: "24px",
       }}
     >
-      {/* Top bar com Back (padrão) */}
+      {/* Top bar with Back (standard) */}
       <div
         style={{
           maxWidth: 600,
@@ -174,7 +174,7 @@ export default function NewFeedPostPage() {
           marginBottom: 12,
         }}
       >
-        {/* ✅ PADRÃO: contorno + "Back" */}
+        {/* ✅ STANDARD: outline + "Back" */}
         <button
           type="button"
           onClick={() => router.back()}
@@ -203,18 +203,18 @@ export default function NewFeedPostPage() {
         </button>
 
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Nova postagem</h1>
+          <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>New post</h1>
           <p style={{ fontSize: 12, color: "#9ca3af", margin: 0, marginTop: 2 }}>
-            Compartilhe um treino, uma conquista ou um recado com o seu grupo.
+            Share a workout, an achievement, or a message with your group.
           </p>
         </div>
       </div>
 
       <div style={{ maxWidth: 600, margin: "0 auto" }}>
         <div style={{ marginBottom: 12, fontSize: 13, color: "#9ca3af" }}>
-          Publicando como{" "}
+          Posting as{" "}
           <span style={{ color: "#e5e7eb", fontWeight: 600 }}>
-            {loadingAuthor ? "carregando..." : authorName ?? "—"}
+            {loadingAuthor ? "loading..." : authorName ?? "—"}
           </span>
         </div>
 
@@ -222,7 +222,7 @@ export default function NewFeedPostPage() {
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Escreva sua postagem..."
+            placeholder="Write your post..."
             rows={4}
             style={{
               width: "100%",
@@ -238,7 +238,7 @@ export default function NewFeedPostPage() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label htmlFor="image" style={{ fontSize: 12, color: "#d1d5db" }}>
-              Imagem (opcional)
+              Image (optional)
             </label>
             <input
               id="image"
@@ -260,7 +260,7 @@ export default function NewFeedPostPage() {
               >
                 <img
                   src={imagePreview}
-                  alt="Pré-visualização"
+                  alt="Preview"
                   style={{
                     width: "100%",
                     height: "100%",
@@ -271,7 +271,7 @@ export default function NewFeedPostPage() {
               </div>
             )}
 
-            <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>Formatos suportados: JPG, PNG, etc.</p>
+            <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>Supported formats: JPG, PNG, etc.</p>
           </div>
 
           {errorMsg && <p style={{ fontSize: 12, color: "#fca5a5", margin: 0 }}>{errorMsg}</p>}
@@ -292,7 +292,7 @@ export default function NewFeedPostPage() {
               opacity: loading || loadingAuthor ? 0.6 : 1,
             }}
           >
-            {loading ? "Publicando..." : "Publicar"}
+            {loading ? "Posting..." : "Post"}
           </button>
         </form>
       </div>

@@ -9,25 +9,21 @@ const rowdies = Rowdies({
   weight: ["300", "400", "700"],
 });
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const hideBottomNav =
-    pathname === "/" ||
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/signup") ||
-    pathname.startsWith("/register") ||
-    pathname.startsWith("/contact");
+  // ✅ Somente as páginas principais do app têm BottomNavbar
+  const showBottomNav =
+    pathname === "/feed" ||
+    pathname === "/events" ||
+    pathname === "/activities" ||
+    pathname === "/profile";
 
   return (
     <html lang="en">
       <body className={rowdies.className}>
         {children}
-        {!hideBottomNav && <BottomNavbar />}
+        {showBottomNav && <BottomNavbar />}
       </body>
     </html>
   );
