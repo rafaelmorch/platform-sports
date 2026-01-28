@@ -288,22 +288,6 @@ export default function EventDetailPage() {
           padding: 16,
         }}
       >
-        <style jsx global>{`
-          html,
-          body {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: #000 !important;
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-          }
-          #__next {
-            background: #000 !important;
-            min-height: 100%;
-          }
-        `}</style>
-
         <p style={{ margin: 0, fontSize: 13, color: "#9ca3af" }}>Loading…</p>
       </main>
     );
@@ -312,6 +296,14 @@ export default function EventDetailPage() {
   if (!event) {
     return (
       <main style={{ minHeight: "100vh", background: "#000", color: "#e5e7eb", padding: 16 }}>
+        <div style={{ maxWidth: 980, margin: "0 auto" }}>
+          <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>{error || "Event not found."}</p>
+          <Link href="/events" style={{ fontSize: 12, color: "#93c5fd", textDecoration: "underline" }}>
+            Back
+          </Link>
+        </div>
+
+        {/* ✅ 1x global only (no nested styled-jsx) */}
         <style jsx global>{`
           html,
           body {
@@ -322,18 +314,7 @@ export default function EventDetailPage() {
             height: 100%;
             overflow-x: hidden;
           }
-          #__next {
-            background: #000 !important;
-            min-height: 100%;
-          }
         `}</style>
-
-        <div style={{ maxWidth: 980, margin: "0 auto" }}>
-          <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>{error || "Event not found."}</p>
-          <Link href="/events" style={{ fontSize: 12, color: "#93c5fd", textDecoration: "underline" }}>
-            Back
-          </Link>
-        </div>
       </main>
     );
   }
@@ -352,23 +333,6 @@ export default function EventDetailPage() {
         overflowX: "hidden",
       }}
     >
-      {/* ✅ mata o contorno branco do WebView (html/body) */}
-      <style jsx global>{`
-        html,
-        body {
-          margin: 0 !important;
-          padding: 0 !important;
-          background: #000 !important;
-          width: 100%;
-          height: 100%;
-          overflow-x: hidden;
-        }
-        #__next {
-          background: #000 !important;
-          min-height: 100%;
-        }
-      `}</style>
-
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
         {/* Header */}
         <header style={{ marginBottom: 12 }}>
@@ -376,20 +340,10 @@ export default function EventDetailPage() {
             <BackArrow href="/events" label="Back" />
 
             <div style={{ minWidth: 0 }}>
-              <p
-                style={{
-                  fontSize: 11,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  color: "#94a3b8",
-                  margin: 0,
-                }}
-              >
+              <p style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "#94a3b8", margin: 0 }}>
                 Events
               </p>
-              <h1 style={{ fontSize: 22, fontWeight: 900, margin: "6px 0 0 0", wordBreak: "break-word" }}>
-                {titleText}
-              </h1>
+              <h1 style={{ fontSize: 22, fontWeight: 900, margin: "6px 0 0 0", wordBreak: "break-word" }}>{titleText}</h1>
               <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#9ca3af" }}>
                 {whenText} • {fieldValue(event.location_name)}
               </p>
@@ -402,8 +356,8 @@ export default function EventDetailPage() {
                 src="/ps.png"
                 alt="Platform Sports"
                 style={{
-                  height: 80, // ✅ 2x (era 40)
-                  maxWidth: 240, // ✅ acompanha 2x
+                  height: 80,
+                  maxWidth: 240,
                   width: "auto",
                   objectFit: "contain",
                   display: "block",
@@ -504,9 +458,7 @@ export default function EventDetailPage() {
           {event.description ? (
             <div style={{ marginTop: 2 }}>
               <p style={{ margin: 0, fontSize: 12, color: "#60a5fa", fontWeight: 800 }}>Description</p>
-              <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#e5e7eb", whiteSpace: "pre-wrap" }}>
-                {event.description}
-              </p>
+              <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#e5e7eb", whiteSpace: "pre-wrap" }}>{event.description}</p>
             </div>
           ) : null}
 
@@ -616,6 +568,7 @@ export default function EventDetailPage() {
             )}
           </div>
 
+          {/* ✅ ONLY ONE styled-jsx block here (no nesting errors) */}
           <style jsx>{`
             .pairRow {
               display: grid;
@@ -641,6 +594,18 @@ export default function EventDetailPage() {
                 transform: scale(1);
                 box-shadow: 0 10px 26px rgba(239, 68, 68, 0.22);
               }
+            }
+          `}</style>
+
+          <style jsx global>{`
+            html,
+            body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #000 !important;
+              width: 100%;
+              height: 100%;
+              overflow-x: hidden;
             }
           `}</style>
         </section>
