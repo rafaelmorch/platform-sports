@@ -38,9 +38,16 @@ function formatDateTime(dt: string | null): string {
 }
 
 function buildAddress(a: ActivityRow): string {
-  const parts = [];
-  if (a.address_text) parts.push(a.address_text);
-  if (a.city && a.state) parts.push(`${a.city}, ${a.state}`);
+  const parts: string[] = [];
+  const addr = (a.address_text ?? "").trim();
+  const city = (a.city ?? "").trim();
+  const state = (a.state ?? "").trim();
+
+  if (addr) parts.push(addr);
+  if (city && state) parts.push(`${city}, ${state}`);
+  else if (city) parts.push(city);
+  else if (state) parts.push(state);
+
   return parts.join(" • ") || "Location TBD";
 }
 
@@ -63,9 +70,7 @@ export default function ActivitiesPage() {
 
       const { data } = await supabase
         .from("app_activities")
-        .select(
-          "id,title,sport,description,start_date,address_text,city,state,capacity,image_path,image_url,published"
-        )
+        .select("id,title,sport,description,start_date,address_text,city,state,capacity,image_path,image_url,published")
         .eq("published", true)
         .gte("start_date", nowIso)
         .order("start_date", { ascending: true });
@@ -82,15 +87,22 @@ export default function ActivitiesPage() {
     };
   }, [supabase]);
 
+  // Tamanhos responsivos SEM media query (evita styled-jsx)
+  const thumbW = "clamp(96px, 24vw, 132px)";
+  const thumbH = "clamp(72px, 18vw, 92px)";
+
+  // Altura do navbar (pra não ficar por cima do conteúdo)
+  const navSafe = 88;
+
   return (
     <main
       style={{
         minHeight: "100vh",
         width: "100%",
-        backgroundColor: "#020617",
+        backgroundColor: "#000000", // preto real
         color: "#e5e7eb",
         padding: 16,
-        paddingBottom: 96,
+        paddingBottom: navSafe + 16,
         boxSizing: "border-box",
         overflowX: "hidden",
       }}
@@ -109,9 +121,7 @@ export default function ActivitiesPage() {
             Activities
           </p>
 
-          <h1 style={{ fontSize: 24, fontWeight: 800, margin: "6px 0" }}>
-            Activities
-          </h1>
+          <h1 style={{ fontSize: 24, fontWeight: 800, margin: "6px 0" }}>Activities</h1>
 
           <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
             Training sessions and community activities.
@@ -121,20 +131,22 @@ export default function ActivitiesPage() {
         {loading ? (
           <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</p>
         ) : activities.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#9ca3af" }}>
-            No upcoming activities.
-          </p>
+          <p style={{ fontSize: 13, color: "#9ca3af" }}>No upcoming activities.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {activities.map((a) => {
-              const img =
-                getPublicImageUrl(a.image_path) || a.image_url || null;
+              const img = getPublicImageUrl(a.image_path) || a.image_url || null;
 
               return (
                 <Link
                   key={a.id}
                   href={`/activities/${a.id}`}
-                  style={{ textDecoration: "none", color: "inherit" }}
+                  style={{
+                    display: "block",
+                    maxWidth: "100%",
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
                 >
                   <article
                     style={{
@@ -142,28 +154,31 @@ export default function ActivitiesPage() {
                       gap: 12,
                       padding: 14,
                       borderRadius: 16,
-                      border: "1px solid rgba(148,163,184,0.25)",
-                      background:
-                        "linear-gradient(145deg,#020617,#000000)",
+                      border: "1px solid rgba(148,163,184,0.22)",
+                      background: "linear-gradient(145deg,#020617,#000000)",
                       boxSizing: "border-box",
                       overflow: "hidden",
+                      maxWidth: "100%",
+                      alignItems: "stretch",
                     }}
                   >
                     <div
                       style={{
-                        width: 120,
-                        minWidth: 120,
-                        height: 80,
+                        width: thumbW,
+                        minWidth: thumbW,
+                        height: thumbH,
                         borderRadius: 12,
                         overflow: "hidden",
                         background: "#000",
-                        border: "1px solid rgba(148,163,184,0.25)",
+                        border: "1px solid rgba(148,163,184,0.20)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
+                        flexShrink: 0,
                       }}
                     >
                       {img ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={img}
                           alt={a.title ?? "activity"}
@@ -174,9 +189,7 @@ export default function ActivitiesPage() {
                           }}
                         />
                       ) : (
-                        <span style={{ fontSize: 11, color: "#9ca3af" }}>
-                          No image
-                        </span>
+                        <span style={{ fontSize: 11, color: "#9ca3af" }}>No image</span>
                       )}
                     </div>
 
@@ -204,7 +217,7 @@ export default function ActivitiesPage() {
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {a.sport} • {formatDateTime(a.start_date)}
+                        {(a.sport ?? "—")} • {formatDateTime(a.start_date)}
                       </p>
 
                       <p
@@ -230,6 +243,7 @@ export default function ActivitiesPage() {
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
                             overflow: "hidden",
+                            wordBreak: "break-word",
                           }}
                         >
                           {a.description}
@@ -244,7 +258,21 @@ export default function ActivitiesPage() {
         )}
       </div>
 
-      <BottomNavbar />
+      {/* Navbar FIXO sem mexer no componente */}
+      <div
+        style={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 9999,
+          background: "#000000",
+          borderTop: "1px solid rgba(148,163,184,0.18)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
+        <BottomNavbar />
+      </div>
     </main>
   );
 }
