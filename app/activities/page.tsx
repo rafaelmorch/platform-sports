@@ -217,6 +217,7 @@ export default function ActivitiesPage() {
               return (
                 <Link key={a.id} href={`/activities/${a.id}`} style={{ textDecoration: "none", color: "inherit" }}>
                   <article
+                    className="activityCard"
                     style={{
                       cursor: "pointer",
                       borderRadius: 18,
@@ -226,9 +227,9 @@ export default function ActivitiesPage() {
                       display: "flex",
                       gap: 12,
                       alignItems: "stretch",
-                      width: "100%", // ✅ nunca passa do container
+                      width: "100%",
                       boxSizing: "border-box",
-                      overflow: "hidden", // ✅ impede overflow interno
+                      overflow: "hidden",
                     }}
                   >
                     <div
@@ -374,15 +375,6 @@ export default function ActivitiesPage() {
                         </p>
                       ) : null}
                     </div>
-
-                    {/* ✅ sem alterar layout: só ajusta no mobile pra não estourar */}
-                    <style jsx>{`
-                      @media (max-width: 520px) {
-                        article {
-                          flex-direction: column;
-                        }
-                      }
-                    `}</style>
                   </article>
                 </Link>
               );
@@ -403,6 +395,20 @@ export default function ActivitiesPage() {
       >
         <BottomNavbar />
       </div>
+
+      {/* ✅ styled-jsx único (fora do map) */}
+      <style jsx>{`
+        @media (max-width: 520px) {
+          .activityCard {
+            flex-direction: column;
+          }
+          .activityCard > div:first-child {
+            width: 100% !important;
+            min-width: 100% !important;
+            height: 170px !important;
+          }
+        }
+      `}</style>
     </main>
   );
 }
