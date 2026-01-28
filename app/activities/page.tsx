@@ -87,178 +87,181 @@ export default function ActivitiesPage() {
     };
   }, [supabase]);
 
-  // Tamanhos responsivos SEM media query (evita styled-jsx)
+  // Responsivo sem CSS extra (evita styled-jsx dentro de map)
   const thumbW = "clamp(96px, 24vw, 132px)";
   const thumbH = "clamp(72px, 18vw, 92px)";
 
-  // Altura do navbar (pra não ficar por cima do conteúdo)
+  // Espaço pro navbar fixo
   const navSafe = 88;
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        width: "100%",
-        backgroundColor: "#000000", // preto real
-        color: "#e5e7eb",
-        padding: 16,
-        paddingBottom: navSafe + 16,
-        boxSizing: "border-box",
-        overflowX: "hidden",
-      }}
-    >
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <header style={{ marginBottom: 16 }}>
-          <p
-            style={{
-              fontSize: 11,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color: "#64748b",
-              margin: 0,
-            }}
-          >
-            Activities
-          </p>
+    <>
+      <main
+        style={{
+          minHeight: "100vh",
+          width: "100%",
+          backgroundColor: "#000000",
+          color: "#e5e7eb",
+          padding: 16,
+          paddingBottom: navSafe + 16,
+          boxSizing: "border-box",
+          overflowX: "hidden",
+        }}
+      >
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <header style={{ marginBottom: 16 }}>
+            <p
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "#64748b",
+                margin: 0,
+              }}
+            >
+              Activities
+            </p>
 
-          <h1 style={{ fontSize: 24, fontWeight: 800, margin: "6px 0" }}>Activities</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: "6px 0" }}>Activities</h1>
 
-          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
-            Training sessions and community activities.
-          </p>
-        </header>
+            <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
+              Training sessions and community activities.
+            </p>
+          </header>
 
-        {loading ? (
-          <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</p>
-        ) : activities.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#9ca3af" }}>No upcoming activities.</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {activities.map((a) => {
-              const img = getPublicImageUrl(a.image_path) || a.image_url || null;
+          {loading ? (
+            <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</p>
+          ) : activities.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#9ca3af" }}>No upcoming activities.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {activities.map((a) => {
+                const img = getPublicImageUrl(a.image_path) || a.image_url || null;
 
-              return (
-                <Link
-                  key={a.id}
-                  href={`/activities/${a.id}`}
-                  style={{
-                    display: "block",
-                    maxWidth: "100%",
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}
-                >
-                  <article
+                return (
+                  <Link
+                    key={a.id}
+                    href={`/activities/${a.id}`}
                     style={{
-                      display: "flex",
-                      gap: 12,
-                      padding: 14,
-                      borderRadius: 16,
-                      border: "1px solid rgba(148,163,184,0.22)",
-                      background: "linear-gradient(145deg,#020617,#000000)",
-                      boxSizing: "border-box",
-                      overflow: "hidden",
+                      display: "block",
                       maxWidth: "100%",
-                      alignItems: "stretch",
+                      textDecoration: "none",
+                      color: "inherit",
                     }}
                   >
-                    <div
+                    <article
                       style={{
-                        width: thumbW,
-                        minWidth: thumbW,
-                        height: thumbH,
-                        borderRadius: 12,
-                        overflow: "hidden",
-                        background: "#000",
-                        border: "1px solid rgba(148,163,184,0.20)",
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
+                        gap: 12,
+                        padding: 14,
+                        borderRadius: 16,
+                        border: "1px solid rgba(148,163,184,0.22)",
+                        background: "linear-gradient(145deg,#020617,#000000)",
+                        boxSizing: "border-box",
+                        overflow: "hidden",
+                        maxWidth: "100%",
+                        alignItems: "stretch",
                       }}
                     >
-                      {img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={img}
-                          alt={a.title ?? "activity"}
+                      <div
+                        style={{
+                          width: thumbW,
+                          minWidth: thumbW,
+                          height: thumbH,
+                          borderRadius: 12,
+                          overflow: "hidden",
+                          background: "#000",
+                          border: "1px solid rgba(148,163,184,0.20)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {img ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={img}
+                            alt={a.title ?? "activity"}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: 11, color: "#9ca3af" }}>No image</span>
+                        )}
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h2
                           style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <span style={{ fontSize: 11, color: "#9ca3af" }}>No image</span>
-                      )}
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h2
-                        style={{
-                          margin: 0,
-                          fontSize: 15,
-                          fontWeight: 800,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {a.title ?? "Activity"}
-                      </h2>
-
-                      <p
-                        style={{
-                          margin: "6px 0 0 0",
-                          fontSize: 12,
-                          color: "#9ca3af",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {(a.sport ?? "—")} • {formatDateTime(a.start_date)}
-                      </p>
-
-                      <p
-                        style={{
-                          margin: "6px 0 0 0",
-                          fontSize: 12,
-                          color: "#9ca3af",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {buildAddress(a)}
-                      </p>
-
-                      {a.description ? (
-                        <p
-                          style={{
-                            margin: "8px 0 0 0",
-                            fontSize: 12,
-                            color: "#cbd5e1",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
+                            margin: 0,
+                            fontSize: 15,
+                            fontWeight: 800,
+                            whiteSpace: "nowrap",
                             overflow: "hidden",
-                            wordBreak: "break-word",
+                            textOverflow: "ellipsis",
                           }}
                         >
-                          {a.description}
-                        </p>
-                      ) : null}
-                    </div>
-                  </article>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                          {a.title ?? "Activity"}
+                        </h2>
 
-      {/* Navbar FIXO sem mexer no componente */}
+                        <p
+                          style={{
+                            margin: "6px 0 0 0",
+                            fontSize: 12,
+                            color: "#9ca3af",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {(a.sport ?? "—")} • {formatDateTime(a.start_date)}
+                        </p>
+
+                        <p
+                          style={{
+                            margin: "6px 0 0 0",
+                            fontSize: 12,
+                            color: "#9ca3af",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {buildAddress(a)}
+                        </p>
+
+                        {a.description ? (
+                          <p
+                            style={{
+                              margin: "8px 0 0 0",
+                              fontSize: 12,
+                              color: "#cbd5e1",
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {a.description}
+                          </p>
+                        ) : null}
+                      </div>
+                    </article>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Navbar FIXO (sem depender do componente ser fixed) */}
       <div
         style={{
           position: "fixed",
@@ -273,6 +276,21 @@ export default function ActivitiesPage() {
       >
         <BottomNavbar />
       </div>
-    </main>
+
+      {/* ✅ Mata o contorno branco (sem mexer no globals.css) */}
+      <style jsx global>{`
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #000 !important;
+          overflow-x: hidden !important;
+        }
+        /* evita “borda” por highlight/outline em alguns browsers */
+        * {
+          outline-color: transparent;
+        }
+      `}</style>
+    </>
   );
 }
