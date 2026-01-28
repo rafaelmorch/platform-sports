@@ -322,11 +322,26 @@ export default function NewActivityPage() {
           color: "#e5e7eb",
           padding: "16px",
           paddingBottom: "24px",
+          boxSizing: "border-box",
         }}
       >
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Loading...</p>
         </div>
+
+        {/* ✅ remove contorno branco (sem mexer em globals.css) */}
+        <style jsx global>{`
+          html,
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #020617 !important;
+            overflow-x: hidden !important;
+          }
+          * {
+            outline: none !important;
+          }
+        `}</style>
       </main>
     );
   }
@@ -348,6 +363,7 @@ export default function NewActivityPage() {
         color: "#e5e7eb",
         padding: "16px",
         paddingBottom: "24px",
+        boxSizing: "border-box",
       }}
     >
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
@@ -368,19 +384,7 @@ export default function NewActivityPage() {
               </p>
             </div>
 
-            {/* ✅ LOGO no lado direito */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/Platform_Logo.png"
-              alt="Platform Sports"
-              style={{
-                height: 56,
-                width: "auto",
-                objectFit: "contain",
-                display: "block",
-                marginLeft: "auto",
-              }}
-            />
+            {/* ✅ (logo removido) */}
           </div>
         </header>
 
@@ -620,6 +624,20 @@ export default function NewActivityPage() {
           </div>
         </section>
       </div>
+
+      {/* ✅ remove contorno branco (sem mexer em globals.css) */}
+      <style jsx global>{`
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #020617 !important;
+          overflow-x: hidden !important;
+        }
+        * {
+          outline: none !important;
+        }
+      `}</style>
     </main>
   );
 }
