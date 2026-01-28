@@ -482,6 +482,20 @@ export default function ActivitiesManagePage() {
           </div>
         )}
       </div>
+
+      {/* ✅ ONLY: remove o contorno branco (sem mexer no resto) */}
+      <style jsx global>{`
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #020617 !important;
+          overflow-x: hidden !important;
+        }
+        * {
+          outline: none !important;
+        }
+      `}</style>
     </main>
   );
 }
