@@ -11,7 +11,7 @@ type ActivityRow = {
   id: string;
   title: string | null;
   sport: string | null;
-  description: string |null;
+  description: string | null;
 
   start_date: string | null;
 
@@ -92,7 +92,9 @@ export default function ActivitiesPage() {
 
         const { data, error } = await supabase
           .from("app_activities")
-          .select("id,title,sport,description,start_date,address_text,city,state,capacity,waitlist_capacity,price_cents,image_path,image_url,published")
+          .select(
+            "id,title,sport,description,start_date,address_text,city,state,capacity,waitlist_capacity,price_cents,image_path,image_url,published"
+          )
           .eq("published", true)
           .gte("start_date", nowIso)
           .order("start_date", { ascending: true });
@@ -105,7 +107,7 @@ export default function ActivitiesPage() {
         } else {
           setActivities((data as ActivityRow[]) ?? []);
         }
-      } catch (err: any) {
+      } catch {
         if (cancelled) return;
         setError("Failed to load activities.");
         setActivities([]);
@@ -124,12 +126,29 @@ export default function ActivitiesPage() {
     <main
       style={{
         minHeight: "100vh",
+        width: "100vw",
+        margin: 0,
         backgroundColor: "#020617",
         color: "#e5e7eb",
         padding: 16,
-        paddingBottom: 80,
+        paddingBottom: 96, // ✅ espaço pro navbar fixo
+        boxSizing: "border-box",
+        overflowX: "hidden", // ✅ evita “vazar” pro lado e criar borda/scroll
       }}
     >
+      {/* ✅ remove contorno branco / scroll lateral */}
+      <style jsx global>{`
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100%;
+          height: 100%;
+          background: #020617 !important;
+          overflow-x: hidden;
+        }
+      `}</style>
+
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <header style={{ marginBottom: 16 }}>
           <p
@@ -173,13 +192,13 @@ export default function ActivitiesPage() {
             </Link>
           </div>
 
-          <p style={{ fontSize: 13, color: "#9ca3af", margin: "8px 0 0 0" }}>Create your activity and share it with the community.</p>
+          <p style={{ fontSize: 13, color: "#9ca3af", margin: "8px 0 0 0" }}>
+            Create your activity and share it with the community.
+          </p>
         </header>
 
         {error ? (
-          <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>
-            {error}
-          </p>
+          <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>{error}</p>
         ) : null}
 
         {loading ? (
@@ -207,6 +226,9 @@ export default function ActivitiesPage() {
                       display: "flex",
                       gap: 12,
                       alignItems: "stretch",
+                      width: "100%", // ✅ nunca passa do container
+                      boxSizing: "border-box",
+                      overflow: "hidden", // ✅ impede overflow interno
                     }}
                   >
                     <div
@@ -221,6 +243,7 @@ export default function ActivitiesPage() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
+                        flexShrink: 0,
                       }}
                     >
                       {img ? (
@@ -246,9 +269,10 @@ export default function ActivitiesPage() {
                           justifyContent: "space-between",
                           gap: 10,
                           alignItems: "flex-start",
+                          flexWrap: "wrap", // ✅ no mobile não estoura
                         }}
                       >
-                        <div style={{ minWidth: 0 }}>
+                        <div style={{ minWidth: 0, flex: "1 1 auto" }}>
                           <h2
                             style={{
                               margin: 0,
@@ -295,6 +319,9 @@ export default function ActivitiesPage() {
                             gap: 8,
                             flexWrap: "wrap",
                             justifyContent: "flex-end",
+                            alignItems: "flex-start",
+                            flex: "0 0 auto",
+                            maxWidth: "100%",
                           }}
                         >
                           <span
@@ -306,6 +333,7 @@ export default function ActivitiesPage() {
                               background: "linear-gradient(135deg, rgba(8,47,73,0.9), rgba(12,74,110,0.9))",
                               color: "#e0f2fe",
                               whiteSpace: "nowrap",
+                              maxWidth: "100%",
                             }}
                           >
                             {priceLabel}
@@ -321,6 +349,7 @@ export default function ActivitiesPage() {
                                 background: "rgba(2,6,23,0.65)",
                                 color: "#e5e7eb",
                                 whiteSpace: "nowrap",
+                                maxWidth: "100%",
                               }}
                             >
                               Cap: {a.capacity}
@@ -345,6 +374,15 @@ export default function ActivitiesPage() {
                         </p>
                       ) : null}
                     </div>
+
+                    {/* ✅ sem alterar layout: só ajusta no mobile pra não estourar */}
+                    <style jsx>{`
+                      @media (max-width: 520px) {
+                        article {
+                          flex-direction: column;
+                        }
+                      }
+                    `}</style>
                   </article>
                 </Link>
               );
@@ -353,7 +391,18 @@ export default function ActivitiesPage() {
         )}
       </div>
 
-      <BottomNavbar />
+      {/* ✅ navbar fixo de verdade */}
+      <div
+        style={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 9999,
+        }}
+      >
+        <BottomNavbar />
+      </div>
     </main>
   );
 }
