@@ -1,3 +1,4 @@
+// app/activities/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -122,9 +123,38 @@ export default function ActivitiesPage() {
               Activities
             </p>
 
-            <h1 style={{ fontSize: 24, fontWeight: 800, margin: "6px 0" }}>Activities</h1>
+            {/* ✅ Título + botão New activity (sem mudar layout dos cards) */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                flexWrap: "wrap",
+                marginTop: 6,
+              }}
+            >
+              <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>Activities</h1>
 
-            <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
+              <Link
+                href="/activities/new"
+                style={{
+                  marginLeft: "auto",
+                  fontSize: 12,
+                  padding: "8px 12px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(56,189,248,0.55)",
+                  background: "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
+                  color: "#e0f2fe",
+                  textDecoration: "none",
+                  fontWeight: 900,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                + New activity
+              </Link>
+            </div>
+
+            <p style={{ fontSize: 13, color: "#9ca3af", margin: "6px 0 0 0" }}>
               Training sessions and community activities.
             </p>
           </header>
