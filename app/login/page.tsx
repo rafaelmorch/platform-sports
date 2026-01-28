@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import BottomNavbar from "@/components/BottomNavbar";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -67,199 +68,216 @@ export default function LoginPage() {
   }
 
   return (
-    <main
-      style={{
-        height: "100vh",
-        width: "100vw",
-        overflow: "hidden", // ✅ não deixa “arrastar” a tela
-        overscrollBehavior: "none", // ✅ corta bounce no mobile
-        background:
-          "radial-gradient(circle at top, #020617 0%, #020617 45%, #000 100%)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px 16px",
-        color: "#e5e7eb",
-        boxSizing: "border-box",
-      }}
-    >
+    <>
       {/* trava scroll do body/html no mobile */}
       <style jsx global>{`
         html,
         body {
           height: 100%;
-          margin: 0;
           overflow: hidden;
           overscroll-behavior: none;
           background: #000;
         }
       `}</style>
 
-      <img
-        src="/logo-sports-platform.png"
-        alt="Sports Platform"
+      <main
         style={{
-          width: "min(320px, 80vw)", // ✅ evita estourar no celular
-          height: "auto",
-          marginBottom: 18,
-        }}
-      />
-
-      <div
-        style={{
-          width: "min(420px, 92vw)", // ✅ NUNCA passa da tela
-          borderRadius: 22,
-          padding: "18px",
+          height: "100vh",
+          width: "100vw",
+          overflow: "hidden",
+          overscrollBehavior: "none",
           background:
-            "linear-gradient(145deg, rgba(15,23,42,0.95), rgba(15,23,42,0.9))",
-          boxShadow: "0 30px 80px rgba(0,0,0,0.85)",
+            "radial-gradient(circle at top, #020617 0%, #020617 45%, #000 100%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px 16px",
+          // ✅ deixa espaço pro BottomNavbar não cobrir conteúdo
+          paddingBottom: 96,
+          color: "#e5e7eb",
           boxSizing: "border-box",
         }}
       >
-        <h1
+        <img
+          src="/logo-sports-platform.png"
+          alt="Sports Platform"
           style={{
-            textAlign: "center",
-            fontSize: 20,
-            fontWeight: 700,
-            marginBottom: 12,
+            width: 520,
+            maxWidth: "92vw",
+            marginBottom: 24,
+          }}
+        />
+
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            borderRadius: 28,
+            padding: 26,
+            background:
+              "linear-gradient(145deg, rgba(15,23,42,0.95), rgba(15,23,42,0.9))",
+            boxShadow: "0 30px 80px rgba(0,0,0,0.85)",
           }}
         >
-          Sign in
-        </h1>
-
-        {errorMsg && (
-          <div
+          <h1
             style={{
-              background: "rgba(220,38,38,0.25)",
-              padding: 10,
-              borderRadius: 10,
-              fontSize: 13,
-              marginBottom: 12,
-            }}
-          >
-            {errorMsg}
-          </div>
-        )}
-
-        <form
-          onSubmit={handleLogin}
-          style={{ display: "flex", flexDirection: "column", gap: 10 }}
-        >
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{
-              width: "100%",
-              height: 44,
-              borderRadius: 999,
-              padding: "0 16px",
-              border: "none",
-              background: "#e5eefc",
-              color: "#020617",
-              boxSizing: "border-box",
-            }}
-          />
-
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{
-              width: "100%",
-              height: 44,
-              borderRadius: 999,
-              padding: "0 16px",
-              border: "none",
-              background: "#e5eefc",
-              color: "#020617",
-              boxSizing: "border-box",
-            }}
-          />
-
-          <button
-            type="button"
-            onClick={() => setShowPassword((p) => !p)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#9ca3af",
-              fontSize: 12,
-              textAlign: "right",
-              cursor: "pointer",
-              padding: 0,
-            }}
-          >
-            {showPassword ? "Hide password" : "Show password"}
-          </button>
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              height: 44,
-              borderRadius: 999,
-              border: "none",
-              background: "#22c55e",
-              color: "#ffffff",
+              textAlign: "center",
+              fontSize: 22,
               fontWeight: 700,
-              marginTop: 6,
-              cursor: "pointer",
-              opacity: loading ? 0.8 : 1,
+              marginBottom: 16,
             }}
           >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
+            Sign in
+          </h1>
 
-          <button
-            type="button"
-            onClick={handleGoogle}
-            disabled={loadingGoogle}
-            style={{
-              width: "100%",
-              height: 44,
-              borderRadius: 999,
-              border: "none",
-              background: "#dc2626",
-              color: "#ffffff",
-              fontWeight: 700,
-              marginTop: 6,
-              cursor: "pointer",
-              opacity: loadingGoogle ? 0.8 : 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-            }}
+          {errorMsg && (
+            <div
+              style={{
+                background: "rgba(220,38,38,0.25)",
+                padding: 10,
+                borderRadius: 10,
+                fontSize: 13,
+                marginBottom: 12,
+              }}
+            >
+              {errorMsg}
+            </div>
+          )}
+
+          <form
+            onSubmit={handleLogin}
+            style={{ display: "flex", flexDirection: "column", gap: 10 }}
           >
-            {loadingGoogle ? (
-              "Connecting..."
-            ) : (
-              <>
-                <img
-                  src="/google_logo.png"
-                  alt="Google"
-                  style={{ width: 26, height: 26 }}
-                />
-                Continue with Google
-              </>
-            )}
-          </button>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                height: 44,
+                width: "100%",
+                borderRadius: 999,
+                padding: "0 16px",
+                border: "none",
+                background: "#e5eefc",
+                color: "#020617",
+                boxSizing: "border-box",
+              }}
+            />
 
-          <div style={{ marginTop: 12, textAlign: "center", fontSize: 13 }}>
-            <span style={{ color: "#9ca3af" }}>Don&apos;t have an account? </span>
-            <Link href="/signup" style={{ color: "#ffffff", fontWeight: 700 }}>
-              Create account
-            </Link>
-          </div>
-        </form>
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                height: 44,
+                width: "100%",
+                borderRadius: 999,
+                padding: "0 16px",
+                border: "none",
+                background: "#e5eefc",
+                color: "#020617",
+                boxSizing: "border-box",
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword((p) => !p)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#9ca3af",
+                fontSize: 12,
+                textAlign: "right",
+                cursor: "pointer",
+              }}
+            >
+              {showPassword ? "Hide password" : "Show password"}
+            </button>
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                height: 44,
+                width: "100%",
+                borderRadius: 999,
+                border: "none",
+                background: "#22c55e",
+                color: "#ffffff",
+                fontWeight: 700,
+                marginTop: 6,
+                cursor: "pointer",
+                opacity: loading ? 0.8 : 1,
+              }}
+            >
+              {loading ? "Signing in..." : "Sign in"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={loadingGoogle}
+              style={{
+                height: 44,
+                width: "100%",
+                borderRadius: 999,
+                border: "none",
+                background: "#dc2626",
+                color: "#ffffff",
+                fontWeight: 700,
+                marginTop: 6,
+                cursor: "pointer",
+                opacity: loadingGoogle ? 0.8 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+              }}
+            >
+              {loadingGoogle ? (
+                "Connecting..."
+              ) : (
+                <>
+                  <img
+                    src="/google_logo.png"
+                    alt="Google"
+                    style={{ width: 26, height: 26 }}
+                  />
+                  Continue with Google
+                </>
+              )}
+            </button>
+
+            <div style={{ marginTop: 12, textAlign: "center", fontSize: 13 }}>
+              <span style={{ color: "#9ca3af" }}>
+                Don&apos;t have an account?{" "}
+              </span>
+              <Link href="/signup" style={{ color: "#ffffff", fontWeight: 700 }}>
+                Create account
+              </Link>
+            </div>
+          </form>
+        </div>
+      </main>
+
+      {/* ✅ Bottom navbar fixo */}
+      <div
+        style={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 50,
+        }}
+      >
+        <BottomNavbar />
       </div>
-    </main>
+    </>
   );
 }
