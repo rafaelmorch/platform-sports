@@ -260,7 +260,6 @@ export default function EventDetailPage() {
     padding: 10,
   };
 
-  // ✅ VOLTOU PRO AZUL PADRÃO
   const boxLabel: React.CSSProperties = {
     margin: 0,
     fontSize: 12,
@@ -289,6 +288,22 @@ export default function EventDetailPage() {
           padding: 16,
         }}
       >
+        <style jsx global>{`
+          html,
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #000 !important;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+          }
+          #__next {
+            background: #000 !important;
+            min-height: 100%;
+          }
+        `}</style>
+
         <p style={{ margin: 0, fontSize: 13, color: "#9ca3af" }}>Loading…</p>
       </main>
     );
@@ -297,6 +312,22 @@ export default function EventDetailPage() {
   if (!event) {
     return (
       <main style={{ minHeight: "100vh", background: "#000", color: "#e5e7eb", padding: 16 }}>
+        <style jsx global>{`
+          html,
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #000 !important;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+          }
+          #__next {
+            background: #000 !important;
+            min-height: 100%;
+          }
+        `}</style>
+
         <div style={{ maxWidth: 980, margin: "0 auto" }}>
           <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>{error || "Event not found."}</p>
           <Link href="/events" style={{ fontSize: 12, color: "#93c5fd", textDecoration: "underline" }}>
@@ -308,7 +339,36 @@ export default function EventDetailPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "#000000", color: "#e5e7eb", padding: 16, paddingBottom: 40 }}>
+    <main
+      style={{
+        minHeight: "100vh",
+        width: "100vw",
+        margin: 0,
+        background: "#000000",
+        color: "#e5e7eb",
+        padding: 16,
+        paddingBottom: 40,
+        boxSizing: "border-box",
+        overflowX: "hidden",
+      }}
+    >
+      {/* ✅ mata o contorno branco do WebView (html/body) */}
+      <style jsx global>{`
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #000 !important;
+          width: 100%;
+          height: 100%;
+          overflow-x: hidden;
+        }
+        #__next {
+          background: #000 !important;
+          min-height: 100%;
+        }
+      `}</style>
+
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
         {/* Header */}
         <header style={{ marginBottom: 12 }}>
@@ -335,15 +395,15 @@ export default function EventDetailPage() {
               </p>
             </div>
 
-            {/* ✅ troca logo do header por /ps.png e faz caber no celular */}
+            {/* ✅ logo 2x */}
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/ps.png"
                 alt="Platform Sports"
                 style={{
-                  height: 40, // ✅ menor no celular
-                  maxWidth: 120, // ✅ impede estourar
+                  height: 80, // ✅ 2x (era 40)
+                  maxWidth: 240, // ✅ acompanha 2x
                   width: "auto",
                   objectFit: "contain",
                   display: "block",
@@ -357,7 +417,7 @@ export default function EventDetailPage() {
         {error ? <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>{error}</p> : null}
 
         <section style={sectionCard}>
-          {/* Hero image (blurred fill like Activities) */}
+          {/* Hero image */}
           <div
             style={{
               width: "100%",
@@ -557,13 +617,11 @@ export default function EventDetailPage() {
           </div>
 
           <style jsx>{`
-            /* ✅ 2 colunas também no celular (sem mexer no design dos boxes) */
             .pairRow {
               display: grid;
               grid-template-columns: 1fr 1fr;
               gap: 10px;
             }
-            /* ✅ se a tela for MUITO estreita, aí sim cai pra 1 coluna */
             @media (max-width: 360px) {
               .pairRow {
                 grid-template-columns: 1fr;
