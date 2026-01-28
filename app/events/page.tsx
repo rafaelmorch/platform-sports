@@ -22,8 +22,8 @@ type EventRow = {
   waitlist_capacity: number | null;
   price_cents: number | null;
 
-  image_path: string | null; // Storage
-  image_url: string | null; // legacy
+  image_path: string | null;
+  image_url: string | null;
   published: boolean;
 };
 
@@ -68,7 +68,9 @@ function buildAddress(e: EventRow): string {
 
 function getPublicImageUrl(path: string | null): string | null {
   if (!path) return null;
-  const { data } = supabaseBrowser.storage.from("event-images").getPublicUrl(path);
+  const { data } = supabaseBrowser.storage
+    .from("event-images")
+    .getPublicUrl(path);
   return data?.publicUrl ?? null;
 }
 
@@ -90,7 +92,9 @@ export default function EventsPage() {
 
         const { data, error } = await supabase
           .from("app_events")
-          .select("id,title,sport,description,date,address_text,city,state,capacity,waitlist_capacity,price_cents,image_path,image_url,published")
+          .select(
+            "id,title,sport,description,date,address_text,city,state,capacity,waitlist_capacity,price_cents,image_path,image_url,published"
+          )
           .eq("published", true)
           .gte("date", nowIso)
           .order("date", { ascending: true });
@@ -128,238 +132,202 @@ export default function EventsPage() {
   }, [supabase]);
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#020617",
-        color: "#e5e7eb",
-        padding: 16,
-        paddingBottom: 80,
-      }}
-    >
-      <div style={{ maxWidth: 980, margin: "0 auto" }}>
-        {/* Header */}
-        <header
-          style={{
-            marginBottom: 16,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
-          <div>
-            <p
-              style={{
-                fontSize: 11,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                color: "#64748b",
-                margin: 0,
-              }}
-            >
-              Events
-            </p>
+    <>
+      {/* TRAVA DEFINITIVA DE SCROLL LATERAL NO MOBILE */}
+      <style jsx global>{`
+        html,
+        body {
+          width: 100%;
+          max-width: 100%;
+          overflow-x: hidden;
+          overscroll-behavior-x: none;
+        }
+        *,
+        *::before,
+        *::after {
+          box-sizing: border-box;
+        }
+      `}</style>
 
-            <h1 style={{ fontSize: 24, fontWeight: 900, margin: "8px 0 0 0" }}>Events</h1>
-
-            <p style={{ fontSize: 13, color: "#9ca3af", margin: "8px 0 0 0" }}>Official platform events.</p>
-          </div>
-
-          {/* Platform Sports Logo (2x) */}
-          <img
-            src="/Platform_Logo.png"
-            alt="Platform Sports"
+      <main
+        style={{
+          minHeight: "100vh",
+          width: "100%",
+          overflowX: "hidden",
+          overscrollBehaviorX: "none",
+          backgroundColor: "#020617",
+          color: "#e5e7eb",
+          padding: 16,
+          paddingBottom: 80,
+        }}
+      >
+        <div style={{ maxWidth: 980, margin: "0 auto" }}>
+          {/* Header */}
+          <header
             style={{
-              height: 56, // 👈 2x the default
-              width: "auto",
-              display: "block",
-              opacity: 0.95,
-            }}
-          />
-        </header>
-
-        {warning && (
-          <div
-            style={{
-              marginBottom: 12,
-              borderRadius: 14,
-              padding: "10px 12px",
-              background: "rgba(245,158,11,0.14)",
-              border: "1px solid rgba(245,158,11,0.22)",
-              color: "#fde68a",
-              fontSize: 12,
-              lineHeight: 1.35,
+              marginBottom: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
             }}
           >
-            {warning}
-          </div>
-        )}
-
-        {/* Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: 14,
-          }}
-        >
-          {loading ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
+            <div>
+              <p
                 style={{
-                  borderRadius: 22,
-                  overflow: "hidden",
-                  border: "1px solid rgba(17,24,39,0.9)",
-                  background: "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.90))",
-                  boxShadow: "0 24px 70px rgba(0,0,0,0.70)",
+                  fontSize: 11,
+                  letterSpacing: "0.16em",
+                  textTransform: "uppercase",
+                  color: "#64748b",
+                  margin: 0,
                 }}
               >
-                <div style={{ height: 160, background: "rgba(148,163,184,0.10)" }} />
-                <div style={{ padding: 14 }} />
-              </div>
-            ))
-          ) : (
-            events.map((e) => {
-              const img = getPublicImageUrl(e.image_path) || e.image_url || null;
+                Events
+              </p>
 
-              const priceLabel = formatPrice(e.price_cents);
-              const when = formatDateTime(e.date);
-              const where = buildAddress(e);
+              <h1
+                style={{
+                  fontSize: 24,
+                  fontWeight: 900,
+                  margin: "8px 0 0 0",
+                }}
+              >
+                Events
+              </h1>
 
-              return (
-                <Link key={e.id} href={`/events/${e.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "#9ca3af",
+                  margin: "8px 0 0 0",
+                }}
+              >
+                Official platform events.
+              </p>
+            </div>
+
+            <img
+              src="/Platform_Logo.png"
+              alt="Platform Sports"
+              style={{
+                height: 56,
+                width: "auto",
+                display: "block",
+                opacity: 0.95,
+              }}
+            />
+          </header>
+
+          {warning && (
+            <div
+              style={{
+                marginBottom: 12,
+                borderRadius: 14,
+                padding: "10px 12px",
+                background: "rgba(245,158,11,0.14)",
+                border: "1px solid rgba(245,158,11,0.22)",
+                color: "#fde68a",
+                fontSize: 12,
+                lineHeight: 1.35,
+              }}
+            >
+              {warning}
+            </div>
+          )}
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 14,
+            }}
+          >
+            {loading
+              ? Array.from({ length: 6 }).map((_, i) => (
                   <div
+                    key={i}
                     style={{
                       borderRadius: 22,
                       overflow: "hidden",
                       border: "1px solid rgba(17,24,39,0.9)",
-                      background: "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.90))",
-                      boxShadow: "0 24px 70px rgba(0,0,0,0.75)",
+                      background:
+                        "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.90))",
+                      boxShadow: "0 24px 70px rgba(0,0,0,0.70)",
                     }}
                   >
-                    {/* Banner */}
                     <div
                       style={{
-                        position: "relative",
-                        width: "100%",
-                        aspectRatio: "16 / 9",
+                        height: 160,
                         background: "rgba(148,163,184,0.10)",
                       }}
-                    >
-                      {img && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={img}
-                          alt={e.title ?? "Event"}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      )}
-
-                      <div
-                        style={{
-                          position: "absolute",
-                          left: 12,
-                          top: 12,
-                          padding: "6px 10px",
-                          borderRadius: 999,
-                          fontSize: 11,
-                          fontWeight: 900,
-                          background: "rgba(2,6,23,0.72)",
-                          border: "1px solid rgba(148,163,184,0.18)",
-                        }}
-                      >
-                        {e.sport?.toUpperCase() ?? "EVENT"}
-                      </div>
-
-                      <div
-                        style={{
-                          position: "absolute",
-                          right: 12,
-                          top: 12,
-                          padding: "6px 10px",
-                          borderRadius: 999,
-                          fontSize: 11,
-                          fontWeight: 900,
-                          background: "rgba(34,197,94,0.95)",
-                          color: "#020617",
-                        }}
-                      >
-                        {priceLabel}
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div style={{ padding: 14 }}>
-                      <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 8 }}>
-                        🕒 {when} &nbsp;&nbsp;•&nbsp;&nbsp; 📍 {where}
-                      </div>
-
-                      <div
-                        style={{
-                          fontSize: 16,
-                          fontWeight: 900,
-                          lineHeight: 1.15,
-                          marginBottom: 6,
-                        }}
-                      >
-                        {e.title}
-                      </div>
-
-                      {e.description && (
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: "#cbd5e1",
-                            lineHeight: 1.35,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            marginBottom: 12,
-                          }}
-                        >
-                          {e.description}
-                        </div>
-                      )}
-
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div style={{ fontSize: 12, color: "#9ca3af" }}>Tap to view details →</div>
-
-                        <div
-                          style={{
-                            borderRadius: 999,
-                            padding: "9px 12px",
-                            fontSize: 12,
-                            fontWeight: 900,
-                            background: "linear-gradient(135deg,#22c55e,#16a34a)",
-                            color: "#020617",
-                          }}
-                        >
-                          View
-                        </div>
-                      </div>
-                    </div>
+                    />
+                    <div style={{ padding: 14 }} />
                   </div>
-                </Link>
-              );
-            })
-          )}
-        </div>
-      </div>
+                ))
+              : events.map((e) => {
+                  const img =
+                    getPublicImageUrl(e.image_path) || e.image_url || null;
 
-      <BottomNavbar />
-    </main>
+                  return (
+                    <Link
+                      key={e.id}
+                      href={`/events/${e.id}`}
+                      style={{
+                        textDecoration: "none",
+                        color: "inherit",
+                      }}
+                    >
+                      <div
+                        style={{
+                          borderRadius: 22,
+                          overflow: "hidden",
+                          border: "1px solid rgba(17,24,39,0.9)",
+                          background:
+                            "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.90))",
+                          boxShadow: "0 24px 70px rgba(0,0,0,0.75)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "relative",
+                            width: "100%",
+                            aspectRatio: "16 / 9",
+                            background: "rgba(148,163,184,0.10)",
+                          }}
+                        >
+                          {img && (
+                            <img
+                              src={img}
+                              alt={e.title ?? "Event"}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                            />
+                          )}
+                        </div>
+
+                        <div style={{ padding: 14 }}>
+                          <div
+                            style={{
+                              fontSize: 16,
+                              fontWeight: 900,
+                              lineHeight: 1.15,
+                            }}
+                          >
+                            {e.title}
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+          </div>
+        </div>
+
+        <BottomNavbar />
+      </main>
+    </>
   );
 }
