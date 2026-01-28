@@ -171,7 +171,6 @@ export default function EventDetailPage() {
         setError(e.message || "Failed to load the event.");
         setEvent(null);
       } else {
-        // ✅ ONLY CHANGE: make TS happy for build
         setEvent((((data as unknown) as EventRow) ?? null));
       }
 
@@ -317,24 +316,36 @@ export default function EventDetailPage() {
             <BackArrow href="/events" label="Back" />
 
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "#94a3b8", margin: 0 }}>
+              <p
+                style={{
+                  fontSize: 11,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "#94a3b8",
+                  margin: 0,
+                }}
+              >
                 Events
               </p>
-              <h1 style={{ fontSize: 22, fontWeight: 900, margin: "6px 0 0 0", wordBreak: "break-word" }}>{titleText}</h1>
+              <h1 style={{ fontSize: 22, fontWeight: 900, margin: "6px 0 0 0", wordBreak: "break-word" }}>
+                {titleText}
+              </h1>
               <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#9ca3af" }}>
                 {whenText} • {fieldValue(event.location_name)}
               </p>
             </div>
 
-            {/* ✅ remove "Events" link and show logo */}
+            {/* ✅ troca logo do header por /ps.png e faz caber no celular */}
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/Platform_Logo.png"
+                src="/ps.png"
                 alt="Platform Sports"
                 style={{
-                  height: 56,
+                  height: 40, // ✅ menor no celular
+                  maxWidth: 120, // ✅ impede estourar
                   width: "auto",
+                  objectFit: "contain",
                   display: "block",
                   opacity: 0.95,
                 }}
@@ -432,9 +443,10 @@ export default function EventDetailPage() {
           {/* Description */}
           {event.description ? (
             <div style={{ marginTop: 2 }}>
-              {/* ✅ label volta pro azul padrão */}
               <p style={{ margin: 0, fontSize: 12, color: "#60a5fa", fontWeight: 800 }}>Description</p>
-              <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#e5e7eb", whiteSpace: "pre-wrap" }}>{event.description}</p>
+              <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#e5e7eb", whiteSpace: "pre-wrap" }}>
+                {event.description}
+              </p>
             </div>
           ) : null}
 
@@ -545,14 +557,16 @@ export default function EventDetailPage() {
           </div>
 
           <style jsx>{`
+            /* ✅ 2 colunas também no celular (sem mexer no design dos boxes) */
             .pairRow {
               display: grid;
-              grid-template-columns: 1fr;
+              grid-template-columns: 1fr 1fr;
               gap: 10px;
             }
-            @media (min-width: 640px) {
+            /* ✅ se a tela for MUITO estreita, aí sim cai pra 1 coluna */
+            @media (max-width: 360px) {
               .pairRow {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr;
               }
             }
 
