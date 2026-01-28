@@ -12,17 +12,11 @@ type ActivityRow = {
   title: string | null;
   sport: string | null;
   description: string | null;
-
   start_date: string | null;
-
   address_text: string | null;
   city: string | null;
   state: string | null;
-
   capacity: number | null;
-  waitlist_capacity: number | null;
-  price_cents: number | null;
-
   image_path: string | null;
   image_url: string | null;
   published: boolean | null;
@@ -35,7 +29,6 @@ function formatDateTime(dt: string | null): string {
       weekday: "short",
       month: "short",
       day: "2-digit",
-      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -44,30 +37,13 @@ function formatDateTime(dt: string | null): string {
   }
 }
 
-function formatPrice(priceCents: number | null): string {
-  const cents = priceCents ?? 0;
-  if (cents <= 0) return "Free";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
-
-function buildAddress(e: ActivityRow): string {
-  const a = (e.address_text ?? "").trim();
-  const city = (e.city ?? "").trim();
-  const state = (e.state ?? "").trim();
-
-  const parts: string[] = [];
-  if (a) parts.push(a);
-  if (city && state) parts.push(`${city}, ${state}`);
-  else if (city) parts.push(city);
-  else if (state) parts.push(state);
-
+function buildAddress(a: ActivityRow): string {
+  const parts = [];
+  if (a.address_text) parts.push(a.address_text);
+  if (a.city && a.state) parts.push(`${a.city}, ${a.state}`);
   return parts.join(" • ") || "Location TBD";
 }
 
-// ✅ keep consistent with /activities/new (uploads to event-images)
 function getPublicImageUrl(path: string | null): string | null {
   if (!path) return null;
   const { data } = supabaseBrowser.storage.from("event-images").getPublicUrl(path);
@@ -78,41 +54,25 @@ export default function ActivitiesPage() {
   const supabase = useMemo(() => supabaseBrowser, []);
   const [activities, setActivities] = useState<ActivityRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      setLoading(true);
-      setError(null);
+      const nowIso = new Date().toISOString();
 
-      try {
-        const nowIso = new Date().toISOString();
+      const { data } = await supabase
+        .from("app_activities")
+        .select(
+          "id,title,sport,description,start_date,address_text,city,state,capacity,image_path,image_url,published"
+        )
+        .eq("published", true)
+        .gte("start_date", nowIso)
+        .order("start_date", { ascending: true });
 
-        const { data, error } = await supabase
-          .from("app_activities")
-          .select(
-            "id,title,sport,description,start_date,address_text,city,state,capacity,waitlist_capacity,price_cents,image_path,image_url,published"
-          )
-          .eq("published", true)
-          .gte("start_date", nowIso)
-          .order("start_date", { ascending: true });
-
-        if (cancelled) return;
-
-        if (error) {
-          setError(error.message || "Failed to load activities.");
-          setActivities([]);
-        } else {
-          setActivities((data as ActivityRow[]) ?? []);
-        }
-      } catch {
-        if (cancelled) return;
-        setError("Failed to load activities.");
-        setActivities([]);
-      } finally {
-        if (!cancelled) setLoading(false);
+      if (!cancelled) {
+        setActivities((data as ActivityRow[]) ?? []);
+        setLoading(false);
       }
     }
 
@@ -126,29 +86,15 @@ export default function ActivitiesPage() {
     <main
       style={{
         minHeight: "100vh",
-        width: "100vw",
-        margin: 0,
+        width: "100%",
         backgroundColor: "#020617",
         color: "#e5e7eb",
         padding: 16,
-        paddingBottom: 96, // ✅ espaço pro navbar fixo
+        paddingBottom: 96,
         boxSizing: "border-box",
-        overflowX: "hidden", // ✅ evita “vazar” pro lado e criar borda/scroll
+        overflowX: "hidden",
       }}
     >
-      {/* ✅ remove contorno branco / scroll lateral */}
-      <style jsx global>{`
-        html,
-        body {
-          margin: 0 !important;
-          padding: 0 !important;
-          width: 100%;
-          height: 100%;
-          background: #020617 !important;
-          overflow-x: hidden;
-        }
-      `}</style>
-
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <header style={{ marginBottom: 16 }}>
           <p
@@ -163,95 +109,64 @@ export default function ActivitiesPage() {
             Activities
           </p>
 
-          <div
-            style={{
-              marginTop: 6,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 10,
-              flexWrap: "wrap",
-            }}
-          >
-            <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>Activities</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 800, margin: "6px 0" }}>
+            Activities
+          </h1>
 
-            <Link
-              href="/activities/new"
-              style={{
-                fontSize: 12,
-                padding: "10px 14px",
-                borderRadius: 999,
-                border: "1px solid rgba(56,189,248,0.55)",
-                background: "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
-                color: "#e0f2fe",
-                textDecoration: "none",
-                fontWeight: 800,
-              }}
-            >
-              Create activity
-            </Link>
-          </div>
-
-          <p style={{ fontSize: 13, color: "#9ca3af", margin: "8px 0 0 0" }}>
-            Create your activity and share it with the community.
+          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
+            Training sessions and community activities.
           </p>
         </header>
-
-        {error ? (
-          <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#fca5a5" }}>{error}</p>
-        ) : null}
 
         {loading ? (
           <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</p>
         ) : activities.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#9ca3af" }}>No upcoming published activities yet.</p>
+          <p style={{ fontSize: 13, color: "#9ca3af" }}>
+            No upcoming activities.
+          </p>
         ) : (
-          <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {activities.map((a) => {
-              const img = getPublicImageUrl(a.image_path) || (a.image_url ?? null);
-
-              const priceLabel = formatPrice(a.price_cents ?? 0);
-              const when = formatDateTime(a.start_date);
-              const where = buildAddress(a);
+              const img =
+                getPublicImageUrl(a.image_path) || a.image_url || null;
 
               return (
-                <Link key={a.id} href={`/activities/${a.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                <Link
+                  key={a.id}
+                  href={`/activities/${a.id}`}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
                   <article
-                    className="activityCard"
                     style={{
-                      cursor: "pointer",
-                      borderRadius: 18,
-                      border: "1px solid rgba(148,163,184,0.35)",
-                      background: "radial-gradient(circle at top left, #020617, #020617 50%, #000000 100%)",
-                      padding: 14,
                       display: "flex",
                       gap: 12,
-                      alignItems: "stretch",
-                      width: "100%",
+                      padding: 14,
+                      borderRadius: 16,
+                      border: "1px solid rgba(148,163,184,0.25)",
+                      background:
+                        "linear-gradient(145deg,#020617,#000000)",
                       boxSizing: "border-box",
                       overflow: "hidden",
                     }}
                   >
                     <div
                       style={{
-                        width: 160,
-                        minWidth: 160,
-                        height: 96,
-                        borderRadius: 14,
-                        border: "1px solid rgba(148,163,184,0.25)",
+                        width: 120,
+                        minWidth: 120,
+                        height: 80,
+                        borderRadius: 12,
                         overflow: "hidden",
-                        background: "rgba(0,0,0,0.25)",
+                        background: "#000",
+                        border: "1px solid rgba(148,163,184,0.25)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        flexShrink: 0,
                       }}
                     >
                       {img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={img}
-                          alt={a.title ?? "activity image"}
+                          alt={a.title ?? "activity"}
                           style={{
                             width: "100%",
                             height: "100%",
@@ -259,112 +174,58 @@ export default function ActivitiesPage() {
                           }}
                         />
                       ) : (
-                        <span style={{ fontSize: 12, color: "#9ca3af" }}>No image</span>
+                        <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                          No image
+                        </span>
                       )}
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
+                      <h2
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: 10,
-                          alignItems: "flex-start",
-                          flexWrap: "wrap", // ✅ no mobile não estoura
+                          margin: 0,
+                          fontSize: 15,
+                          fontWeight: 800,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
                       >
-                        <div style={{ minWidth: 0, flex: "1 1 auto" }}>
-                          <h2
-                            style={{
-                              margin: 0,
-                              fontSize: 16,
-                              fontWeight: 800,
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
-                            {a.title ?? "Activity"}
-                          </h2>
+                        {a.title ?? "Activity"}
+                      </h2>
 
-                          <p
-                            style={{
-                              margin: "6px 0 0 0",
-                              fontSize: 12,
-                              color: "#9ca3af",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
-                            {(a.sport ?? "")} • {when}
-                          </p>
+                      <p
+                        style={{
+                          margin: "6px 0 0 0",
+                          fontSize: 12,
+                          color: "#9ca3af",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {a.sport} • {formatDateTime(a.start_date)}
+                      </p>
 
-                          <p
-                            style={{
-                              margin: "6px 0 0 0",
-                              fontSize: 12,
-                              color: "#9ca3af",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
-                            {where}
-                          </p>
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 8,
-                            flexWrap: "wrap",
-                            justifyContent: "flex-end",
-                            alignItems: "flex-start",
-                            flex: "0 0 auto",
-                            maxWidth: "100%",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: 11,
-                              padding: "4px 10px",
-                              borderRadius: 999,
-                              border: "1px solid rgba(56,189,248,0.5)",
-                              background: "linear-gradient(135deg, rgba(8,47,73,0.9), rgba(12,74,110,0.9))",
-                              color: "#e0f2fe",
-                              whiteSpace: "nowrap",
-                              maxWidth: "100%",
-                            }}
-                          >
-                            {priceLabel}
-                          </span>
-
-                          {typeof a.capacity === "number" && a.capacity > 0 ? (
-                            <span
-                              style={{
-                                fontSize: 11,
-                                padding: "4px 10px",
-                                borderRadius: 999,
-                                border: "1px solid rgba(148,163,184,0.35)",
-                                background: "rgba(2,6,23,0.65)",
-                                color: "#e5e7eb",
-                                whiteSpace: "nowrap",
-                                maxWidth: "100%",
-                              }}
-                            >
-                              Cap: {a.capacity}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
+                      <p
+                        style={{
+                          margin: "6px 0 0 0",
+                          fontSize: 12,
+                          color: "#9ca3af",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {buildAddress(a)}
+                      </p>
 
                       {a.description ? (
                         <p
                           style={{
-                            margin: "10px 0 0 0",
+                            margin: "8px 0 0 0",
                             fontSize: 12,
-                            color: "#9ca3af",
+                            color: "#cbd5e1",
                             display: "-webkit-box",
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
@@ -383,32 +244,7 @@ export default function ActivitiesPage() {
         )}
       </div>
 
-      {/* ✅ navbar fixo de verdade */}
-      <div
-        style={{
-          position: "fixed",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 9999,
-        }}
-      >
-        <BottomNavbar />
-      </div>
-
-      {/* ✅ styled-jsx único (fora do map) */}
-      <style jsx>{`
-        @media (max-width: 520px) {
-          .activityCard {
-            flex-direction: column;
-          }
-          .activityCard > div:first-child {
-            width: 100% !important;
-            min-width: 100% !important;
-            height: 170px !important;
-          }
-        }
-      `}</style>
+      <BottomNavbar />
     </main>
   );
 }
