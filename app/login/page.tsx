@@ -69,43 +69,60 @@ export default function LoginPage() {
   return (
     <main
       style={{
-        minHeight: "100vh",
+        height: "100vh",
+        width: "100vw",
+        overflow: "hidden", // ✅ não deixa “arrastar” a tela
+        overscrollBehavior: "none", // ✅ corta bounce no mobile
         background:
           "radial-gradient(circle at top, #020617 0%, #020617 45%, #000 100%)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        paddingTop: 120,
+        justifyContent: "center",
+        padding: "24px 16px",
         color: "#e5e7eb",
+        boxSizing: "border-box",
       }}
     >
+      {/* trava scroll do body/html no mobile */}
+      <style jsx global>{`
+        html,
+        body {
+          height: 100%;
+          margin: 0;
+          overflow: hidden;
+          overscroll-behavior: none;
+          background: #000;
+        }
+      `}</style>
+
       <img
         src="/logo-sports-platform.png"
         alt="Sports Platform"
         style={{
-          width: 520,
-          maxWidth: "92vw",
-          marginBottom: 40,
+          width: "min(320px, 80vw)", // ✅ evita estourar no celular
+          height: "auto",
+          marginBottom: 18,
         }}
       />
 
       <div
         style={{
-          width: "100%",
-          maxWidth: 420,
-          borderRadius: 28,
-          padding: 26,
+          width: "min(420px, 92vw)", // ✅ NUNCA passa da tela
+          borderRadius: 22,
+          padding: "18px",
           background:
             "linear-gradient(145deg, rgba(15,23,42,0.95), rgba(15,23,42,0.9))",
           boxShadow: "0 30px 80px rgba(0,0,0,0.85)",
+          boxSizing: "border-box",
         }}
       >
         <h1
           style={{
             textAlign: "center",
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: 700,
-            marginBottom: 16,
+            marginBottom: 12,
           }}
         >
           Sign in
@@ -136,12 +153,14 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             style={{
+              width: "100%",
               height: 44,
               borderRadius: 999,
               padding: "0 16px",
               border: "none",
               background: "#e5eefc",
               color: "#020617",
+              boxSizing: "border-box",
             }}
           />
 
@@ -152,12 +171,14 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             style={{
+              width: "100%",
               height: 44,
               borderRadius: 999,
               padding: "0 16px",
               border: "none",
               background: "#e5eefc",
               color: "#020617",
+              boxSizing: "border-box",
             }}
           />
 
@@ -171,6 +192,7 @@ export default function LoginPage() {
               fontSize: 12,
               textAlign: "right",
               cursor: "pointer",
+              padding: 0,
             }}
           >
             {showPassword ? "Hide password" : "Show password"}
@@ -180,6 +202,7 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             style={{
+              width: "100%",
               height: 44,
               borderRadius: 999,
               border: "none",
@@ -199,6 +222,7 @@ export default function LoginPage() {
             onClick={handleGoogle}
             disabled={loadingGoogle}
             style={{
+              width: "100%",
               height: 44,
               borderRadius: 999,
               border: "none",
@@ -221,14 +245,14 @@ export default function LoginPage() {
                 <img
                   src="/google_logo.png"
                   alt="Google"
-                  style={{ width: 45, height: 45 }}
+                  style={{ width: 26, height: 26 }}
                 />
                 Continue with Google
               </>
             )}
           </button>
 
-          <div style={{ marginTop: 14, textAlign: "center", fontSize: 13 }}>
+          <div style={{ marginTop: 12, textAlign: "center", fontSize: 13 }}>
             <span style={{ color: "#9ca3af" }}>Don&apos;t have an account? </span>
             <Link href="/signup" style={{ color: "#ffffff", fontWeight: 700 }}>
               Create account
