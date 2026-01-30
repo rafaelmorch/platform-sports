@@ -3,6 +3,7 @@
 import { Rowdies } from "next/font/google";
 import { usePathname } from "next/navigation";
 import BottomNavbar from "@/components/BottomNavbar";
+import Header from "@/components/Header";
 
 const rowdies = Rowdies({
   subsets: ["latin"],
@@ -19,9 +20,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     pathname === "/activities" ||
     pathname === "/profile";
 
+  // ✅ Header apenas para páginas públicas do site
+  const showHeader =
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/privacy" ||
+    pathname === "/terms";
+
   return (
     <html lang="en">
       <body className={rowdies.className}>
+        {showHeader && <Header />}
         {children}
         {showBottomNav && <BottomNavbar />}
       </body>
