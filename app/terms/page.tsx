@@ -3,16 +3,17 @@ export default function TermsPage() {
     <main
       style={{
         minHeight: "100vh",
-        background: "#020617",
-        color: "#e5e7eb",
-        padding: "32px 20px",
+        background: "#f3f4f6", // cinza claro
+        color: "#000000",
+        padding: "40px 20px",
         maxWidth: 900,
         margin: "0 auto",
-        lineHeight: 1.6,
+        lineHeight: 1.7,
         fontSize: 14,
+        fontFamily: "Tahoma, Arial, sans-serif",
       }}
     >
-      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 20 }}>
+      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 20 }}>
         Terms & Conditions – Platform Sports
       </h1>
 
