@@ -41,7 +41,7 @@ export default function LoginPage() {
     return () => subscription.unsubscribe();
   }, [router]);
 
-  // ================= GOOGLE CALLBACK (ANDROID/iOS via deep link) =================
+  // ================= GOOGLE CALLBACK (ANDROID) =================
   useEffect(() => {
     if (!isNative) return;
 
@@ -49,29 +49,16 @@ export default function LoginPage() {
       try {
         if (!url) return;
 
-        // Fecha o browser do OAuth (se estiver aberto)
+        // fecha o browser OAuth (se estiver aberto)
         try {
           await Browser.close();
         } catch {}
 
-        const u = new URL(url);
-        const code = u.searchParams.get("code");
+        // troca o code por sessão
+        const { error } = await supabase.auth.exchangeCodeForSession(url);
+        if (error) throw error;
 
-        if (code) {
-          // Troca o code por sessão
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-        } else {
-          // fallback (caso venha outro formato)
-          // @ts-expect-error compat
-          const { error } = await supabase.auth.getSessionFromUrl({
-            url,
-            storeSession: true,
-          });
-          if (error) throw error;
-        }
-
-        setLoadingGoogle(false);
+        // se deu certo, o onAuthStateChange acima leva para /activities
       } catch (e: any) {
         setErrorMsg(e?.message || "Failed to complete Google login.");
         setLoadingGoogle(false);
@@ -97,10 +84,7 @@ export default function LoginPage() {
     if (error) {
       setErrorMsg("Invalid email or password.");
       setLoading(false);
-      return;
     }
-
-    // auth state listener vai redirecionar
   }
 
   // ================= GOOGLE LOGIN =================
@@ -108,33 +92,33 @@ export default function LoginPage() {
     setErrorMsg(null);
     setLoadingGoogle(true);
 
+    // ⚠️ IMPORTANTE:
+    // Seu AndroidManifest está com scheme="platformsports"
+    // então o redirectTo do app TEM que ser platformsports://auth/callback
     const redirectTo = isNative
-      ? "com.platformsports.app://auth/callback"
+      ? "platformsports://auth/callback"
       : `${window.location.origin}/auth/callback`;
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo,
-        // ✅ no app a gente controla a abertura do browser
-        // ✅ no site deixa o supabase redirecionar normal
-        skipBrowserRedirect: isNative,
+        // no app: a gente abre manualmente no Browser.open
+        skipBrowserRedirect: true,
       },
     });
 
-    if (error) {
+    if (error || !data?.url) {
       setErrorMsg("Failed to connect with Google.");
       setLoadingGoogle(false);
       return;
     }
 
-    // APP: abre o Chrome Custom Tab (Capacitor Browser)
-    if (isNative && data?.url) {
-      await Browser.open({
-        url: data.url,
-        presentationStyle: "fullscreen",
-      });
-    }
+    // abre o Chrome Custom Tab no Android
+    await Browser.open({
+      url: data.url,
+      presentationStyle: "fullscreen",
+    });
   }
 
   // ================= UI =================
@@ -162,7 +146,6 @@ export default function LoginPage() {
           padding: "24px 16px",
           paddingBottom: 96,
           color: "#e5e7eb",
-          boxSizing: "border-box",
         }}
       >
         <img
@@ -233,21 +216,6 @@ export default function LoginPage() {
                 background: "#e5eefc",
               }}
             />
-
-            <button
-              type="button"
-              onClick={() => setShowPassword((p) => !p)}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#9ca3af",
-                fontSize: 12,
-                textAlign: "right",
-                cursor: "pointer",
-              }}
-            >
-              {showPassword ? "Hide password" : "Show password"}
-            </button>
 
             <button
               type="submit"
