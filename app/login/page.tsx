@@ -40,48 +40,13 @@ export default function LoginPage() {
     setErrorMsg(null);
     setLoading(true);
 
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) {
-        setErrorMsg("Invalid email or password.");
-      }
-    } catch (e) {
-      setErrorMsg(`Error: ${String(e)}`);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // ================= GOOGLE LOGIN (DEEP LINK) =================
-  async function handleGoogle() {
-    setErrorMsg(null);
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          // ✅ isto força o retorno pro app via deep link
-          redirectTo: "platformsports://auth/callback",
-          // opcional (mas ajuda em alguns casos)
-          queryParams: {
-            prompt: "select_account",
-          },
-        },
-      });
-
-      if (error) {
-        setErrorMsg(error.message);
-        setLoading(false);
-      }
-      // Se não houve erro, o browser vai ser redirecionado para o Google.
-      // Depois do login, volta para o deep link e o app abre.
-    } catch (e) {
-      setErrorMsg(`Error: ${String(e)}`);
+    if (error) {
+      setErrorMsg("Invalid email or password.");
       setLoading(false);
     }
   }
@@ -223,23 +188,9 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign in"}
             </button>
 
-            {/* ✅ GOOGLE */}
-            <button
-              type="button"
-              onClick={handleGoogle}
-              disabled={loading}
-              style={{
-                height: 44,
-                borderRadius: 999,
-                border: "1px solid rgba(148,163,184,0.35)",
-                background: "rgba(2,6,23,0.35)",
-                color: "#e5e7eb",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              {loading ? "Please wait..." : "Continue with Google"}
-            </button>
+            {/* BOTAO GOOGLE (DESATIVADO TEMPORARIAMENTE)
+              Para voltar, mova a lógica de auth e o botão para cá.
+            */}
 
             <div style={{ marginTop: 12, textAlign: "center", fontSize: 13 }}>
               <span style={{ color: "#9ca3af" }}>
@@ -259,4 +210,3 @@ export default function LoginPage() {
     </>
   );
 }
-
