@@ -10,32 +10,27 @@ import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 
-// Use o padrão PKCE para maior segurança em apps mobile
+// ================= SUPABASE =================
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    flowType: "pkce",
-    detectSessionInUrl: false, // Deixamos o listener manual tratar a URL no app
-  }
-});
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const NATIVE_REDIRECT = "platformsports://auth/callback";
-// Certifique-se de que esta URL é a que contém o seu route.ts
 const WEB_REDIRECT = "https://platform-sports.vercel.app/auth/callback";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const isNative = useMemo(() => {
     if (typeof window === "undefined") return false;
     return Capacitor.isNativePlatform();
   }, []);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // ================= AUTH STATE =================
   useEffect(() => {
@@ -52,11 +47,9 @@ export default function LoginPage() {
     if (!isNative) return;
 
     const setupListener = async () => {
-      // Trata o caso do app abrir direto por um link (Cold Start)
       const launch = await App.getLaunchUrl();
       if (launch?.url) handleDeepLink(launch.url);
 
-      // Trata o app já aberto em background
       await App.addListener("appUrlOpen", ({ url }) => {
         handleDeepLink(url);
       });
@@ -69,7 +62,7 @@ export default function LoginPage() {
           const { error } = await supabase.auth.exchangeCodeForSession(url);
           if (error) throw error;
         } catch (e: any) {
-          setErrorMsg("Erro ao processar login: " + e.message);
+          setErrorMsg(e.message);
           setLoadingGoogle(false);
         }
       }
@@ -79,13 +72,12 @@ export default function LoginPage() {
     return () => { App.removeAllListeners(); };
   }, [isNative]);
 
-  // ================= ACTIONS =================
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      setErrorMsg("Credenciais inválidas.");
+      setErrorMsg("Invalid credentials.");
       setLoading(false);
     }
   }
@@ -93,19 +85,15 @@ export default function LoginPage() {
   async function handleGoogle() {
     setErrorMsg(null);
     setLoadingGoogle(true);
-
     const redirectTo = isNative ? NATIVE_REDIRECT : WEB_REDIRECT;
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo,
-        skipBrowserRedirect: isNative, // Só pulamos o redirect automático no App
-      },
+      options: { redirectTo, skipBrowserRedirect: isNative },
     });
 
     if (error || !data?.url) {
-      setErrorMsg("Falha ao conectar com Google.");
+      setErrorMsg("Connection failed.");
       setLoadingGoogle(false);
       return;
     }
@@ -118,9 +106,22 @@ export default function LoginPage() {
   }
 
   return (
-    // ... sua UI se mantém a mesma ...
-    <main>
-       {/* UI aqui */}
-    </main>
+    <>
+      <style jsx global>{`html, body { height: 100%; overflow: hidden; background: #000; }`}</style>
+      <main style={{ height: "100vh", width: "100vw", background: "radial-gradient(circle at top, #020617 0%, #000 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px", color: "#e5e7eb" }}>
+        <img src="/logo-sports-platform.png" alt="Logo" style={{ width: 520, maxWidth: "92vw", marginBottom: 24 }} />
+        <div style={{ width: "100%", maxWidth: 420, borderRadius: 28, padding: 26, background: "rgba(15,23,42,0.95)", boxShadow: "0 30px 80px rgba(0,0,0,0.85)" }}>
+          <h1 style={{ textAlign: "center", fontSize: 22, fontWeight: 700, marginBottom: 20 }}>Sign in</h1>
+          {errorMsg && <div style={{ background: "rgba(220,38,38,0.25)", padding: 10, borderRadius: 10, fontSize: 13, marginBottom: 12 }}>{errorMsg}</div>}
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ height: 44, borderRadius: 999, padding: "0 16px", background: "#e5eefc", color: "#000" }} />
+            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ height: 44, borderRadius: 999, padding: "0 16px", background: "#e5eefc", color: "#000" }} />
+            <button type="submit" disabled={loading} style={{ height: 44, borderRadius: 999, background: "#22c55e", color: "#fff", fontWeight: 700 }}>{loading ? "Signing in..." : "Sign in"}</button>
+            <button type="button" onClick={handleGoogle} disabled={loadingGoogle} style={{ height: 44, borderRadius: 999, background: "#dc2626", color: "#fff", fontWeight: 700 }}>Continue with Google</button>
+          </form>
+        </div>
+      </main>
+      <div style={{ position: "fixed", bottom: 0, width: "100%" }}><BottomNavbar /></div>
+    </>
   );
 }
