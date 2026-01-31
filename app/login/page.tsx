@@ -1,4 +1,3 @@
-// app/login/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,9 +15,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// ================= PAGE =================
 export default function LoginPage() {
   const router = useRouter();
-  const isNative = Capacitor.getPlatform() !== "web";
+  const isNative = Capacitor.isNativePlatform();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,11 +30,14 @@ export default function LoginPage() {
 
   // ================= AUTH STATE =================
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
         router.replace("/activities");
       }
     });
+
     return () => subscription.unsubscribe();
   }, [router]);
 
@@ -46,9 +49,20 @@ export default function LoginPage() {
       await App.addListener("appUrlOpen", async ({ url }) => {
         try {
           if (!url) return;
-          try { await Browser.close(); } catch {}
-          const { error } = await supabase.auth.exchangeCodeForSession(url);
-          if (error) throw error;
+
+          const u = new URL(url);
+          const code = u.searchParams.get("code");
+
+          // fecha o browser do OAuth
+          try {
+            await Browser.close();
+          } catch {}
+
+          if (code) {
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) throw error;
+            return;
+          }
         } catch (e: any) {
           setErrorMsg(e?.message || "Failed to complete Google login.");
           setLoadingGoogle(false);
@@ -57,154 +71,242 @@ export default function LoginPage() {
     };
 
     setupListener();
-    return () => { App.removeAllListeners(); };
+
+    return () => {
+      // Forma segura de remover listeners no Capacitor 6+ para evitar erro de tipo
+      App.removeAllListeners();
+    };
   }, [isNative]);
 
-  // ================= ACTIONS =================
+  // ================= EMAIL LOGIN =================
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
     if (error) {
       setErrorMsg("Invalid email or password.");
       setLoading(false);
     }
   }
 
+  // ================= GOOGLE LOGIN =================
   async function handleGoogle() {
     setErrorMsg(null);
     setLoadingGoogle(true);
-    const nativeRedirect = "platformsports://auth/callback";
-    const webRedirect = `${window.location.origin}/auth/callback`;
-    const redirectTo = isNative ? nativeRedirect : webRedirect;
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const redirectTo = isNative
+      ? "platformsports://auth/callback"
+      : `${window.location.origin}/auth/callback`;
+
+    const { error, data } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo, skipBrowserRedirect: isNative },
+      options: {
+        redirectTo,
+        skipBrowserRedirect: isNative,
+      },
     });
 
-    if (error || !data?.url) {
+    if (error) {
       setErrorMsg("Failed to connect with Google.");
       setLoadingGoogle(false);
       return;
     }
 
-    if (isNative) {
+    if (isNative && data?.url) {
       await Browser.open({ url: data.url, presentationStyle: "fullscreen" });
-    } else {
-      window.location.href = data.url;
     }
   }
 
+  // ================= UI =================
   return (
     <>
       <style jsx global>{`
-        html, body { height: 100%; overflow: hidden; background: #000; margin: 0; }
-        input::placeholder { color: #64748b; }
+        html,
+        body {
+          height: 100%;
+          overflow: hidden;
+          background: #000;
+        }
       `}</style>
 
-      <main style={{
-        height: "100vh",
-        width: "100vw",
-        background: "radial-gradient(circle at top, #0f172a 0%, #020617 50%, #000 100%)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 20px",
-        color: "#f8fafc"
-      }}>
-        
-        <img 
-          src="/logo-sports-platform.png" 
-          alt="Platform Sports" 
-          style={{ width: "100%", maxWidth: "450px", marginBottom: "30px", filter: "drop-shadow(0 0 15px rgba(34, 197, 94, 0.2))" }} 
+      <main
+        style={{
+          height: "100vh",
+          width: "100vw",
+          background:
+            "radial-gradient(circle at top, #020617 0%, #020617 45%, #000 100%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px 16px",
+          paddingBottom: 96,
+          color: "#e5e7eb",
+          boxSizing: "border-box",
+        }}
+      >
+        <img
+          src="/logo-sports-platform.png"
+          alt="Platform Sports"
+          style={{ width: 520, maxWidth: "92vw", marginBottom: 24 }}
         />
 
-        <div style={{
-          width: "100%",
-          maxWidth: "400px",
-          borderRadius: "24px",
-          padding: "32px",
-          background: "rgba(30, 41, 59, 0.7)",
-          backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
-        }}>
-          <h1 style={{ textAlign: "center", fontSize: "24px", fontWeight: "700", marginBottom: "24px", letterSpacing: "-0.5px" }}>
-            Bem-vindo
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            borderRadius: 28,
+            padding: 26,
+            background:
+              "linear-gradient(145deg, rgba(15,23,42,0.95), rgba(15,23,42,0.9))",
+            boxShadow: "0 30px 80px rgba(0,0,0,0.85)",
+          }}
+        >
+          <h1
+            style={{
+              textAlign: "center",
+              fontSize: 22,
+              fontWeight: 700,
+              marginBottom: 16,
+            }}
+          >
+            Sign in
           </h1>
 
           {errorMsg && (
-            <div style={{ background: "rgba(239, 68, 68, 0.2)", color: "#fca5a5", padding: "12px", borderRadius: "12px", fontSize: "14px", marginBottom: "16px", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
+            <div
+              style={{
+                background: "rgba(220,38,38,0.25)",
+                padding: 10,
+                borderRadius: 10,
+                fontSize: 13,
+                marginBottom: 12,
+              }}
+            >
               {errorMsg}
             </div>
           )}
 
-          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <form
+            onSubmit={handleLogin}
+            style={{ display: "flex", flexDirection: "column", gap: 10 }}
+          >
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{ height: "48px", borderRadius: "12px", padding: "0 16px", border: "1px solid rgba(255,255,255,0.1)", background: "#f1f5f9", color: "#0f172a", fontSize: "16px" }}
+              style={{
+                height: 44,
+                borderRadius: 999,
+                padding: "0 16px",
+                border: "none",
+                background: "#e5eefc",
+                color: "#000",
+              }}
             />
 
-            <div style={{ position: "relative" }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{ height: "48px", width: "100%", borderRadius: "12px", padding: "0 48px 0 16px", border: "1px solid rgba(255,255,255,0.1)", background: "#f1f5f9", color: "#0f172a", fontSize: "16px", boxSizing: "border-box" }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", fontSize: "12px", fontWeight: "bold", cursor: "pointer", padding: "8px" }}
-              >
-                {showPassword ? "OCULTAR" : "EXIBIR"}
-              </button>
-            </div>
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                height: 44,
+                borderRadius: 999,
+                padding: "0 16px",
+                border: "none",
+                background: "#e5eefc",
+                color: "#000",
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword((p) => !p)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#9ca3af",
+                fontSize: 12,
+                textAlign: "right",
+                cursor: "pointer",
+              }}
+            >
+              {showPassword ? "Hide password" : "Show password"}
+            </button>
 
             <button
               type="submit"
               disabled={loading}
-              style={{ height: "50px", borderRadius: "12px", border: "none", background: "#22c55e", color: "#fff", fontWeight: "700", fontSize: "16px", marginTop: "8px", cursor: "pointer", transition: "0.2s", opacity: loading ? 0.7 : 1 }}
+              style={{
+                height: 44,
+                borderRadius: 999,
+                border: "none",
+                background: "#22c55e",
+                color: "#fff",
+                fontWeight: 700,
+                marginTop: 6,
+                cursor: "pointer",
+              }}
             >
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
-
-            <div style={{ display: "flex", alignItems: "center", margin: "10px 0" }}>
-              <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }}></div>
-              <span style={{ padding: "0 10px", color: "#94a3b8", fontSize: "12px" }}>OU</span>
-              <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }}></div>
-            </div>
 
             <button
               type="button"
               onClick={handleGoogle}
               disabled={loadingGoogle}
-              style={{ height: "50px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "#fff", color: "#0f172a", fontWeight: "600", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", cursor: "pointer", transition: "0.2s", opacity: loadingGoogle ? 0.7 : 1 }}
+              style={{
+                height: 44,
+                borderRadius: 999,
+                border: "none",
+                background: "#dc2626",
+                color: "#fff",
+                fontWeight: 700,
+                marginTop: 6,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                cursor: "pointer",
+              }}
             >
-              <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: "18px" }} />
-              {loadingGoogle ? "Carregando..." : "Google"}
+              {loadingGoogle ? (
+                "Connecting..."
+              ) : (
+                <>
+                  <img
+                    src="https://www.google.com/favicon.ico"
+                    alt="Google"
+                    style={{ width: 18, height: 18 }}
+                  />
+                  Continue with Google
+                </>
+              )}
             </button>
 
-            <div style={{ textAlign: "center", fontSize: "14px", marginTop: "16px" }}>
-              <span style={{ color: "#94a3b8" }}>Não tem conta? </span>
-              <Link href="/signup" style={{ color: "#22c55e", fontWeight: "700", textDecoration: "none" }}>
-                Cadastre-se
+            <div style={{ marginTop: 12, textAlign: "center", fontSize: 13 }}>
+              <span style={{ color: "#9ca3af" }}>
+                Don&apos;t have an account?{" "}
+              </span>
+              <Link href="/signup" style={{ color: "#fff", fontWeight: 700 }}>
+                Create account
               </Link>
             </div>
           </form>
         </div>
       </main>
 
-      <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 100 }}>
+      <div style={{ position: "fixed", left: 0, right: 0, bottom: 0 }}>
         <BottomNavbar />
       </div>
     </>
