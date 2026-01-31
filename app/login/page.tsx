@@ -49,7 +49,6 @@ export default function LoginPage() {
       if (error) {
         setErrorMsg("Invalid email or password.");
       }
-      // Se deu certo, o onAuthStateChange vai redirecionar.
     } catch (e) {
       setErrorMsg(`Error: ${String(e)}`);
     } finally {
@@ -57,19 +56,21 @@ export default function LoginPage() {
     }
   }
 
-  // ================= GOOGLE LOGIN =================
+  // ================= GOOGLE LOGIN (DEEP LINK) =================
   async function handleGoogle() {
     setErrorMsg(null);
     setLoading(true);
 
     try {
-      const origin = window.location.origin;
-
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          // callback web do Next.js (route.ts troca code por session e redireciona)
-          redirectTo: `${origin}/auth/callback`,
+          // ✅ isto força o retorno pro app via deep link
+          redirectTo: "platformsports://auth/callback",
+          // opcional (mas ajuda em alguns casos)
+          queryParams: {
+            prompt: "select_account",
+          },
         },
       });
 
@@ -77,7 +78,8 @@ export default function LoginPage() {
         setErrorMsg(error.message);
         setLoading(false);
       }
-      // Se não tem error, o Supabase vai redirecionar pro Google (fluxo normal).
+      // Se não houve erro, o browser vai ser redirecionado para o Google.
+      // Depois do login, volta para o deep link e o app abre.
     } catch (e) {
       setErrorMsg(`Error: ${String(e)}`);
       setLoading(false);
@@ -221,7 +223,7 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign in"}
             </button>
 
-            {/* GOOGLE BUTTON */}
+            {/* ✅ GOOGLE */}
             <button
               type="button"
               onClick={handleGoogle}
@@ -257,3 +259,4 @@ export default function LoginPage() {
     </>
   );
 }
+
