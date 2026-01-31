@@ -6,12 +6,19 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import BottomNavbar from "@/components/BottomNavbar";
 
+import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
+
+// ================= SUPABASE =================
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// ================= PAGE =================
 export default function LoginPage() {
   const router = useRouter();
+  const isNative = Capacitor.isNativePlatform();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,6 +28,7 @@ export default function LoginPage() {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // ================= AUTH STATE =================
   useEffect(() => {
     const {
       data: { subscription },
@@ -33,6 +41,49 @@ export default function LoginPage() {
     return () => subscription.unsubscribe();
   }, [router]);
 
+  // ================= GOOGLE CALLBACK (ANDROID/iOS via deep link) =================
+  useEffect(() => {
+    if (!isNative) return;
+
+    const sub = App.addListener("appUrlOpen", async ({ url }) => {
+      try {
+        if (!url) return;
+
+        // Fecha o browser do OAuth (se estiver aberto)
+        try {
+          await Browser.close();
+        } catch {}
+
+        const u = new URL(url);
+        const code = u.searchParams.get("code");
+
+        if (code) {
+          // Troca o code por sessão
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+        } else {
+          // fallback (caso venha outro formato)
+          // @ts-expect-error compat
+          const { error } = await supabase.auth.getSessionFromUrl({
+            url,
+            storeSession: true,
+          });
+          if (error) throw error;
+        }
+
+        setLoadingGoogle(false);
+      } catch (e: any) {
+        setErrorMsg(e?.message || "Failed to complete Google login.");
+        setLoadingGoogle(false);
+      }
+    });
+
+    return () => {
+      sub.remove();
+    };
+  }, [isNative]);
+
+  // ================= EMAIL LOGIN =================
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
@@ -48,34 +99,52 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
+
+    // auth state listener vai redirecionar
   }
 
+  // ================= GOOGLE LOGIN =================
   async function handleGoogle() {
     setErrorMsg(null);
     setLoadingGoogle(true);
 
-    const { error } = await supabase.auth.signInWithOAuth({
+    const redirectTo = isNative
+      ? "com.platformsports.app://auth/callback"
+      : `${window.location.origin}/auth/callback`;
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo,
+        // ✅ no app a gente controla a abertura do browser
+        // ✅ no site deixa o supabase redirecionar normal
+        skipBrowserRedirect: isNative,
       },
     });
 
     if (error) {
       setErrorMsg("Failed to connect with Google.");
       setLoadingGoogle(false);
+      return;
+    }
+
+    // APP: abre o Chrome Custom Tab (Capacitor Browser)
+    if (isNative && data?.url) {
+      await Browser.open({
+        url: data.url,
+        presentationStyle: "fullscreen",
+      });
     }
   }
 
+  // ================= UI =================
   return (
     <>
-      {/* trava scroll do body/html no mobile */}
       <style jsx global>{`
         html,
         body {
           height: 100%;
           overflow: hidden;
-          overscroll-behavior: none;
           background: #000;
         }
       `}</style>
@@ -84,8 +153,6 @@ export default function LoginPage() {
         style={{
           height: "100vh",
           width: "100vw",
-          overflow: "hidden",
-          overscrollBehavior: "none",
           background:
             "radial-gradient(circle at top, #020617 0%, #020617 45%, #000 100%)",
           display: "flex",
@@ -93,7 +160,6 @@ export default function LoginPage() {
           alignItems: "center",
           justifyContent: "center",
           padding: "24px 16px",
-          // ✅ deixa espaço pro BottomNavbar não cobrir conteúdo
           paddingBottom: 96,
           color: "#e5e7eb",
           boxSizing: "border-box",
@@ -101,12 +167,8 @@ export default function LoginPage() {
       >
         <img
           src="/logo-sports-platform.png"
-          alt="Sports Platform"
-          style={{
-            width: 520,
-            maxWidth: "92vw",
-            marginBottom: 24,
-          }}
+          alt="Platform Sports"
+          style={{ width: 520, maxWidth: "92vw", marginBottom: 24 }}
         />
 
         <div
@@ -120,14 +182,7 @@ export default function LoginPage() {
             boxShadow: "0 30px 80px rgba(0,0,0,0.85)",
           }}
         >
-          <h1
-            style={{
-              textAlign: "center",
-              fontSize: 22,
-              fontWeight: 700,
-              marginBottom: 16,
-            }}
-          >
+          <h1 style={{ textAlign: "center", fontSize: 22, fontWeight: 700 }}>
             Sign in
           </h1>
 
@@ -157,13 +212,10 @@ export default function LoginPage() {
               required
               style={{
                 height: 44,
-                width: "100%",
                 borderRadius: 999,
                 padding: "0 16px",
                 border: "none",
                 background: "#e5eefc",
-                color: "#020617",
-                boxSizing: "border-box",
               }}
             />
 
@@ -175,13 +227,10 @@ export default function LoginPage() {
               required
               style={{
                 height: 44,
-                width: "100%",
                 borderRadius: 999,
                 padding: "0 16px",
                 border: "none",
                 background: "#e5eefc",
-                color: "#020617",
-                boxSizing: "border-box",
               }}
             />
 
@@ -205,15 +254,11 @@ export default function LoginPage() {
               disabled={loading}
               style={{
                 height: 44,
-                width: "100%",
                 borderRadius: 999,
                 border: "none",
                 background: "#22c55e",
-                color: "#ffffff",
+                color: "#fff",
                 fontWeight: 700,
-                marginTop: 6,
-                cursor: "pointer",
-                opacity: loading ? 0.8 : 1,
               }}
             >
               {loading ? "Signing in..." : "Sign in"}
@@ -225,40 +270,25 @@ export default function LoginPage() {
               disabled={loadingGoogle}
               style={{
                 height: 44,
-                width: "100%",
                 borderRadius: 999,
                 border: "none",
                 background: "#dc2626",
-                color: "#ffffff",
+                color: "#fff",
                 fontWeight: 700,
-                marginTop: 6,
-                cursor: "pointer",
-                opacity: loadingGoogle ? 0.8 : 1,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 10,
               }}
             >
-              {loadingGoogle ? (
-                "Connecting..."
-              ) : (
-                <>
-                  <img
-                    src="/google_logo.png"
-                    alt="Google"
-                    style={{ width: 26, height: 26 }}
-                  />
-                  Continue with Google
-                </>
-              )}
+              {loadingGoogle ? "Connecting..." : "Continue with Google"}
             </button>
 
-            <div style={{ marginTop: 12, textAlign: "center", fontSize: 13 }}>
+            <div style={{ textAlign: "center", fontSize: 13 }}>
               <span style={{ color: "#9ca3af" }}>
                 Don&apos;t have an account?{" "}
               </span>
-              <Link href="/signup" style={{ color: "#ffffff", fontWeight: 700 }}>
+              <Link href="/signup" style={{ color: "#fff", fontWeight: 700 }}>
                 Create account
               </Link>
             </div>
@@ -266,16 +296,7 @@ export default function LoginPage() {
         </div>
       </main>
 
-      {/* ✅ Bottom navbar fixo */}
-      <div
-        style={{
-          position: "fixed",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 50,
-        }}
-      >
+      <div style={{ position: "fixed", left: 0, right: 0, bottom: 0 }}>
         <BottomNavbar />
       </div>
     </>
