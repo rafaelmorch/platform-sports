@@ -19,26 +19,19 @@
             android:exported="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density">
 
-            <!-- LAUNCHER -->
+            <!-- APP LAUNCHER -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- GOOGLE / SUPABASE AUTH CALLBACK (CAPTURA O DEEPLINK E VOLTA PRO APP) -->
+            <!-- GOOGLE / SUPABASE OAUTH CALLBACK -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <!-- principal (bate com redirectTo do código) -->
-                <data
-                    android:scheme="com.platformsports.app"
-                    android:host="auth"
-                    android:pathPrefix="/callback" />
-
-                <!-- opcional: mantém compatibilidade se você usar platformsports:// -->
                 <data
                     android:scheme="platformsports"
                     android:host="auth"
