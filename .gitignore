@@ -21,3 +21,8 @@ pnpm-debug.log*
 Thumbs.db
 .vscode/
 .vercel
+
+# Android keystore
+android/app/keystore/
+*.jks
+
