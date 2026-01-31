@@ -6,26 +6,19 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import BottomNavbar from "@/components/BottomNavbar";
 
-import { Capacitor } from "@capacitor/core";
-import { App } from "@capacitor/app";
-import { Browser } from "@capacitor/browser";
-
 // ================= SUPABASE =================
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// ================= PAGE =================
 export default function LoginPage() {
   const router = useRouter();
-  const isNative = Capacitor.isNativePlatform();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // ================= AUTH STATE =================
@@ -40,43 +33,6 @@ export default function LoginPage() {
 
     return () => subscription.unsubscribe();
   }, [router]);
-
-  // ================= GOOGLE CALLBACK (ANDROID) =================
-  useEffect(() => {
-    if (!isNative) return;
-
-    const setupListener = async () => {
-      await App.addListener("appUrlOpen", async ({ url }) => {
-        try {
-          if (!url) return;
-
-          const u = new URL(url);
-          const code = u.searchParams.get("code");
-
-          // fecha o browser do OAuth
-          try {
-            await Browser.close();
-          } catch {}
-
-          if (code) {
-            const { error } = await supabase.auth.exchangeCodeForSession(code);
-            if (error) throw error;
-            return;
-          }
-        } catch (e: any) {
-          setErrorMsg(e?.message || "Failed to complete Google login.");
-          setLoadingGoogle(false);
-        }
-      });
-    };
-
-    setupListener();
-
-    return () => {
-      // Forma segura de remover listeners no Capacitor 6+ para evitar erro de tipo
-      App.removeAllListeners();
-    };
-  }, [isNative]);
 
   // ================= EMAIL LOGIN =================
   async function handleLogin(e: React.FormEvent) {
@@ -95,35 +51,6 @@ export default function LoginPage() {
     }
   }
 
-  // ================= GOOGLE LOGIN =================
-  async function handleGoogle() {
-    setErrorMsg(null);
-    setLoadingGoogle(true);
-
-    const redirectTo = isNative
-      ? "platformsports://auth/callback"
-      : `${window.location.origin}/auth/callback`;
-
-    const { error, data } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo,
-        skipBrowserRedirect: isNative,
-      },
-    });
-
-    if (error) {
-      setErrorMsg("Failed to connect with Google.");
-      setLoadingGoogle(false);
-      return;
-    }
-
-    if (isNative && data?.url) {
-      await Browser.open({ url: data.url, presentationStyle: "fullscreen" });
-    }
-  }
-
-  // ================= UI =================
   return (
     <>
       <style jsx global>{`
@@ -261,38 +188,9 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign in"}
             </button>
 
-            <button
-              type="button"
-              onClick={handleGoogle}
-              disabled={loadingGoogle}
-              style={{
-                height: 44,
-                borderRadius: 999,
-                border: "none",
-                background: "#dc2626",
-                color: "#fff",
-                fontWeight: 700,
-                marginTop: 6,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                cursor: "pointer",
-              }}
-            >
-              {loadingGoogle ? (
-                "Connecting..."
-              ) : (
-                <>
-                  <img
-                    src="https://www.google.com/favicon.ico"
-                    alt="Google"
-                    style={{ width: 18, height: 18 }}
-                  />
-                  Continue with Google
-                </>
-              )}
-            </button>
+            {/* BOTAO GOOGLE (DESATIVADO TEMPORARIAMENTE)
+              Para voltar, mova a lógica de auth e o botão para cá.
+            */}
 
             <div style={{ marginTop: 12, textAlign: "center", fontSize: 13 }}>
               <span style={{ color: "#9ca3af" }}>
