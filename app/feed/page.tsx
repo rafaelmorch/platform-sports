@@ -68,26 +68,18 @@ function avatarStyleFromId(id: string) {
   } as const;
 }
 
-/* ================= Page ================= */
-
 export default function FeedPage() {
   const router = useRouter();
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
 
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [commentText, setCommentText] = useState<Record<string, string>>({});
-
-  const [likeLoadingPostId, setLikeLoadingPostId] = useState<string | null>(null);
-  const [commentLoadingPostId, setCommentLoadingPostId] = useState<string | null>(null);
-
   const [postComments, setPostComments] = useState<Record<string, Comment[]>>({});
   const [openComments, setOpenComments] = useState<Set<string>>(new Set());
-  const [loadingCommentsPostId, setLoadingCommentsPostId] = useState<string | null>(null);
 
   async function loadPosts() {
     setLoading(true);
@@ -123,7 +115,42 @@ export default function FeedPage() {
       return;
     }
 
-    setPosts(postsData as Post[]);
+    const rawPosts = postsData as Post[];
+    const postIds = rawPosts.map((p) => p.id);
+
+    const likeCountMap: Record<string, number> = {};
+    const commentCountMap: Record<string, number> = {};
+    const likedByUser = new Set<string>();
+
+    if (postIds.length > 0) {
+      const { data: likesData } = await supabaseBrowser
+        .from("feed_likes")
+        .select("post_id, user_id")
+        .in("post_id", postIds);
+
+      likesData?.forEach((row: any) => {
+        likeCountMap[row.post_id] = (likeCountMap[row.post_id] ?? 0) + 1;
+        if (row.user_id === user.id) likedByUser.add(row.post_id);
+      });
+
+      const { data: commentsData } = await supabaseBrowser
+        .from("feed_comments")
+        .select("post_id")
+        .in("post_id", postIds);
+
+      commentsData?.forEach((row: any) => {
+        commentCountMap[row.post_id] = (commentCountMap[row.post_id] ?? 0) + 1;
+      });
+    }
+
+    const postsWithCounters = rawPosts.map((p) => ({
+      ...p,
+      likes: likeCountMap[p.id] ?? 0,
+      comments_count: commentCountMap[p.id] ?? 0,
+    }));
+
+    setPosts(postsWithCounters);
+    setLikedPosts(likedByUser);
     setLoading(false);
   }
 
@@ -132,68 +159,18 @@ export default function FeedPage() {
   }, []);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#020617",
-        color: "#e5e7eb",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <main style={{ flex: 1, padding: "16px", paddingBottom: "72px" }}>
-        <div style={{ maxWidth: "720px", margin: "0 auto" }}>
-          <div
-            style={{
-              marginBottom: "12px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              gap: "12px",
-            }}
-          >
-            <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-              <h1 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "4px" }}>
-                Training Feed
-              </h1>
+    <div style={{ minHeight: "100vh", background: "#020617", color: "#e5e7eb" }}>
+      <main style={{ padding: 16, paddingBottom: 72 }}>
+        <h1>Training Feed</h1>
 
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "#60a5fa",
-                  margin: 0,
-                  fontWeight: 700,
-                }}
-              >
-                Challenges push you to the next level. Share yours in sport today.
-              </p>
+        {loading && <p>Loading posts…</p>}
+
+        {!loading &&
+          posts.map((post) => (
+            <div key={post.id}>
+              <p>{post.content}</p>
             </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <button
-                onClick={() => router.push("/feed/new")}
-                style={{
-                  padding: "9px 14px",
-                  borderRadius: "999px",
-                  background: "#22c55e",
-                  color: "#020617",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                New post
-              </button>
-
-              <img src="/ps.png" alt="Platform Sports" style={{ height: 86 }} />
-            </div>
-          </div>
-
-          {loading && <p>Loading posts…</p>}
-
-          {!loading && posts.length === 0 && <p>No posts yet.</p>}
-        </div>
+          ))}
       </main>
 
       <BottomNavbar />
