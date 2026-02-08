@@ -171,7 +171,7 @@ export default function EventDetailPage() {
         setError(e.message || "Failed to load the event.");
         setEvent(null);
       } else {
-        setEvent(((data as unknown) as EventRow) ?? null);
+        setEvent((((data as unknown) as EventRow) ?? null));
       }
 
       setLoading(false);
@@ -349,24 +349,16 @@ export default function EventDetailPage() {
               </p>
             </div>
 
-            {/* ✅ logo topo (troca ps.png -> logo-sports-platform.png) */}
-            <div
-              className="topLogo"
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                alignItems: "center",
-                flexShrink: 0,
-              }}
-            >
+            {/* ✅ logo 2x */}
+            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/logo-sports-platform.png"
-                alt="Sports Platform"
+                src="/ps.png"
+                alt="Platform Sports"
                 style={{
-                  height: 56,          // ✅ menor pra não brigar com o título
+                  height: 80,
+                  maxWidth: 240,
                   width: "auto",
-                  maxWidth: 220,
                   objectFit: "contain",
                   display: "block",
                   opacity: 0.95,
@@ -586,9 +578,6 @@ export default function EventDetailPage() {
             @media (max-width: 360px) {
               .pairRow {
                 grid-template-columns: 1fr;
-              }
-              .topLogo {
-                display: none; /* ✅ no mobile, pra não apertar título/subtítulo */
               }
             }
 
