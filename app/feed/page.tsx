@@ -81,6 +81,7 @@ export default function FeedPage() {
 
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [commentText, setCommentText] = useState<Record<string, string>>({});
+
   const [likeLoadingPostId, setLikeLoadingPostId] = useState<string | null>(null);
   const [commentLoadingPostId, setCommentLoadingPostId] = useState<string | null>(null);
 
@@ -122,42 +123,7 @@ export default function FeedPage() {
       return;
     }
 
-    const rawPosts = postsData as Post[];
-    const postIds = rawPosts.map((p) => p.id);
-
-    const likeCountMap: Record<string, number> = {};
-    const commentCountMap: Record<string, number> = {};
-    const likedByCurrentUser = new Set<string>();
-
-    if (postIds.length > 0) {
-      const { data: likesData } = await supabaseBrowser
-        .from("feed_likes")
-        .select("post_id, user_id")
-        .in("post_id", postIds);
-
-      likesData?.forEach((row: any) => {
-        likeCountMap[row.post_id] = (likeCountMap[row.post_id] ?? 0) + 1;
-        if (row.user_id === user.id) likedByCurrentUser.add(row.post_id);
-      });
-
-      const { data: commentsData } = await supabaseBrowser
-        .from("feed_comments")
-        .select("post_id")
-        .in("post_id", postIds);
-
-      commentsData?.forEach((row: any) => {
-        commentCountMap[row.post_id] = (commentCountMap[row.post_id] ?? 0) + 1;
-      });
-    }
-
-    const postsWithCounters = rawPosts.map((p) => ({
-      ...p,
-      likes: likeCountMap[p.id] ?? 0,
-      comments_count: commentCountMap[p.id] ?? 0,
-    }));
-
-    setPosts(postsWithCounters);
-    setLikedPosts(likedByCurrentUser);
+    setPosts(postsData as Post[]);
     setLoading(false);
   }
 
@@ -191,16 +157,12 @@ export default function FeedPage() {
                 Training Feed
               </h1>
 
-              {/* ✅ FIX AQUI */}
               <p
                 style={{
                   fontSize: "13px",
                   color: "#60a5fa",
                   margin: 0,
                   fontWeight: 700,
-                  width: "100%",
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
                 }}
               >
                 Challenges push you to the next level. Share yours in sport today.
@@ -224,19 +186,13 @@ export default function FeedPage() {
                 New post
               </button>
 
-              <img
-                src="/ps.png"
-                alt="Platform Sports"
-                style={{ height: 86 }}
-              />
+              <img src="/ps.png" alt="Platform Sports" style={{ height: 86 }} />
             </div>
           </div>
 
-          {loading && (
-            <p style={{ fontSize: "13px", color: "#64748b" }}>
-              Loading posts…
-            </p>
-          )}
+          {loading && <p>Loading posts…</p>}
+
+          {!loading && posts.length === 0 && <p>No posts yet.</p>}
         </div>
       </main>
 
