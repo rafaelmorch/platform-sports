@@ -82,9 +82,7 @@ export default function NewFeedPostPage() {
     else setImagePreview(null);
   };
 
-  const uploadImageIfNeeded = async (
-    userId: string
-  ): Promise<string | null> => {
+  const uploadImageIfNeeded = async (userId: string): Promise<string | null> => {
     if (!imageFile) return null;
 
     const fileExt = imageFile.name.split(".").pop() || "jpg";
@@ -182,9 +180,11 @@ export default function NewFeedPostPage() {
           background: "#020617",
           color: "#e5e7eb",
           padding: "16px",
+          paddingRight: "18px", // ✅ pequena “margem” extra à direita
           paddingBottom: "24px",
-          width: "100vw",
           margin: 0,
+          boxSizing: "border-box", // ✅ evita estourar pra fora
+          width: "100%", // ✅ NÃO usar 100vw (causa overflow no mobile)
         }}
       >
         {/* Top bar with Back (standard) */}
@@ -198,7 +198,6 @@ export default function NewFeedPostPage() {
             marginBottom: 12,
           }}
         >
-          {/* ✅ STANDARD: outline + "Back" */}
           <button
             type="button"
             onClick={() => router.back()}
@@ -297,7 +296,6 @@ export default function NewFeedPostPage() {
                     maxHeight: 260,
                   }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imagePreview}
                     alt="Preview"
