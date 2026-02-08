@@ -322,490 +322,505 @@ export default function FeedPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#020617",
-        color: "#e5e7eb",
-        display: "flex",
-        flexDirection: "column",
-        margin: 0,
-        padding: 0,
-        width: "100%",
-      }}
-    >
-      <main
+    <>
+      {/* ✅ FIX da margem branca no app (WebView): zera html/body e força fundo escuro */}
+      <style jsx global>{`
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #020617 !important;
+          width: 100%;
+          height: 100%;
+          overflow-x: hidden;
+        }
+      `}</style>
+
+      <div
         style={{
-          flex: 1,
-          padding: "16px",
-          paddingBottom: "72px",
+          minHeight: "100vh",
+          background: "#020617",
+          color: "#e5e7eb",
+          display: "flex",
+          flexDirection: "column",
+          width: "100vw",
+          margin: 0,
+          padding: 0,
         }}
       >
-        <div
+        <main
           style={{
-            maxWidth: "720px",
-            margin: "0 auto",
+            flex: 1,
+            padding: "16px",
+            paddingBottom: "72px",
           }}
         >
-          {/* ✅ Logo no topo (responsivo) */}
           <div
             style={{
-              display: "flex",
-              justifyContent: "center",
-              marginBottom: "10px",
+              maxWidth: "720px",
+              margin: "0 auto",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo-sports-platform.png"
-              alt="Sports Platform"
+            {/* ✅ Logo no topo (responsivo) */}
+            <div
               style={{
-                width: "100%",
-                maxWidth: "320px",
-                height: "auto",
-                display: "block",
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "10px",
               }}
-            />
-          </div>
-
-          <div
-            style={{
-              marginBottom: "12px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
-            <div>
-              <h1
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo-sports-platform.png"
+                alt="Sports Platform"
                 style={{
-                  fontSize: "20px",
-                  fontWeight: 800,
-                  marginBottom: "4px",
+                  width: "100%",
+                  maxWidth: "320px",
+                  height: "auto",
+                  display: "block",
                 }}
-              >
-                Feed de Treinos
-              </h1>
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "#94a3b8",
-                  marginBottom: "6px",
-                }}
-              ></p>
-
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "#60a5fa",
-                  margin: 0,
-                  fontWeight: 700,
-                }}
-              >
-                Desafios te levam a um novo nível. Compartilhe o seu no esporte
-                hoje.
-              </p>
+              />
             </div>
 
-            <a
-              href="/feed/new"
+            <div
               style={{
-                padding: "9px 14px",
-                borderRadius: "999px",
-                background: "#22c55e",
-                color: "#020617",
-                fontSize: "13px",
-                fontWeight: 700,
-                textDecoration: "none",
-                whiteSpace: "nowrap",
+                marginBottom: "12px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "12px",
               }}
             >
-              Nova postagem
-            </a>
-          </div>
-
-          {loading && (
-            <p
-              style={{
-                fontSize: "13px",
-                color: "#64748b",
-                marginTop: "8px",
-              }}
-            >
-              Carregando postagens…
-            </p>
-          )}
-
-          {!loading && posts.length === 0 && (
-            <p
-              style={{
-                fontSize: "13px",
-                color: "#64748b",
-                marginTop: "8px",
-              }}
-            >
-              Nenhuma postagem ainda. Seja o primeiro a registrar seu treino.
-            </p>
-          )}
-
-          <div
-            style={{
-              marginTop: posts.length > 0 ? "4px" : "0",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-            }}
-          >
-            {posts.map((post) => {
-              const isLiked = likedPosts.has(post.id);
-              const isCommentsOpen = openComments.has(post.id);
-              const comments = postComments[post.id] ?? [];
-
-              return (
-                <article
-                  key={post.id}
+              <div>
+                <h1
                   style={{
-                    borderRadius: "16px",
-                    border: "1px solid #1e293b",
-                    background: "#020617",
-                    padding: "14px 14px 12px 14px",
+                    fontSize: "20px",
+                    fontWeight: 800,
+                    marginBottom: "4px",
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "999px",
-                        background:
-                          "radial-gradient(circle at 30% 30%, #22c55e, #0f172a)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "14px",
-                        fontWeight: 700,
-                        color: "#0b1120",
-                      }}
-                    >
-                      {(post.author_name || "AT")
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .slice(0, 2)
-                        .toUpperCase()}
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "2px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {post.author_name || "Atleta"}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          color: "#64748b",
-                        }}
-                      >
-                        {new Date(post.created_at).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
+                  Feed de Treinos
+                </h1>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "#94a3b8",
+                    marginBottom: "6px",
+                  }}
+                ></p>
 
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      color: "#e5e7eb",
-                      marginBottom: post.image_url ? "10px" : "8px",
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {post.content}
-                  </p>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "#60a5fa",
+                    margin: 0,
+                    fontWeight: 700,
+                  }}
+                >
+                  Desafios te levam a um novo nível. Compartilhe o seu no esporte
+                  hoje.
+                </p>
+              </div>
 
-                  {post.image_url && (
-                    <div
-                      style={{
-                        borderRadius: "14px",
-                        overflow: "hidden",
-                        border: "1px solid #1e293b",
-                        marginBottom: "8px",
-                        background: "rgba(0,0,0,0.25)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        maxHeight: "420px",
-                      }}
-                    >
-                      <img
-                        src={post.image_url}
-                        alt="Foto do treino"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "contain",
-                          display: "block",
-                        }}
-                      />
-                    </div>
-                  )}
+              <a
+                href="/feed/new"
+                style={{
+                  padding: "9px 14px",
+                  borderRadius: "999px",
+                  background: "#22c55e",
+                  color: "#020617",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Nova postagem
+              </a>
+            </div>
 
-                  <div
+            {loading && (
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#64748b",
+                  marginTop: "8px",
+                }}
+              >
+                Carregando postagens…
+              </p>
+            )}
+
+            {!loading && posts.length === 0 && (
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#64748b",
+                  marginTop: "8px",
+                }}
+              >
+                Nenhuma postagem ainda. Seja o primeiro a registrar seu treino.
+              </p>
+            )}
+
+            <div
+              style={{
+                marginTop: posts.length > 0 ? "4px" : "0",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+              }}
+            >
+              {posts.map((post) => {
+                const isLiked = likedPosts.has(post.id);
+                const isCommentsOpen = openComments.has(post.id);
+                const comments = postComments[post.id] ?? [];
+
+                return (
+                  <article
+                    key={post.id}
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      fontSize: "12px",
-                      marginTop: "4px",
+                      borderRadius: "16px",
+                      border: "1px solid #1e293b",
+                      background: "#020617",
+                      padding: "14px 14px 12px 14px",
                     }}
                   >
                     <div
                       style={{
                         display: "flex",
-                        gap: "12px",
                         alignItems: "center",
+                        gap: "10px",
+                        marginBottom: "10px",
                       }}
                     >
-                      <button
-                        type="button"
-                        onClick={() => handleLike(post.id)}
-                        disabled={likeLoadingPostId === post.id}
+                      <div
                         style={{
-                          border: "none",
-                          background: isLiked
-                            ? "rgba(34,197,94,0.15)"
-                            : "transparent",
-                          color: isLiked ? "#4ade80" : "#e5e7eb",
+                          width: "36px",
+                          height: "36px",
+                          borderRadius: "999px",
+                          background:
+                            "radial-gradient(circle at 30% 30%, #22c55e, #0f172a)",
                           display: "flex",
                           alignItems: "center",
-                          gap: "6px",
-                          cursor: "pointer",
-                          padding: "4px 8px",
-                          borderRadius: "999px",
-                          opacity: likeLoadingPostId === post.id ? 0.7 : 1,
+                          justifyContent: "center",
+                          fontSize: "14px",
+                          fontWeight: 700,
+                          color: "#0b1120",
                         }}
                       >
-                        <span style={{ fontSize: "14px", lineHeight: 1 }}>
-                          {isLiked ? "💚" : "🤍"}
+                        {(post.author_name || "AT")
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase()}
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "2px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {post.author_name || "Atleta"}
                         </span>
-                        <span>{isLiked ? "Você curtiu" : "Curtir"}</span>
-                      </button>
-
-                      <span style={{ fontSize: "12px", color: "#64748b" }}>
-                        {post.likes} curtida{post.likes === 1 ? "" : "s"}
-                      </span>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "#64748b",
+                          }}
+                        >
+                          {new Date(post.created_at).toLocaleString()}
+                        </span>
+                      </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => toggleComments(post.id)}
+                    <p
                       style={{
-                        border: "none",
-                        background: "transparent",
-                        color: "#64748b",
-                        fontSize: "12px",
-                        cursor: "pointer",
-                        padding: "4px 6px",
-                        borderRadius: "999px",
-                        textDecoration: "underline",
-                        textDecorationStyle: "dotted",
+                        fontSize: "13px",
+                        color: "#e5e7eb",
+                        marginBottom: post.image_url ? "10px" : "8px",
+                        lineHeight: 1.5,
                       }}
                     >
-                      {loadingCommentsPostId === post.id
-                        ? "Carregando comentários…"
-                        : isCommentsOpen
-                        ? `Ocultar comentários (${post.comments_count})`
-                        : `Ver comentários (${post.comments_count})`}
-                    </button>
-                  </div>
+                      {post.content}
+                    </p>
 
-                  <div style={{ marginTop: "8px" }}>
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleSubmitComment(post.id);
-                      }}
-                      style={{
-                        display: "flex",
-                        gap: "8px",
-                        alignItems: "center",
-                      }}
-                    >
-                      <input
-                        type="text"
-                        placeholder="Escreva um comentário…"
-                        value={commentText[post.id] ?? ""}
-                        onChange={(e) =>
-                          setCommentText((prev) => ({
-                            ...prev,
-                            [post.id]: e.target.value,
-                          }))
-                        }
+                    {post.image_url && (
+                      <div
                         style={{
-                          flex: 1,
-                          fontSize: "12px",
-                          padding: "6px 10px",
-                          borderRadius: "999px",
+                          borderRadius: "14px",
+                          overflow: "hidden",
                           border: "1px solid #1e293b",
-                          backgroundColor: "#020617",
-                          color: "#e5e7eb",
-                          outline: "none",
-                        }}
-                      />
-                      <button
-                        type="submit"
-                        disabled={commentLoadingPostId === post.id}
-                        style={{
-                          fontSize: "12px",
-                          padding: "6px 10px",
-                          borderRadius: "999px",
-                          border: "none",
-                          background: "#22c55e",
-                          color: "#020617",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                          opacity: commentLoadingPostId === post.id ? 0.7 : 1,
+                          marginBottom: "8px",
+                          background: "rgba(0,0,0,0.25)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          maxHeight: "420px",
                         }}
                       >
-                        {commentLoadingPostId === post.id
-                          ? "Enviando..."
-                          : "Enviar"}
-                      </button>
-                    </form>
-                  </div>
+                        <img
+                          src={post.image_url}
+                          alt="Foto do treino"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain",
+                            display: "block",
+                          }}
+                        />
+                      </div>
+                    )}
 
-                  {isCommentsOpen && (
                     <div
                       style={{
-                        marginTop: "8px",
-                        paddingTop: "8px",
-                        borderTop: "1px solid #1f2937",
-                        maxHeight: "180px",
-                        overflowY: "auto",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        fontSize: "12px",
+                        marginTop: "4px",
                       }}
                     >
-                      {comments.length === 0 ? (
-                        <p
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "12px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleLike(post.id)}
+                          disabled={likeLoadingPostId === post.id}
+                          style={{
+                            border: "none",
+                            background: isLiked
+                              ? "rgba(34,197,94,0.15)"
+                              : "transparent",
+                            color: isLiked ? "#4ade80" : "#e5e7eb",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            cursor: "pointer",
+                            padding: "4px 8px",
+                            borderRadius: "999px",
+                            opacity: likeLoadingPostId === post.id ? 0.7 : 1,
+                          }}
+                        >
+                          <span style={{ fontSize: "14px", lineHeight: 1 }}>
+                            {isLiked ? "💚" : "🤍"}
+                          </span>
+                          <span>{isLiked ? "Você curtiu" : "Curtir"}</span>
+                        </button>
+
+                        <span style={{ fontSize: "12px", color: "#64748b" }}>
+                          {post.likes} curtida{post.likes === 1 ? "" : "s"}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => toggleComments(post.id)}
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          color: "#64748b",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          padding: "4px 6px",
+                          borderRadius: "999px",
+                          textDecoration: "underline",
+                          textDecorationStyle: "dotted",
+                        }}
+                      >
+                        {loadingCommentsPostId === post.id
+                          ? "Carregando comentários…"
+                          : isCommentsOpen
+                          ? `Ocultar comentários (${post.comments_count})`
+                          : `Ver comentários (${post.comments_count})`}
+                      </button>
+                    </div>
+
+                    <div style={{ marginTop: "8px" }}>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSubmitComment(post.id);
+                        }}
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          placeholder="Escreva um comentário…"
+                          value={commentText[post.id] ?? ""}
+                          onChange={(e) =>
+                            setCommentText((prev) => ({
+                              ...prev,
+                              [post.id]: e.target.value,
+                            }))
+                          }
+                          style={{
+                            flex: 1,
+                            fontSize: "12px",
+                            padding: "6px 10px",
+                            borderRadius: "999px",
+                            border: "1px solid #1e293b",
+                            backgroundColor: "#020617",
+                            color: "#e5e7eb",
+                            outline: "none",
+                          }}
+                        />
+                        <button
+                          type="submit"
+                          disabled={commentLoadingPostId === post.id}
                           style={{
                             fontSize: "12px",
-                            color: "#64748b",
-                            margin: 0,
+                            padding: "6px 10px",
+                            borderRadius: "999px",
+                            border: "none",
+                            background: "#22c55e",
+                            color: "#020617",
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                            opacity:
+                              commentLoadingPostId === post.id ? 0.7 : 1,
                           }}
                         >
-                          Ainda não há comentários neste post. Seja o primeiro a
-                          comentar.
-                        </p>
-                      ) : (
-                        <ul
-                          style={{
-                            listStyle: "none",
-                            padding: 0,
-                            margin: 0,
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "6px",
-                          }}
-                        >
-                          {comments.map((c) => (
-                            <li
-                              key={c.id}
-                              style={{ display: "flex", gap: "8px" }}
-                            >
-                              <div
-                                style={{
-                                  width: "22px",
-                                  height: "22px",
-                                  borderRadius: "999px",
-                                  background:
-                                    "radial-gradient(circle at 30% 30%, #38bdf8, #0f172a)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontSize: "11px",
-                                  fontWeight: 600,
-                                  color: "#0b1120",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {(c.author_name || "AT")
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")
-                                  .slice(0, 2)
-                                  .toUpperCase()}
-                              </div>
-                              <div
-                                style={{
-                                  flex: 1,
-                                  fontSize: "12px",
-                                  lineHeight: 1.4,
-                                }}
+                          {commentLoadingPostId === post.id
+                            ? "Enviando..."
+                            : "Enviar"}
+                        </button>
+                      </form>
+                    </div>
+
+                    {isCommentsOpen && (
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          paddingTop: "8px",
+                          borderTop: "1px solid #1f2937",
+                          maxHeight: "180px",
+                          overflowY: "auto",
+                        }}
+                      >
+                        {comments.length === 0 ? (
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              color: "#64748b",
+                              margin: 0,
+                            }}
+                          >
+                            Ainda não há comentários neste post. Seja o primeiro
+                            a comentar.
+                          </p>
+                        ) : (
+                          <ul
+                            style={{
+                              listStyle: "none",
+                              padding: 0,
+                              margin: 0,
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "6px",
+                            }}
+                          >
+                            {comments.map((c) => (
+                              <li
+                                key={c.id}
+                                style={{ display: "flex", gap: "8px" }}
                               >
                                 <div
                                   style={{
+                                    width: "22px",
+                                    height: "22px",
+                                    borderRadius: "999px",
+                                    background:
+                                      "radial-gradient(circle at 30% 30%, #38bdf8, #0f172a)",
                                     display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "baseline",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "11px",
+                                    fontWeight: 600,
+                                    color: "#0b1120",
+                                    flexShrink: 0,
                                   }}
                                 >
-                                  <span
+                                  {(c.author_name || "AT")
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .slice(0, 2)
+                                    .toUpperCase()}
+                                </div>
+                                <div
+                                  style={{
+                                    flex: 1,
+                                    fontSize: "12px",
+                                    lineHeight: 1.4,
+                                  }}
+                                >
+                                  <div
                                     style={{
-                                      fontWeight: 600,
-                                      color: "#e5e7eb",
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "baseline",
                                     }}
                                   >
-                                    {c.author_name || "Atleta"}
-                                  </span>
-                                  <span
-                                    style={{
-                                      fontSize: "10px",
-                                      color: "#6b7280",
-                                      marginLeft: "8px",
-                                    }}
-                                  >
-                                    {new Date(c.created_at).toLocaleDateString(
-                                      "pt-BR",
-                                      {
+                                    <span
+                                      style={{
+                                        fontWeight: 600,
+                                        color: "#e5e7eb",
+                                      }}
+                                    >
+                                      {c.author_name || "Atleta"}
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontSize: "10px",
+                                        color: "#6b7280",
+                                        marginLeft: "8px",
+                                      }}
+                                    >
+                                      {new Date(
+                                        c.created_at
+                                      ).toLocaleDateString("pt-BR", {
                                         day: "2-digit",
                                         month: "2-digit",
-                                      }
-                                    )}
-                                  </span>
+                                      })}
+                                    </span>
+                                  </div>
+                                  <p style={{ margin: 0, color: "#d1d5db" }}>
+                                    {c.content}
+                                  </p>
                                 </div>
-                                <p style={{ margin: 0, color: "#d1d5db" }}>
-                                  {c.content}
-                                </p>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  )}
-                </article>
-              );
-            })}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
 
-      <BottomNavbar />
-    </div>
+        <BottomNavbar />
+      </div>
+    </>
   );
 }
