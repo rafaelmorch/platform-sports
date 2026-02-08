@@ -59,7 +59,8 @@ export default function NewFeedPostPage() {
         const meta: any = user.user_metadata || {};
         const nameFromMeta = meta.full_name || meta.name || null;
 
-        const finalName = nameFromProfile || nameFromMeta || user.email || "Athlete";
+        const finalName =
+          nameFromProfile || nameFromMeta || user.email || "Athlete";
 
         setAuthorName(finalName);
       } catch (err) {
@@ -81,21 +82,27 @@ export default function NewFeedPostPage() {
     else setImagePreview(null);
   };
 
-  const uploadImageIfNeeded = async (userId: string): Promise<string | null> => {
+  const uploadImageIfNeeded = async (
+    userId: string
+  ): Promise<string | null> => {
     if (!imageFile) return null;
 
     const fileExt = imageFile.name.split(".").pop() || "jpg";
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = fileName;
 
-    const { error: uploadError } = await supabase.storage.from("feed-images").upload(filePath, imageFile);
+    const { error: uploadError } = await supabase.storage
+      .from("feed-images")
+      .upload(filePath, imageFile);
 
     if (uploadError) {
       console.error("Error uploading image:", uploadError);
       throw new Error("Could not upload the image.");
     }
 
-    const { data: publicData } = supabase.storage.from("feed-images").getPublicUrl(filePath);
+    const { data: publicData } = supabase.storage
+      .from("feed-images")
+      .getPublicUrl(filePath);
 
     return publicData?.publicUrl ?? null;
   };
@@ -154,148 +161,188 @@ export default function NewFeedPostPage() {
   };
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#020617",
-        color: "#e5e7eb",
-        padding: "16px",
-        paddingBottom: "24px",
-      }}
-    >
-      {/* Top bar with Back (standard) */}
-      <div
+    <>
+      {/* ✅ FIX da margem branca no app (WebView): zera html/body/#__next e força fundo escuro */}
+      <style jsx global>{`
+        html,
+        body,
+        #__next {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #020617 !important;
+          width: 100% !important;
+          height: 100% !important;
+          overflow-x: hidden;
+        }
+      `}</style>
+
+      <main
         style={{
-          maxWidth: 600,
-          margin: "0 auto",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 12,
+          minHeight: "100vh",
+          background: "#020617",
+          color: "#e5e7eb",
+          padding: "16px",
+          paddingBottom: "24px",
+          width: "100vw",
+          margin: 0,
         }}
       >
-        {/* ✅ STANDARD: outline + "Back" */}
-        <button
-          type="button"
-          onClick={() => router.back()}
-          aria-label="Back"
+        {/* Top bar with Back (standard) */}
+        <div
           style={{
-            height: 36,
-            padding: "0 12px",
-            borderRadius: 999,
-            border: "1px solid rgba(148,163,184,0.35)",
-            background: "rgba(2,6,23,0.65)",
-            color: "#e5e7eb",
-            cursor: "pointer",
-            display: "inline-flex",
+            maxWidth: 600,
+            margin: "0 auto",
+            display: "flex",
             alignItems: "center",
-            gap: 8,
-            fontSize: 12,
-            fontWeight: 900,
-            letterSpacing: "0.02em",
-            boxShadow: "0 10px 22px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04)",
-            flex: "0 0 auto",
-            whiteSpace: "nowrap",
+            gap: 10,
+            marginBottom: 12,
           }}
         >
-          <span style={{ fontSize: 16, lineHeight: 1, marginTop: -1 }}>←</span>
-          <span>Back</span>
-        </button>
-
-        <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>New post</h1>
-          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0, marginTop: 2 }}>
-            Share a workout, an achievement, or a message with your group.
-          </p>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 600, margin: "0 auto" }}>
-        <div style={{ marginBottom: 12, fontSize: 13, color: "#9ca3af" }}>
-          Posting as{" "}
-          <span style={{ color: "#e5e7eb", fontWeight: 600 }}>
-            {loadingAuthor ? "loading..." : authorName ?? "—"}
-          </span>
-        </div>
-
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your post..."
-            rows={4}
-            style={{
-              width: "100%",
-              borderRadius: 12,
-              padding: 10,
-              border: "1px solid rgba(55,65,81,0.9)",
-              backgroundColor: "#020617",
-              color: "#e5e7eb",
-              fontSize: 13,
-              resize: "vertical",
-            }}
-          />
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label htmlFor="image" style={{ fontSize: 12, color: "#d1d5db" }}>
-              Image (optional)
-            </label>
-            <input
-              id="image"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              style={{ fontSize: 12, color: "#e5e7eb" }}
-            />
-
-            {imagePreview && (
-              <div
-                style={{
-                  marginTop: 6,
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  border: "1px solid rgba(55,65,81,0.9)",
-                  maxHeight: 260,
-                }}
-              >
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
-              </div>
-            )}
-
-            <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>Supported formats: JPG, PNG, etc.</p>
-          </div>
-
-          {errorMsg && <p style={{ fontSize: 12, color: "#fca5a5", margin: 0 }}>{errorMsg}</p>}
-
+          {/* ✅ STANDARD: outline + "Back" */}
           <button
-            type="submit"
-            disabled={loading || loadingAuthor}
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Back"
             style={{
-              marginTop: 4,
+              height: 36,
+              padding: "0 12px",
               borderRadius: 999,
-              padding: "10px 16px",
-              border: "none",
-              fontSize: 14,
-              fontWeight: 700,
-              background: "#22c55e",
-              color: "#ffffff",
-              cursor: loading || loadingAuthor ? "not-allowed" : "pointer",
-              opacity: loading || loadingAuthor ? 0.6 : 1,
+              border: "1px solid rgba(148,163,184,0.35)",
+              background: "rgba(2,6,23,0.65)",
+              color: "#e5e7eb",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 12,
+              fontWeight: 900,
+              letterSpacing: "0.02em",
+              boxShadow:
+                "0 10px 22px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04)",
+              flex: "0 0 auto",
+              whiteSpace: "nowrap",
             }}
           >
-            {loading ? "Posting..." : "Post"}
+            <span style={{ fontSize: 16, lineHeight: 1, marginTop: -1 }}>
+              ←
+            </span>
+            <span>Back</span>
           </button>
-        </form>
-      </div>
-    </main>
+
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>
+              New post
+            </h1>
+            <p
+              style={{
+                fontSize: 12,
+                color: "#9ca3af",
+                margin: 0,
+                marginTop: 2,
+              }}
+            >
+              Share a workout, an achievement, or a message with your group.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ maxWidth: 600, margin: "0 auto" }}>
+          <div style={{ marginBottom: 12, fontSize: 13, color: "#9ca3af" }}>
+            Posting as{" "}
+            <span style={{ color: "#e5e7eb", fontWeight: 600 }}>
+              {loadingAuthor ? "loading..." : authorName ?? "—"}
+            </span>
+          </div>
+
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: 12 }}
+          >
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your post..."
+              rows={4}
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                padding: 10,
+                border: "1px solid rgba(55,65,81,0.9)",
+                backgroundColor: "#020617",
+                color: "#e5e7eb",
+                fontSize: 13,
+                resize: "vertical",
+              }}
+            />
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label htmlFor="image" style={{ fontSize: 12, color: "#d1d5db" }}>
+                Image (optional)
+              </label>
+              <input
+                id="image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                style={{ fontSize: 12, color: "#e5e7eb" }}
+              />
+
+              {imagePreview && (
+                <div
+                  style={{
+                    marginTop: 6,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    border: "1px solid rgba(55,65,81,0.9)",
+                    maxHeight: 260,
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
+                  />
+                </div>
+              )}
+
+              <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>
+                Supported formats: JPG, PNG, etc.
+              </p>
+            </div>
+
+            {errorMsg && (
+              <p style={{ fontSize: 12, color: "#fca5a5", margin: 0 }}>
+                {errorMsg}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || loadingAuthor}
+              style={{
+                marginTop: 4,
+                borderRadius: 999,
+                padding: "10px 16px",
+                border: "none",
+                fontSize: 14,
+                fontWeight: 700,
+                background: "#22c55e",
+                color: "#ffffff",
+                cursor: loading || loadingAuthor ? "not-allowed" : "pointer",
+                opacity: loading || loadingAuthor ? 0.6 : 1,
+              }}
+            >
+              {loading ? "Posting..." : "Post"}
+            </button>
+          </form>
+        </div>
+      </main>
+    </>
   );
 }
