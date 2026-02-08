@@ -323,7 +323,7 @@ export default function FeedPage() {
 
   return (
     <>
-      {/* ✅ Mata a “margem branca” do WebView (html/body) sem mexer no layout */}
+      {/* ✅ FIX da margem branca no app (WebView): zera html/body/#__next e força fundo escuro */}
       <style jsx global>{`
         html,
         body,
@@ -344,6 +344,9 @@ export default function FeedPage() {
           color: "#e5e7eb",
           display: "flex",
           flexDirection: "column",
+          width: "100vw",
+          margin: 0,
+          padding: 0,
         }}
       >
         <main
@@ -353,8 +356,13 @@ export default function FeedPage() {
             paddingBottom: "72px",
           }}
         >
-          <div style={{ maxWidth: "720px", margin: "0 auto" }}>
-            {/* ✅ Logo topo (responsivo) */}
+          <div
+            style={{
+              maxWidth: "720px",
+              margin: "0 auto",
+            }}
+          >
+            {/* ✅ Logo no topo (responsivo) */}
             <div
               style={{
                 display: "flex",
@@ -394,7 +402,6 @@ export default function FeedPage() {
                 >
                   Feed de Treinos
                 </h1>
-
                 <p
                   style={{
                     fontSize: "13px",
@@ -434,13 +441,25 @@ export default function FeedPage() {
             </div>
 
             {loading && (
-              <p style={{ fontSize: "13px", color: "#64748b", marginTop: "8px" }}>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#64748b",
+                  marginTop: "8px",
+                }}
+              >
                 Carregando postagens…
               </p>
             )}
 
             {!loading && posts.length === 0 && (
-              <p style={{ fontSize: "13px", color: "#64748b", marginTop: "8px" }}>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#64748b",
+                  marginTop: "8px",
+                }}
+              >
                 Nenhuma postagem ainda. Seja o primeiro a registrar seu treino.
               </p>
             )}
@@ -498,12 +517,27 @@ export default function FeedPage() {
                           .slice(0, 2)
                           .toUpperCase()}
                       </div>
-
-                      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                        <span style={{ fontSize: "13px", fontWeight: 600 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "2px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: 600,
+                          }}
+                        >
                           {post.author_name || "Atleta"}
                         </span>
-                        <span style={{ fontSize: "11px", color: "#64748b" }}>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "#64748b",
+                          }}
+                        >
                           {new Date(post.created_at).toLocaleString()}
                         </span>
                       </div>
@@ -557,14 +591,22 @@ export default function FeedPage() {
                         marginTop: "4px",
                       }}
                     >
-                      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "12px",
+                          alignItems: "center",
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={() => handleLike(post.id)}
                           disabled={likeLoadingPostId === post.id}
                           style={{
                             border: "none",
-                            background: isLiked ? "rgba(34,197,94,0.15)" : "transparent",
+                            background: isLiked
+                              ? "rgba(34,197,94,0.15)"
+                              : "transparent",
                             color: isLiked ? "#4ade80" : "#e5e7eb",
                             display: "flex",
                             alignItems: "center",
@@ -615,7 +657,11 @@ export default function FeedPage() {
                           e.preventDefault();
                           handleSubmitComment(post.id);
                         }}
-                        style={{ display: "flex", gap: "8px", alignItems: "center" }}
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          alignItems: "center",
+                        }}
                       >
                         <input
                           type="text"
@@ -650,10 +696,13 @@ export default function FeedPage() {
                             color: "#020617",
                             cursor: "pointer",
                             whiteSpace: "nowrap",
-                            opacity: commentLoadingPostId === post.id ? 0.7 : 1,
+                            opacity:
+                              commentLoadingPostId === post.id ? 0.7 : 1,
                           }}
                         >
-                          {commentLoadingPostId === post.id ? "Enviando..." : "Enviar"}
+                          {commentLoadingPostId === post.id
+                            ? "Enviando..."
+                            : "Enviar"}
                         </button>
                       </form>
                     </div>
@@ -669,8 +718,15 @@ export default function FeedPage() {
                         }}
                       >
                         {comments.length === 0 ? (
-                          <p style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>
-                            Ainda não há comentários neste post. Seja o primeiro a comentar.
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              color: "#64748b",
+                              margin: 0,
+                            }}
+                          >
+                            Ainda não há comentários neste post. Seja o primeiro
+                            a comentar.
                           </p>
                         ) : (
                           <ul
@@ -684,7 +740,10 @@ export default function FeedPage() {
                             }}
                           >
                             {comments.map((c) => (
-                              <li key={c.id} style={{ display: "flex", gap: "8px" }}>
+                              <li
+                                key={c.id}
+                                style={{ display: "flex", gap: "8px" }}
+                              >
                                 <div
                                   style={{
                                     width: "22px",
@@ -708,8 +767,13 @@ export default function FeedPage() {
                                     .slice(0, 2)
                                     .toUpperCase()}
                                 </div>
-
-                                <div style={{ flex: 1, fontSize: "12px", lineHeight: 1.4 }}>
+                                <div
+                                  style={{
+                                    flex: 1,
+                                    fontSize: "12px",
+                                    lineHeight: 1.4,
+                                  }}
+                                >
                                   <div
                                     style={{
                                       display: "flex",
@@ -717,17 +781,32 @@ export default function FeedPage() {
                                       alignItems: "baseline",
                                     }}
                                   >
-                                    <span style={{ fontWeight: 600, color: "#e5e7eb" }}>
+                                    <span
+                                      style={{
+                                        fontWeight: 600,
+                                        color: "#e5e7eb",
+                                      }}
+                                    >
                                       {c.author_name || "Atleta"}
                                     </span>
-                                    <span style={{ fontSize: "10px", color: "#6b7280", marginLeft: "8px" }}>
-                                      {new Date(c.created_at).toLocaleDateString("pt-BR", {
+                                    <span
+                                      style={{
+                                        fontSize: "10px",
+                                        color: "#6b7280",
+                                        marginLeft: "8px",
+                                      }}
+                                    >
+                                      {new Date(
+                                        c.created_at
+                                      ).toLocaleDateString("pt-BR", {
                                         day: "2-digit",
                                         month: "2-digit",
                                       })}
                                     </span>
                                   </div>
-                                  <p style={{ margin: 0, color: "#d1d5db" }}>{c.content}</p>
+                                  <p style={{ margin: 0, color: "#d1d5db" }}>
+                                    {c.content}
+                                  </p>
                                 </div>
                               </li>
                             ))}
