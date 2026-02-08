@@ -132,11 +132,10 @@ export default function FeedPage() {
       }
 
       // 4) comentários dos posts
-      const { data: commentsData, error: commentsError } =
-        await supabaseBrowser
-          .from("feed_comments")
-          .select("post_id")
-          .in("post_id", postIds);
+      const { data: commentsData, error: commentsError } = await supabaseBrowser
+        .from("feed_comments")
+        .select("post_id")
+        .in("post_id", postIds);
 
       if (!commentsError && commentsData) {
         (commentsData as any[]).forEach((row) => {
@@ -330,6 +329,9 @@ export default function FeedPage() {
         color: "#e5e7eb",
         display: "flex",
         flexDirection: "column",
+        margin: 0,
+        padding: 0,
+        width: "100%",
       }}
     >
       <main
@@ -345,6 +347,27 @@ export default function FeedPage() {
             margin: "0 auto",
           }}
         >
+          {/* ✅ Logo no topo (responsivo) */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: "10px",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-sports-platform.png"
+              alt="Sports Platform"
+              style={{
+                width: "100%",
+                maxWidth: "320px",
+                height: "auto",
+                display: "block",
+              }}
+            />
+          </div>
+
           <div
             style={{
               marginBottom: "12px",
@@ -657,8 +680,7 @@ export default function FeedPage() {
                           color: "#020617",
                           cursor: "pointer",
                           whiteSpace: "nowrap",
-                          opacity:
-                            commentLoadingPostId === post.id ? 0.7 : 1,
+                          opacity: commentLoadingPostId === post.id ? 0.7 : 1,
                         }}
                       >
                         {commentLoadingPostId === post.id
@@ -701,7 +723,10 @@ export default function FeedPage() {
                           }}
                         >
                           {comments.map((c) => (
-                            <li key={c.id} style={{ display: "flex", gap: "8px" }}>
+                            <li
+                              key={c.id}
+                              style={{ display: "flex", gap: "8px" }}
+                            >
                               <div
                                 style={{
                                   width: "22px",
@@ -725,7 +750,13 @@ export default function FeedPage() {
                                   .slice(0, 2)
                                   .toUpperCase()}
                               </div>
-                              <div style={{ flex: 1, fontSize: "12px", lineHeight: 1.4 }}>
+                              <div
+                                style={{
+                                  flex: 1,
+                                  fontSize: "12px",
+                                  lineHeight: 1.4,
+                                }}
+                              >
                                 <div
                                   style={{
                                     display: "flex",
@@ -733,7 +764,12 @@ export default function FeedPage() {
                                     alignItems: "baseline",
                                   }}
                                 >
-                                  <span style={{ fontWeight: 600, color: "#e5e7eb" }}>
+                                  <span
+                                    style={{
+                                      fontWeight: 600,
+                                      color: "#e5e7eb",
+                                    }}
+                                  >
                                     {c.author_name || "Atleta"}
                                   </span>
                                   <span
@@ -743,13 +779,18 @@ export default function FeedPage() {
                                       marginLeft: "8px",
                                     }}
                                   >
-                                    {new Date(c.created_at).toLocaleDateString("pt-BR", {
-                                      day: "2-digit",
-                                      month: "2-digit",
-                                    })}
+                                    {new Date(c.created_at).toLocaleDateString(
+                                      "pt-BR",
+                                      {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                      }
+                                    )}
                                   </span>
                                 </div>
-                                <p style={{ margin: 0, color: "#d1d5db" }}>{c.content}</p>
+                                <p style={{ margin: 0, color: "#d1d5db" }}>
+                                  {c.content}
+                                </p>
                               </div>
                             </li>
                           ))}
