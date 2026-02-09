@@ -147,180 +147,217 @@ export default function ProfilePage() {
   };
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#020617",
-        color: "#e5e7eb",
-        padding: "16px",
-        paddingBottom: "80px",
-      }}
-    >
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <header
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            marginBottom: 20,
-          }}
-        >
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "999px",
-                background: "radial-gradient(circle at 20% 20%, #38bdf8, #0ea5e9 40%, #0f172a 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 20,
-                fontWeight: 700,
-                color: "#0b1120",
-              }}
-            >
-              {name ? name.charAt(0).toUpperCase() : "A"}
-            </div>
+    <>
+      {/* ✅ remove white margin in WebView */}
+      <style jsx global>{`
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #020617 !important;
+          width: 100%;
+          height: 100%;
+          overflow-x: hidden;
+        }
+      `}</style>
 
-            <div>
-              <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>My Profile</h1>
-              <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>Manage the name shown in SportPlatform.</p>
-            </div>
-          </div>
-
-          <button
-            onClick={handleSignOut}
-            disabled={signingOut}
+      <main
+        style={{
+          minHeight: "100vh",
+          background: "#020617",
+          color: "#e5e7eb",
+          padding: "16px",
+          paddingBottom: "80px",
+          width: "100vw",
+          margin: 0,
+          boxSizing: "border-box",
+          overflowX: "hidden",
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <header
             style={{
-              borderRadius: 999,
-              padding: "8px 14px",
-              border: "1px solid rgba(148,163,184,0.35)",
-              background: "rgba(2,6,23,0.6)",
-              color: "#e5e7eb",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: signingOut ? "not-allowed" : "pointer",
-              opacity: signingOut ? 0.7 : 1,
-            }}
-            title="Sign out"
-          >
-            {signingOut ? "Signing out..." : "Sign out"}
-          </button>
-        </header>
-
-        <section
-          style={{
-            borderRadius: 18,
-            padding: "16px 14px",
-            background: "radial-gradient(circle at top, #0f172a, #020617 60%)",
-            border: "1px solid rgba(148,163,184,0.4)",
-            marginBottom: 20,
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 15,
-              fontWeight: 600,
-              margin: 0,
-              marginBottom: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              marginBottom: 20,
             }}
           >
-            Basic info
-          </h2>
-
-          {loadingProfile ? (
-            <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Loading profile...</p>
-          ) : (
-            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <label htmlFor="name" style={{ fontSize: 12, color: "#d1d5db" }}>
-                  Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  style={{
-                    borderRadius: 10,
-                    padding: "8px 10px",
-                    border: "1px solid rgba(55,65,81,0.9)",
-                    backgroundColor: "#020617",
-                    color: "#e5e7eb",
-                    fontSize: 13,
-                  }}
-                />
-                <p
-                  style={{
-                    fontSize: 11,
-                    color: "#6b7280",
-                    margin: 0,
-                    marginTop: 2,
-                  }}
-                >
-                  This is the name that will appear in the feed, dashboard, and other areas of the app.
-                </p>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: "999px",
+                  background:
+                    "radial-gradient(circle at 20% 20%, #38bdf8, #0ea5e9 40%, #0f172a 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: "#0b1120",
+                }}
+              >
+                {name ? name.charAt(0).toUpperCase() : "A"}
               </div>
 
-              {email && (
+              <div>
+                <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>
+                  My Profile
+                </h1>
+                <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
+                  Manage the name shown in SportPlatform.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              style={{
+                borderRadius: 999,
+                padding: "8px 14px",
+                border: "1px solid rgba(148,163,184,0.35)",
+                background: "rgba(2,6,23,0.6)",
+                color: "#e5e7eb",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: signingOut ? "not-allowed" : "pointer",
+                opacity: signingOut ? 0.7 : 1,
+              }}
+              title="Sign out"
+            >
+              {signingOut ? "Signing out..." : "Sign out"}
+            </button>
+          </header>
+
+          <section
+            style={{
+              borderRadius: 18,
+              padding: "16px 14px",
+              background: "radial-gradient(circle at top, #0f172a, #020617 60%)",
+              border: "1px solid rgba(148,163,184,0.4)",
+              marginBottom: 20,
+            }}
+          >
+            <h2
+              style={{
+                fontSize: 15,
+                fontWeight: 600,
+                margin: 0,
+                marginBottom: 10,
+              }}
+            >
+              Basic info
+            </h2>
+
+            {loadingProfile ? (
+              <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
+                Loading profile...
+              </p>
+            ) : (
+              <form
+                onSubmit={handleSave}
+                style={{ display: "flex", flexDirection: "column", gap: 10 }}
+              >
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <span style={{ fontSize: 12, color: "#d1d5db" }}>Email (read-only)</span>
-                  <div
+                  <label htmlFor="name" style={{ fontSize: 12, color: "#d1d5db" }}>
+                    Name
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
                     style={{
                       borderRadius: 10,
                       padding: "8px 10px",
-                      border: "1px solid rgba(31,41,55,0.9)",
+                      border: "1px solid rgba(55,65,81,0.9)",
                       backgroundColor: "#020617",
+                      color: "#e5e7eb",
                       fontSize: 13,
-                      color: "#9ca3af",
+                      width: "100%",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: "#6b7280",
+                      margin: 0,
+                      marginTop: 2,
                     }}
                   >
-                    {email}
-                  </div>
+                    This is the name that will appear in the feed, dashboard, and
+                    other areas of the app.
+                  </p>
                 </div>
-              )}
 
-              {errorMsg && (
-                <p style={{ fontSize: 12, color: "#fca5a5", margin: 0, marginTop: 4 }}>
-                  {errorMsg}
-                </p>
-              )}
+                {email && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ fontSize: 12, color: "#d1d5db" }}>
+                      Email (read-only)
+                    </span>
+                    <div
+                      style={{
+                        borderRadius: 10,
+                        padding: "8px 10px",
+                        border: "1px solid rgba(31,41,55,0.9)",
+                        backgroundColor: "#020617",
+                        fontSize: 13,
+                        color: "#9ca3af",
+                        width: "100%",
+                        boxSizing: "border-box",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {email}
+                    </div>
+                  </div>
+                )}
 
-              {successMsg && (
-                <p style={{ fontSize: 12, color: "#bbf7d0", margin: 0, marginTop: 4 }}>
-                  {successMsg}
-                </p>
-              )}
+                {errorMsg && (
+                  <p style={{ fontSize: 12, color: "#fca5a5", margin: 0, marginTop: 4 }}>
+                    {errorMsg}
+                  </p>
+                )}
 
-              <button
-                type="submit"
-                disabled={saving}
-                style={{
-                  marginTop: 8,
-                  alignSelf: "flex-start",
-                  borderRadius: 999,
-                  padding: "8px 16px",
-                  border: "none",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  background: "linear-gradient(to right, #38bdf8, #0ea5e9, #0284c7)",
-                  color: "#0b1120",
-                  cursor: saving ? "not-allowed" : "pointer",
-                  opacity: saving ? 0.7 : 1,
-                  transition: "opacity 0.15s ease-out",
-                }}
-              >
-                {saving ? "Saving..." : "Save changes"}
-              </button>
-            </form>
-          )}
-        </section>
-      </div>
+                {successMsg && (
+                  <p style={{ fontSize: 12, color: "#bbf7d0", margin: 0, marginTop: 4 }}>
+                    {successMsg}
+                  </p>
+                )}
 
-      <BottomNavbar />
-    </main>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  style={{
+                    marginTop: 8,
+                    alignSelf: "flex-start",
+                    borderRadius: 999,
+                    padding: "8px 16px",
+                    border: "none",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background: "linear-gradient(to right, #38bdf8, #0ea5e9, #0284c7)",
+                    color: "#0b1120",
+                    cursor: saving ? "not-allowed" : "pointer",
+                    opacity: saving ? 0.7 : 1,
+                    transition: "opacity 0.15s ease-out",
+                  }}
+                >
+                  {saving ? "Saving..." : "Save changes"}
+                </button>
+              </form>
+            )}
+          </section>
+        </div>
+
+        <BottomNavbar />
+      </main>
+    </>
   );
 }
