@@ -334,6 +334,29 @@ export default function EventDetailPage() {
       }}
     >
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
+        {/* ✅ LOGO em uma linha só (não atrapalha texto) */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginBottom: 10,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-sports-platform.png"
+            alt="Sports Platform"
+            style={{
+              width: "100%",
+              maxWidth: 320,
+              height: "auto",
+              display: "block",
+              opacity: 0.95,
+            }}
+          />
+        </div>
+
         {/* Header */}
         <header style={{ marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -347,31 +370,6 @@ export default function EventDetailPage() {
               <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#9ca3af" }}>
                 {whenText} • {fieldValue(event.location_name)}
               </p>
-            </div>
-
-            {/* ✅ logo topo (troca ps.png -> logo-sports-platform.png) */}
-            <div
-              className="topLogo"
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                alignItems: "center",
-                flexShrink: 0,
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/logo-sports-platform.png"
-                alt="Sports Platform"
-                style={{
-                  height: 56,          // ✅ menor pra não brigar com o título
-                  width: "auto",
-                  maxWidth: 220,
-                  objectFit: "contain",
-                  display: "block",
-                  opacity: 0.95,
-                }}
-              />
             </div>
           </div>
         </header>
@@ -586,9 +584,6 @@ export default function EventDetailPage() {
             @media (max-width: 360px) {
               .pairRow {
                 grid-template-columns: 1fr;
-              }
-              .topLogo {
-                display: none; /* ✅ no mobile, pra não apertar título/subtítulo */
               }
             }
 
