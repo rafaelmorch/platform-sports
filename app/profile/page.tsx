@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import BottomNavbar from "@/components/BottomNavbar";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 type ProfileRow = {
@@ -28,7 +27,6 @@ export default function ProfilePage() {
       setErrorMsg(null);
       setSuccessMsg(null);
 
-      // 0) must be logged in
       const {
         data: { session },
       } = await supabaseBrowser.auth.getSession();
@@ -41,7 +39,6 @@ export default function ProfilePage() {
       const user = session.user;
       setEmail(user.email ?? null);
 
-      // 1) load name (profiles -> fallback user_metadata)
       try {
         const { data: profile, error: profileError } = await supabaseBrowser
           .from("profiles")
@@ -75,8 +72,16 @@ export default function ProfilePage() {
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    if (!name.trim()) {
+    const trimmed = name.trim();
+
+    if (!trimmed) {
       setErrorMsg("Please enter your name.");
+      return;
+    }
+
+    // ✅ Avoid emails being used as display name
+    if (trimmed.includes("@")) {
+      setErrorMsg("Please enter your name (not an email).");
       return;
     }
 
@@ -89,7 +94,6 @@ export default function ProfilePage() {
 
       if (!session) {
         setErrorMsg("You must be logged in to save your profile.");
-        setSaving(false);
         router.replace("/login");
         return;
       }
@@ -101,7 +105,7 @@ export default function ProfilePage() {
         .upsert(
           {
             id: user.id,
-            full_name: name.trim(),
+            full_name: trimmed,
           },
           { onConflict: "id" }
         );
@@ -109,7 +113,6 @@ export default function ProfilePage() {
       if (upsertError) {
         console.error("Error saving profile:", upsertError);
         setErrorMsg("Error saving profile data.");
-        setSaving(false);
         return;
       }
 
@@ -161,20 +164,50 @@ export default function ProfilePage() {
         }
       `}</style>
 
+      {/* ✅ iPad-friendly spacing + readable controls */}
+      <style jsx>{`
+        .wrap {
+          max-width: 560px;
+          margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+          .wrap {
+            max-width: 640px;
+          }
+          .title {
+            font-size: 22px !important;
+          }
+          .subtitle {
+            font-size: 13px !important;
+          }
+          .card {
+            padding: 18px 16px !important;
+          }
+          .input {
+            padding: 10px 12px !important;
+            font-size: 14px !important;
+          }
+          .btn {
+            padding: 10px 18px !important;
+            font-size: 14px !important;
+          }
+        }
+      `}</style>
+
       <main
         style={{
           minHeight: "100vh",
           background: "#020617",
           color: "#e5e7eb",
-          padding: "16px",
-          paddingBottom: "80px",
-          width: "100vw",
-          margin: 0,
+          padding: 16,
+          // ✅ extra safe-area so content is not crowded by bottom nav on iPad/iPhone
+          paddingBottom: "calc(110px + env(safe-area-inset-bottom))",
           boxSizing: "border-box",
           overflowX: "hidden",
         }}
       >
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <div className="wrap">
           <header
             style={{
               display: "flex",
@@ -182,13 +215,14 @@ export default function ProfilePage() {
               justifyContent: "space-between",
               gap: 12,
               marginBottom: 20,
+              flexWrap: "wrap",
             }}
           >
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <div
                 style={{
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   borderRadius: "999px",
                   background:
                     "radial-gradient(circle at 20% 20%, #38bdf8, #0ea5e9 40%, #0f172a 100%)",
@@ -198,16 +232,17 @@ export default function ProfilePage() {
                   fontSize: 20,
                   fontWeight: 700,
                   color: "#0b1120",
+                  flex: "0 0 auto",
                 }}
               >
                 {name ? name.charAt(0).toUpperCase() : "A"}
               </div>
 
               <div>
-                <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>
+                <h1 className="title" style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>
                   My Profile
                 </h1>
-                <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
+                <p className="subtitle" style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
                   Manage the name shown in SportPlatform.
                 </p>
               </div>
@@ -218,7 +253,7 @@ export default function ProfilePage() {
               disabled={signingOut}
               style={{
                 borderRadius: 999,
-                padding: "8px 14px",
+                padding: "9px 14px",
                 border: "1px solid rgba(148,163,184,0.35)",
                 background: "rgba(2,6,23,0.6)",
                 color: "#e5e7eb",
@@ -226,6 +261,7 @@ export default function ProfilePage() {
                 fontWeight: 600,
                 cursor: signingOut ? "not-allowed" : "pointer",
                 opacity: signingOut ? 0.7 : 1,
+                whiteSpace: "nowrap",
               }}
               title="Sign out"
             >
@@ -234,6 +270,7 @@ export default function ProfilePage() {
           </header>
 
           <section
+            className="card"
             style={{
               borderRadius: 18,
               padding: "16px 14px",
@@ -242,26 +279,14 @@ export default function ProfilePage() {
               marginBottom: 20,
             }}
           >
-            <h2
-              style={{
-                fontSize: 15,
-                fontWeight: 600,
-                margin: 0,
-                marginBottom: 10,
-              }}
-            >
+            <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0, marginBottom: 10 }}>
               Basic info
             </h2>
 
             {loadingProfile ? (
-              <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
-                Loading profile...
-              </p>
+              <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Loading profile...</p>
             ) : (
-              <form
-                onSubmit={handleSave}
-                style={{ display: "flex", flexDirection: "column", gap: 10 }}
-              >
+              <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <label htmlFor="name" style={{ fontSize: 12, color: "#d1d5db" }}>
                     Name
@@ -272,6 +297,7 @@ export default function ProfilePage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Your name"
+                    className="input"
                     style={{
                       borderRadius: 10,
                       padding: "8px 10px",
@@ -283,24 +309,14 @@ export default function ProfilePage() {
                       boxSizing: "border-box",
                     }}
                   />
-                  <p
-                    style={{
-                      fontSize: 11,
-                      color: "#6b7280",
-                      margin: 0,
-                      marginTop: 2,
-                    }}
-                  >
-                    This is the name that will appear in the feed, dashboard, and
-                    other areas of the app.
+                  <p style={{ fontSize: 11, color: "#6b7280", margin: 0, marginTop: 2 }}>
+                    This is the name that will appear in the feed, dashboard, and other areas of the app.
                   </p>
                 </div>
 
                 {email && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <span style={{ fontSize: 12, color: "#d1d5db" }}>
-                      Email (read-only)
-                    </span>
+                    <span style={{ fontSize: 12, color: "#d1d5db" }}>Email (read-only)</span>
                     <div
                       style={{
                         borderRadius: 10,
@@ -320,20 +336,17 @@ export default function ProfilePage() {
                 )}
 
                 {errorMsg && (
-                  <p style={{ fontSize: 12, color: "#fca5a5", margin: 0, marginTop: 4 }}>
-                    {errorMsg}
-                  </p>
+                  <p style={{ fontSize: 12, color: "#fca5a5", margin: 0, marginTop: 4 }}>{errorMsg}</p>
                 )}
 
                 {successMsg && (
-                  <p style={{ fontSize: 12, color: "#bbf7d0", margin: 0, marginTop: 4 }}>
-                    {successMsg}
-                  </p>
+                  <p style={{ fontSize: 12, color: "#bbf7d0", margin: 0, marginTop: 4 }}>{successMsg}</p>
                 )}
 
                 <button
                   type="submit"
                   disabled={saving}
+                  className="btn"
                   style={{
                     marginTop: 8,
                     alignSelf: "flex-start",
@@ -355,8 +368,6 @@ export default function ProfilePage() {
             )}
           </section>
         </div>
-
-        <BottomNavbar />
       </main>
     </>
   );
