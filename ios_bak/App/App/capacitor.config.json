@@ -1,0 +1,13 @@
+{
+	"appId": "com.platformsports.app",
+	"appName": "Platform Sports",
+	"webDir": "public",
+	"server": {
+		"url": "https://platform-sports.vercel.app",
+		"cleartext": false
+	},
+	"packageClassList": [
+		"AppPlugin",
+		"CAPBrowserPlugin"
+	]
+}

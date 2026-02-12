@@ -1,5 +1,6 @@
 "use client";
 
+import "./globals.css";
 import { Rowdies } from "next/font/google";
 import { usePathname } from "next/navigation";
 import BottomNavbar from "@/components/BottomNavbar";
@@ -29,6 +30,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
+      </head>
       <body className={rowdies.className}>
         {showHeader && <Header />}
         {children}
@@ -37,3 +44,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
