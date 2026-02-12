@@ -47,5 +47,18 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+
+	<!-- ✅ Helps keyboard/input behavior in WKWebView (Capacitor) -->
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+
+	<!-- ✅ Optional WKWebView settings dictionary -->
+	<key>WKWebView</key>
+	<dict>
+		<key>AllowsBackForwardNavigationGestures</key>
+		<true/>
+	</dict>
+
 </dict>
 </plist>
+
