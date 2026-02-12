@@ -269,7 +269,7 @@ export default function NewFeedPostPage() {
                 border: "1px solid rgba(55,65,81,0.9)",
                 backgroundColor: "#020617",
                 color: "#e5e7eb",
-                fontSize: 13,
+                fontSize: 16,
                 resize: "vertical",
               }}
             />
@@ -283,7 +283,7 @@ export default function NewFeedPostPage() {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                style={{ fontSize: 12, color: "#e5e7eb" }}
+                style={{ fontSize: 16, color: "#e5e7eb" }}
               />
 
               {imagePreview && (
