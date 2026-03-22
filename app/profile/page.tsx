@@ -18,6 +18,7 @@ export default function ProfilePage() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -79,7 +80,6 @@ export default function ProfilePage() {
       return;
     }
 
-    // ✅ Avoid emails being used as display name
     if (trimmed.includes("@")) {
       setErrorMsg("Please enter your name (not an email).");
       return;
@@ -149,9 +149,56 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    const confirmDelete = confirm(
+      "Are you sure you want to delete your account? This action is permanent and cannot be undone."
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      setDeleting(true);
+      setErrorMsg(null);
+      setSuccessMsg(null);
+
+      const {
+        data: { session },
+      } = await supabaseBrowser.auth.getSession();
+
+      if (!session) {
+        router.replace("/login");
+        return;
+      }
+
+      const user = session.user;
+
+      const res = await fetch("/api/delete-account", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Error deleting account.");
+      }
+
+      await supabaseBrowser.auth.signOut();
+      router.replace("/login");
+      router.refresh();
+    } catch (err) {
+      console.error("Delete account error:", err);
+      setErrorMsg("Error deleting account. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <>
-      {/* ✅ remove white margin in WebView */}
       <style jsx global>{`
         html,
         body {
@@ -164,7 +211,6 @@ export default function ProfilePage() {
         }
       `}</style>
 
-      {/* ✅ iPad-friendly spacing + readable controls */}
       <style jsx>{`
         .wrap {
           max-width: 560px;
@@ -201,7 +247,6 @@ export default function ProfilePage() {
           background: "#020617",
           color: "#e5e7eb",
           padding: 16,
-          // ✅ extra safe-area so content is not crowded by bottom nav on iPad/iPhone
           paddingBottom: "calc(110px + env(safe-area-inset-bottom))",
           boxSizing: "border-box",
           overflowX: "hidden",
@@ -363,6 +408,27 @@ export default function ProfilePage() {
                   }}
                 >
                   {saving ? "Saving..." : "Save changes"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  style={{
+                    marginTop: 16,
+                    alignSelf: "flex-start",
+                    borderRadius: 999,
+                    padding: "8px 16px",
+                    border: "1px solid rgba(239,68,68,0.5)",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background: "transparent",
+                    color: "#f87171",
+                    cursor: deleting ? "not-allowed" : "pointer",
+                    opacity: deleting ? 0.7 : 1,
+                  }}
+                >
+                  {deleting ? "Processing..." : "Delete Account"}
                 </button>
               </form>
             )}

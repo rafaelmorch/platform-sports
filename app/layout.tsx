@@ -5,13 +5,18 @@ import { Rowdies } from "next/font/google";
 import { usePathname } from "next/navigation";
 import BottomNavbar from "@/components/BottomNavbar";
 import Header from "@/components/Header";
+import CapacitorAndroidFix from "./CapacitorAndroidFix";
 
 const rowdies = Rowdies({
   subsets: ["latin"],
   weight: ["300", "400", "700"],
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
 
   // ✅ Somente as páginas principais do app têm BottomNavbar
@@ -37,6 +42,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={rowdies.className}>
+        {/* ✅ Roda apenas no Android (não afeta iOS nem web) */}
+        <CapacitorAndroidFix />
+
         {showHeader && <Header />}
         {children}
         {showBottomNav && <BottomNavbar />}

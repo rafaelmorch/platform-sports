@@ -8,6 +8,11 @@ const config: CapacitorConfig = {
     url: 'https://platform-sports.vercel.app',
     cleartext: false,
   },
+  plugins: {
+    StatusBar: {
+      overlaysWebView: false
+    }
+  }
 };
 
 export default config;
