@@ -7,7 +7,11 @@ export default function RegisterPage() {
     const script = document.createElement("script");
     script.src = "https://pci.jotform.com/jsform/260788197607169";
     script.async = true;
-    document.getElementById("jotform-container")?.appendChild(script);
+
+    const container = document.getElementById("jotform-container");
+    if (container && !container.hasChildNodes()) {
+      container.appendChild(script);
+    }
   }, []);
 
   return (
@@ -20,12 +24,12 @@ export default function RegisterPage() {
     >
       <div
         style={{
-          maxWidth: 800,
+          maxWidth: 900,
           margin: "0 auto",
           color: "#e5e7eb",
         }}
       >
-        <h1 style={{ marginBottom: 12 }}>Event Registration</h1>
+        <h1 style={{ marginBottom: 16 }}>Event Registration</h1>
 
         <div id="jotform-container" />
       </div>
