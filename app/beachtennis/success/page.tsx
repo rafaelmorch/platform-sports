@@ -1,10 +1,14 @@
-"use client";
+type SuccessPageProps = {
+  searchParams?: Promise<{
+    code?: string;
+  }>;
+};
 
-import { useSearchParams } from "next/navigation";
-
-export default function BeachTennisSuccessPage() {
-  const params = useSearchParams();
-  const code = params.get("code");
+export default async function BeachTennisSuccessPage({
+  searchParams,
+}: SuccessPageProps) {
+  const params = searchParams ? await searchParams : undefined;
+  const code = params?.code;
 
   const pageStyle: React.CSSProperties = {
     minHeight: "100vh",
