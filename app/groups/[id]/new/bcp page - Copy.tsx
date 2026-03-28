@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-// import BottomNavbar from "@/components/BottomNavbar";
+import BottomNavbar from "@/components/BottomNavbar";
 import BackArrow from "@/components/BackArrow";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
@@ -17,7 +17,7 @@ type GroupRow = {
 };
 
 type WeekDraft = {
-  weekIndex: number; // 1..N (UI)
+  week_start: string; // YYYY-MM-DD
   title: string;
   content: string;
 };
@@ -35,22 +35,26 @@ function toISODate(d: Date) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// Monday of current week (internal only)
+// returns Monday of the week for given date
 function mondayOf(date: Date) {
   const d = new Date(date);
   const day = d.getDay(); // 0 Sun ... 6 Sat
-  const diff = (day === 0 ? -6 : 1) - day;
+  const diff = (day === 0 ? -6 : 1) - day; // move to Monday
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
   return d;
 }
 
-function addDaysISO(isoYYYYMMDD: string, days: number) {
-  const [y, m, d] = isoYYYYMMDD.split("-").map((x) => Number(x));
-  const dt = new Date(y, (m || 1) - 1, d || 1);
-  dt.setDate(dt.getDate() + days);
-  dt.setHours(0, 0, 0, 0);
-  return toISODate(dt);
+function fmtDateShort(d: string) {
+  try {
+    return new Date(d + "T00:00:00").toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    });
+  } catch {
+    return d;
+  }
 }
 
 export default function CreateTrainingPage() {
@@ -65,12 +69,14 @@ export default function CreateTrainingPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [group, setGroup] = useState<GroupRow | null>(null);
 
-  // Weekly only (internal schedule)
-  const scheduleType: "weekly" = "weekly";
-  const [weekStart] = useState<string>(() => toISODate(mondayOf(new Date()))); // internal only (not shown)
+  // schedule
+  const [scheduleType] = useState<"weekly">("weekly");
+  const [weekStart, setWeekStart] = useState<string>(() =>
+    toISODate(mondayOf(new Date()))
+  );
 
-  // ✅ Number of weeks MUST start empty
-  const [weeksCountStr, setWeeksCountStr] = useState<string>("");
+  // multi-week
+  const [weeksCount, setWeeksCount] = useState<number>(4);
 
   // AI + editor
   const [prompt, setPrompt] = useState("");
@@ -86,17 +92,12 @@ export default function CreateTrainingPage() {
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
 
-  // ===== Light gray theme styles =====
-  const pageBg = "#f3f4f6"; // light gray
-  const textMain = "#0f172a"; // near-black
-  const textSub = "rgba(15,23,42,0.65)";
-
   const cardStyle = useMemo(
     () => ({
-      borderRadius: 16,
-      border: "1px solid rgba(15,23,42,0.10)",
-      background: "#e5e7eb",
-      boxShadow: "0 8px 20px rgba(15,23,42,0.08)",
+      borderRadius: 18,
+      border: "1px solid rgba(56,189,248,0.15)",
+      background: "linear-gradient(160deg, rgba(2,6,23,0.98), rgba(0,0,0,1))",
+      boxShadow: "0 6px 18px rgba(2,132,199,0.08)",
       padding: 14,
     }),
     []
@@ -106,43 +107,14 @@ export default function CreateTrainingPage() {
     () => ({
       width: "100%",
       borderRadius: 14,
-      border: "1px solid rgba(15,23,42,0.16)",
-      background: "#f9fafb",
-      color: textMain,
+      border: "1px solid rgba(148,163,184,0.22)",
+      background: "rgba(2,6,23,0.70)",
+      color: "#e5e7eb",
       padding: "10px 12px",
       outline: "none",
       fontSize: 13,
     }),
-    [textMain]
-  );
-
-  const buttonPrimary = useMemo(
-    () => ({
-      width: "100%",
-      padding: "12px 14px",
-      borderRadius: 14,
-      border: "1px solid rgba(15,23,42,0.18)",
-      background: "#111827",
-      color: "#ffffff",
-      fontWeight: 900 as const,
-      cursor: "pointer",
-    }),
     []
-  );
-
-  const buttonGhost = useMemo(
-    () => ({
-      padding: "8px 10px",
-      borderRadius: 999,
-      border: "1px solid rgba(15,23,42,0.16)",
-      background: "#f9fafb",
-      color: textMain,
-      fontWeight: 900 as const,
-      fontSize: 12,
-      cursor: "pointer",
-      whiteSpace: "nowrap" as const,
-    }),
-    [textMain]
   );
 
   // ✅ Require login
@@ -158,7 +130,7 @@ export default function CreateTrainingPage() {
       if (cancelled) return;
 
       if (!session) {
-        const returnTo = `/groups/${groupId}/new`;
+        const returnTo = `/groups/${groupId}/training/new`;
         try {
           localStorage.setItem("ps:returnTo", returnTo);
         } catch {}
@@ -251,7 +223,7 @@ export default function CreateTrainingPage() {
       setCheckingOwner(true);
 
       if (group.created_by !== userId) {
-        router.replace(`/groups/${groupId}`);
+        router.replace(`/groups/${groupId}/training`);
         return;
       }
 
@@ -276,21 +248,6 @@ export default function CreateTrainingPage() {
     setContent(w.content);
   }, [weeksDraft, selectedIndex]);
 
-  function parseWeeksCountOrError(): number | null {
-    const raw = weeksCountStr.trim();
-    if (!raw) {
-      setAiError("Please fill Number of weeks (max 24).");
-      return null;
-    }
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      setAiError("Number of weeks must be a valid number (1 to 24).");
-      return null;
-    }
-    const n = clampInt(parsed, 1, 24);
-    return n;
-  }
-
   async function generateWithAI() {
     setAiError(null);
     setPublishError(null);
@@ -306,8 +263,8 @@ export default function CreateTrainingPage() {
       return;
     }
 
-    const n = parseWeeksCountOrError();
-    if (!n) return;
+    const n = clampInt(weeksCount, 1, 24);
+    setWeeksCount(n);
 
     setAiLoading(true);
     try {
@@ -318,8 +275,8 @@ export default function CreateTrainingPage() {
           prompt: p,
           groupName: group.name,
           groupGoal: group.goal ?? "",
-          scheduleType, // weekly only
-          weekStart, // internal only
+          scheduleType,
+          weekStart,
           weeksCount: n,
         }),
       });
@@ -333,29 +290,28 @@ export default function CreateTrainingPage() {
       }
 
       if (data?.error) {
+        // backend may return 200 with error + raw
         setAiError(data.error);
         setAiLoading(false);
         return;
       }
 
-      // Expect: { weeks: [{ title, content }, ...] }
-      const weeks = Array.isArray(data?.weeks) ? (data.weeks as any[]) : [];
+      const weeks = Array.isArray(data?.weeks) ? (data.weeks as WeekDraft[]) : [];
       if (!weeks.length) {
         setAiError("AI returned empty weeks.");
         setAiLoading(false);
         return;
       }
 
-      const cleaned: WeekDraft[] = weeks
-        .slice(0, n)
-        .map((w, i) => ({
-          weekIndex: i + 1,
-          title: String(w?.title ?? "").trim(),
-          content: String(w?.content ?? "").trim(),
+      const cleaned = weeks
+        .map((w) => ({
+          week_start: String(w.week_start ?? "").trim(),
+          title: String(w.title ?? "").trim(),
+          content: String(w.content ?? "").trim(),
         }))
-        .filter((w) => w.title && w.content);
+        .filter((w) => w.week_start && w.title && w.content);
 
-      if (cleaned.length !== Math.min(weeks.length, n)) {
+      if (cleaned.length !== weeks.length) {
         setAiError("AI returned incomplete weeks. Try again.");
         setAiLoading(false);
         return;
@@ -375,11 +331,6 @@ export default function CreateTrainingPage() {
     setAiError(null);
 
     if (!groupId || !userId) return;
-
-    // ✅ Must not allow publish if Number of weeks is empty
-    const n = parseWeeksCountOrError();
-    if (!n) return;
-
     if (!weeksDraft.length) {
       setPublishError("Generate weeks first.");
       return;
@@ -388,47 +339,35 @@ export default function CreateTrainingPage() {
     setPublishing(true);
 
     try {
-      // ✅ Delete ALL previous weekly trainings for this group first
-      const del = await supabaseBrowser
-        .from("app_group_trainings")
-        .delete()
-        .eq("group_id", groupId)
-        .eq("schedule_type", "weekly");
-
-      if (del.error) {
-        setPublishError(del.error.message);
-        setPublishing(false);
-        return;
-      }
-
-      // ✅ Insert weeks in Week 1..N order
-      const baseWeekStart = weekStart; // Monday ISO
-      const rows = weeksDraft.slice(0, n).map((w, i) => ({
+      // bulk insert one row per week (weekly)
+      const rows = weeksDraft.map((w) => ({
         group_id: groupId,
         created_by: userId,
         title: w.title,
         content: w.content,
         is_published: true,
         schedule_type: "weekly",
-        week_start_date: addDaysISO(baseWeekStart, 7 * i), // internal ordering (not shown)
+        week_start_date: w.week_start, // must satisfy constraint
         training_date: null,
       }));
 
-      const ins = await supabaseBrowser.from("app_group_trainings").insert(rows);
+      const { error } = await supabaseBrowser.from("app_group_trainings").insert(rows);
 
-      if (ins.error) {
-        setPublishError(ins.error.message);
+      if (error) {
+        setPublishError(error.message);
         setPublishing(false);
         return;
       }
 
-      router.replace(`/groups/${groupId}`);
+      // go back to training list
+      router.replace(`/groups/${groupId}/training`);
     } catch (e: any) {
       setPublishError(e?.message ?? "Publish error.");
       setPublishing(false);
     }
   }
 
+  // Avoid flicker while redirecting
   if (checkingAuth || checkingMember || checkingOwner) return null;
 
   return (
@@ -436,8 +375,8 @@ export default function CreateTrainingPage() {
       <main
         style={{
           minHeight: "100vh",
-          background: pageBg,
-          color: textMain,
+          background: "#000",
+          color: "#e5e7eb",
           padding: "16px",
           paddingBottom: "120px",
         }}
@@ -449,57 +388,79 @@ export default function CreateTrainingPage() {
 
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900 }}>Create Training</h1>
           {group?.name ? (
-            <p style={{ margin: "6px 0 0 0", fontSize: 12, color: textSub }}>
-              Group: <span style={{ color: textMain, fontWeight: 900 }}>{group.name}</span>
+            <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "#9ca3af" }}>
+              Group: <span style={{ color: "#e5e7eb", fontWeight: 800 }}>{group.name}</span>
             </p>
           ) : null}
 
           <div style={{ height: 12 }} />
 
-          {/* Weekly-only + Number of weeks */}
+          {/* Schedule card */}
           <div style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 10 }}>Schedule</div>
 
-            <div style={{ fontSize: 13, fontWeight: 900, marginBottom: 10 }}>
-              Weekly
-              <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 700, color: textSub }}>
-                (One card per week)
-              </span>
-            </div>
-
-            <div>
-              <div style={{ fontSize: 11, color: textSub, marginBottom: 6 }}>Number of weeks</div>
-
-              <input
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={weeksCountStr}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/[^\d]/g, "");
-                  setWeeksCountStr(v);
-                }}
-                placeholder="Max 24 weeks"
-                style={inputStyle}
-              />
-
-              <div style={{ marginTop: 6, fontSize: 11, color: textSub }}>
-                Max: <span style={{ color: textMain, fontWeight: 900 }}>24</span> weeks.
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>Type</div>
+                <div
+                  style={{
+                    ...inputStyle,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    opacity: 0.95,
+                  }}
+                >
+                  <span style={{ fontWeight: 900 }}>Weekly</span>
+                  <span style={{ fontSize: 11, color: "#9ca3af" }}>cards per week</span>
+                </div>
               </div>
 
-              {/* inline alert only when user tries and fails (aiError already shows) */}
+              <div>
+                <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>Week start (Monday)</div>
+                <input
+                  type="date"
+                  value={weekStart}
+                  onChange={(e) => setWeekStart(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+
+            <div style={{ height: 10 }} />
+
+            <div>
+              <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>Number of weeks</div>
+              <input
+                type="number"
+                min={1}
+                max={24}
+                value={weeksCount}
+                onChange={(e) => setWeeksCount(clampInt(e.target.value, 1, 24))}
+                style={inputStyle}
+              />
+              <div style={{ marginTop: 6, fontSize: 11, color: "#9ca3af" }}>
+                Weekly plan starting <span style={{ color: "#e5e7eb", fontWeight: 800 }}>{fmtDateShort(weekStart)}</span>.
+              </div>
             </div>
           </div>
 
           <div style={{ height: 12 }} />
 
-          {/* AI prompt */}
+          {/* AI prompt card */}
           <div style={cardStyle}>
-            <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 10 }}>AI Prompt</div>
+            <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 10 }}>AI Prompt (Draft Generator)</div>
 
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe the athletes and the goal. Example: Beginners, run/walk, goal is 5K consistency..."
+              placeholder="Describe the athletes and the goal. Example: Beginners, can barely run 5K, goal is consistency + 5K improvement..."
               style={{
                 ...inputStyle,
                 minHeight: 110,
@@ -509,12 +470,12 @@ export default function CreateTrainingPage() {
             />
 
             {aiError ? (
-              <div style={{ marginTop: 10, fontSize: 12, color: "#b91c1c", fontWeight: 900 }}>
+              <div style={{ marginTop: 10, fontSize: 12, color: "#fca5a5", fontWeight: 800 }}>
                 {aiError}
               </div>
             ) : (
-              <div style={{ marginTop: 10, fontSize: 11, color: textSub }}>
-                Generate drafts, then review before publishing.
+              <div style={{ marginTop: 10, fontSize: 11, color: "#9ca3af" }}>
+                You will review & edit before publishing.
               </div>
             )}
 
@@ -522,9 +483,16 @@ export default function CreateTrainingPage() {
               onClick={generateWithAI}
               disabled={aiLoading}
               style={{
-                ...buttonPrimary,
                 marginTop: 10,
-                opacity: aiLoading ? 0.6 : 1,
+                width: "100%",
+                padding: "12px 14px",
+                borderRadius: 14,
+                border: "1px solid rgba(148,163,184,0.22)",
+                background: aiLoading
+                  ? "rgba(148,163,184,0.10)"
+                  : "linear-gradient(90deg, rgba(255, 200, 0, 0.18), rgba(255, 70, 0, 0.14))",
+                color: aiLoading ? "#94a3b8" : "#fde68a",
+                fontWeight: 900,
                 cursor: aiLoading ? "not-allowed" : "pointer",
               }}
             >
@@ -534,15 +502,17 @@ export default function CreateTrainingPage() {
 
           <div style={{ height: 12 }} />
 
-          {/* Weeks + editor */}
+          {/* Weeks list + editor */}
           <div style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 10 }}>Weeks</div>
 
             {weeksDraft.length === 0 ? (
-              <div style={{ fontSize: 13, color: textSub }}>No draft yet. Generate with AI to create weekly cards.</div>
+              <div style={{ fontSize: 13, color: "#9ca3af" }}>
+                No draft yet. Generate with AI to create weekly cards.
+              </div>
             ) : (
               <>
-                {/* Week selector: Week 1 / Week 2 ... (NO DATES) */}
+                {/* week selector */}
                 <div
                   style={{
                     display: "flex",
@@ -554,27 +524,36 @@ export default function CreateTrainingPage() {
                 >
                   {weeksDraft.map((w, i) => (
                     <button
-                      key={`week-${i}`}
+                      key={`${w.week_start}-${i}`}
                       onClick={() => setSelectedIndex(i)}
                       style={{
-                        ...buttonGhost,
+                        flex: "0 0 auto",
+                        padding: "8px 10px",
+                        borderRadius: 999,
                         border:
                           i === selectedIndex
-                            ? "1px solid rgba(17,24,39,0.55)"
-                            : "1px solid rgba(15,23,42,0.16)",
-                        background: i === selectedIndex ? "#111827" : "#f9fafb",
-                        color: i === selectedIndex ? "#ffffff" : textMain,
+                            ? "1px solid rgba(56,189,248,0.45)"
+                            : "1px solid rgba(148,163,184,0.22)",
+                        background:
+                          i === selectedIndex
+                            ? "rgba(2,132,199,0.16)"
+                            : "rgba(148,163,184,0.10)",
+                        color: i === selectedIndex ? "#e0f2fe" : "#cbd5e1",
+                        fontWeight: 900,
+                        fontSize: 12,
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      {`Week ${w.weekIndex}`}
+                      {`Week ${i + 1} • ${fmtDateShort(w.week_start)}`}
                     </button>
                   ))}
                 </div>
 
-                {/* Editor */}
+                {/* editor (edits ONLY selected week, and then syncs back into weeksDraft) */}
                 <div style={{ display: "grid", gap: 10 }}>
                   <div>
-                    <div style={{ fontSize: 11, color: textSub, marginBottom: 6 }}>Title</div>
+                    <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>Title</div>
                     <input
                       value={title}
                       onChange={(e) => {
@@ -586,13 +565,13 @@ export default function CreateTrainingPage() {
                           return next;
                         });
                       }}
-                      placeholder={`e.g. Week ${weeksDraft[selectedIndex]?.weekIndex ?? 1} — Base + Technique`}
+                      placeholder="e.g. Week Plan — Base + Speed"
                       style={inputStyle}
                     />
                   </div>
 
                   <div>
-                    <div style={{ fontSize: 11, color: textSub, marginBottom: 6 }}>Content</div>
+                    <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>Content</div>
                     <textarea
                       value={content}
                       onChange={(e) => {
@@ -604,7 +583,7 @@ export default function CreateTrainingPage() {
                           return next;
                         });
                       }}
-                      placeholder="Write the weekly plan here..."
+                      placeholder="Write the training here..."
                       style={{
                         ...inputStyle,
                         minHeight: 220,
@@ -624,7 +603,7 @@ export default function CreateTrainingPage() {
           {/* Publish */}
           <div style={cardStyle}>
             {publishError ? (
-              <div style={{ marginBottom: 10, fontSize: 12, color: "#b91c1c", fontWeight: 900 }}>
+              <div style={{ marginBottom: 10, fontSize: 12, color: "#fca5a5", fontWeight: 800 }}>
                 {publishError}
               </div>
             ) : null}
@@ -633,35 +612,41 @@ export default function CreateTrainingPage() {
               onClick={publishAllWeeks}
               disabled={publishing || weeksDraft.length === 0}
               style={{
-                ...buttonPrimary,
-                opacity: publishing || weeksDraft.length === 0 ? 0.6 : 1,
+                width: "100%",
+                padding: "14px 14px",
+                borderRadius: 14,
+                border: "1px solid rgba(56,189,248,0.25)",
+                background:
+                  publishing || weeksDraft.length === 0
+                    ? "rgba(148,163,184,0.10)"
+                    : "rgba(2,132,199,0.14)",
+                color: publishing || weeksDraft.length === 0 ? "#94a3b8" : "#e0f2fe",
+                fontWeight: 900,
                 cursor: publishing || weeksDraft.length === 0 ? "not-allowed" : "pointer",
               }}
             >
-              {publishing ? "Publishing..." : `Publish ${weeksDraft.length || ""} Weeks`}
+              {publishing ? "Publishing..." : `Publish ${weeksDraft.length || ""} Training Cards`}
             </button>
 
-            <div style={{ marginTop: 8, fontSize: 11, color: textSub }}>
-              This will delete the previous plan and publish one card per week.
+            <div style={{ marginTop: 8, fontSize: 11, color: "#9ca3af" }}>
+              This will create one weekly training card per week.
             </div>
           </div>
         </div>
       </main>
-{/*
+
       <div
         style={{
           position: "fixed",
           bottom: 0,
           left: 0,
           right: 0,
-          background: pageBg,
-          borderTop: "1px solid rgba(15,23,42,0.10)",
+          background: "#000",
+          borderTop: "1px solid rgba(148,163,184,0.25)",
         }}
       >
         <BottomNavbar />
       </div>
-*/}
     </>
   );
 }
-

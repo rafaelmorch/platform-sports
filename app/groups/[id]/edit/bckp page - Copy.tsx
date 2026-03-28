@@ -1,8 +1,9 @@
+// app/groups/[id]/training/edit/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-// import BottomNavbar from "@/components/BottomNavbar";
+import BottomNavbar from "@/components/BottomNavbar";
 import BackArrow from "@/components/BackArrow";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
@@ -27,33 +28,9 @@ type TrainingRow = {
   created_at: string;
 };
 
-type EditableTraining = {
-  id: string | null; // null = new week not yet saved
-  group_id: string;
-  created_by: string;
-  title: string;
-  content: string;
-  is_published: boolean;
-  schedule_type: "weekly" | "daily";
-  week_start_date: string | null;
-  created_at: string | null;
+type EditableTraining = TrainingRow & {
   weekLabel: string;
 };
-
-function toISODate(d: Date) {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function addDaysISO(isoYYYYMMDD: string, days: number) {
-  const [y, m, d] = isoYYYYMMDD.split("-").map((x) => Number(x));
-  const dt = new Date(y, (m || 1) - 1, d || 1);
-  dt.setDate(dt.getDate() + days);
-  dt.setHours(0, 0, 0, 0);
-  return toISODate(dt);
-}
 
 export default function EditTrainingPage() {
   const router = useRouter();
@@ -70,6 +47,7 @@ export default function EditTrainingPage() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<EditableTraining[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const pageBg = "#f3f4f6";
@@ -116,21 +94,6 @@ export default function EditTrainingPage() {
     []
   );
 
-  const addWeekBtnStyle = useMemo(
-    () => ({
-      width: "100%",
-      padding: "12px 14px",
-      borderRadius: 14,
-      border: "1px solid rgba(15,23,42,0.18)",
-      background: "#ffffff",
-      color: "#111827",
-      fontWeight: 900 as const,
-      cursor: "pointer",
-      boxShadow: "0 8px 18px rgba(15,23,42,0.06)",
-    }),
-    []
-  );
-
   useEffect(() => {
     let cancelled = false;
 
@@ -143,7 +106,7 @@ export default function EditTrainingPage() {
       if (cancelled) return;
 
       if (!session) {
-        const returnTo = `/groups/${groupId}/edit`;
+        const returnTo = `/groups/${groupId}/training/edit`;
         try {
           localStorage.setItem("ps:returnTo", returnTo);
         } catch {}
@@ -233,7 +196,7 @@ export default function EditTrainingPage() {
       setCheckingOwner(true);
 
       if (group.created_by !== userId) {
-        router.replace(`/groups/${groupId}`);
+        router.replace(`/groups/${groupId}/training`);
         return;
       }
 
@@ -260,9 +223,7 @@ export default function EditTrainingPage() {
 
       const { data, error } = await supabaseBrowser
         .from("app_group_trainings")
-        .select(
-          "id,group_id,created_by,title,content,is_published,schedule_type,week_start_date,created_at"
-        )
+        .select("id,group_id,created_by,title,content,is_published,schedule_type,week_start_date,created_at")
         .eq("group_id", groupId)
         .eq("is_published", true)
         .eq("schedule_type", "weekly")
@@ -287,15 +248,7 @@ export default function EditTrainingPage() {
           return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         })
         .map((r, idx) => ({
-          id: r.id,
-          group_id: r.group_id,
-          created_by: r.created_by,
-          title: (r.title ?? "").trim(),
-          content: (r.content ?? "").trim(),
-          is_published: Boolean(r.is_published),
-          schedule_type: r.schedule_type,
-          week_start_date: r.week_start_date,
-          created_at: r.created_at,
+          ...r,
           weekLabel: `Week ${idx + 1}`,
         }));
 
@@ -310,6 +263,54 @@ export default function EditTrainingPage() {
     };
   }, [groupId, checkingAuth, checkingMember, checkingOwner]);
 
+async function saveAll() {
+  setSavedMsg(null);
+  setErrorMsg(null);
+
+  if (!rows.length) {
+    setErrorMsg("No trainings to save.");
+    return;
+  }
+
+  // basic validation
+  for (const r of rows) {
+    if (!String(r.title ?? "").trim() || !String(r.content ?? "").trim()) {
+      setErrorMsg("All cards must have Title and Content.");
+      return;
+    }
+  }
+
+  setSaving(true);
+
+  try {
+    const results = await Promise.all(
+      rows.map((r) =>
+        supabaseBrowser
+          .from("app_group_trainings")
+          .update({
+            title: String(r.title ?? "").trim(),
+            content: String(r.content ?? "").trim(),
+          })
+          .eq("id", r.id)
+          .eq("group_id", groupId)
+      )
+    );
+
+    const failed = results.find((x) => x.error);
+    if (failed?.error) {
+      setErrorMsg(failed.error.message);
+      setSaving(false);
+      return;
+    }
+
+    setSaving(false);
+    router.replace(`/groups/${groupId}/training`);
+  } catch (e: any) {
+    setErrorMsg(e?.message ?? "Save error.");
+    setSaving(false);
+  }
+}
+
   function updateRow(index: number, field: "title" | "content", value: string) {
     setRows((prev) => {
       const next = [...prev];
@@ -319,118 +320,6 @@ export default function EditTrainingPage() {
       };
       return next;
     });
-  }
-
-  function addWeek() {
-    setErrorMsg(null);
-
-    const nextWeekNumber = rows.length + 1;
-
-    let nextWeekStart: string | null = null;
-
-    if (rows.length > 0) {
-      const lastWeek = rows[rows.length - 1];
-      if (lastWeek.week_start_date) {
-        nextWeekStart = addDaysISO(lastWeek.week_start_date, 7);
-      }
-    }
-
-    // fallback in case there is no previous week date
-    if (!nextWeekStart) {
-      nextWeekStart = toISODate(new Date());
-    }
-
-    setRows((prev) => [
-      ...prev,
-      {
-        id: null,
-        group_id: groupId,
-        created_by: userId || "",
-        title: `Week ${nextWeekNumber}`,
-        content: "",
-        is_published: true,
-        schedule_type: "weekly",
-        week_start_date: nextWeekStart,
-        created_at: null,
-        weekLabel: `Week ${nextWeekNumber}`,
-      },
-    ]);
-  }
-
-  async function saveAll() {
-    setErrorMsg(null);
-
-    if (!rows.length) {
-      setErrorMsg("No trainings to save.");
-      return;
-    }
-
-    for (const r of rows) {
-      if (!String(r.title ?? "").trim() || !String(r.content ?? "").trim()) {
-        setErrorMsg("All cards must have Title and Content.");
-        return;
-      }
-    }
-
-    setSaving(true);
-
-    try {
-      const existingRows = rows.filter((r) => r.id);
-      const newRows = rows.filter((r) => !r.id);
-
-      // update existing
-      if (existingRows.length > 0) {
-        const updateResults = await Promise.all(
-          existingRows.map((r) =>
-            supabaseBrowser
-              .from("app_group_trainings")
-              .update({
-                title: String(r.title ?? "").trim(),
-                content: String(r.content ?? "").trim(),
-              })
-              .eq("id", r.id as string)
-              .eq("group_id", groupId)
-          )
-        );
-
-        const failedUpdate = updateResults.find((x) => x.error);
-        if (failedUpdate?.error) {
-          setErrorMsg(failedUpdate.error.message);
-          setSaving(false);
-          return;
-        }
-      }
-
-      // insert new weeks
-      if (newRows.length > 0) {
-        const payload = newRows.map((r) => ({
-          group_id: groupId,
-          created_by: userId,
-          title: String(r.title ?? "").trim(),
-          content: String(r.content ?? "").trim(),
-          is_published: true,
-          schedule_type: "weekly",
-          week_start_date: r.week_start_date,
-          training_date: null,
-        }));
-
-        const { error: insertError } = await supabaseBrowser
-          .from("app_group_trainings")
-          .insert(payload);
-
-        if (insertError) {
-          setErrorMsg(insertError.message);
-          setSaving(false);
-          return;
-        }
-      }
-
-      setSaving(false);
-      router.replace(`/groups/${groupId}`);
-    } catch (e: any) {
-      setErrorMsg(e?.message ?? "Save error.");
-      setSaving(false);
-    }
   }
 
   if (checkingAuth || checkingMember || checkingOwner) return null;
@@ -481,23 +370,18 @@ export default function EditTrainingPage() {
             </div>
           ) : (
             <>
-              <div style={{ ...cardStyle, marginBottom: 12 }}>
-                <button onClick={addWeek} style={addWeekBtnStyle}>
-                  Add Week
-                </button>
-              </div>
+              {savedMsg ? (
+                <div style={{ ...cardStyle, marginBottom: 12 }}>
+                  <p style={{ margin: 0, fontSize: 13, color: textMain, fontWeight: 900 }}>
+                    {savedMsg}
+                  </p>
+                </div>
+              ) : null}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {rows.map((r, index) => (
-                  <div key={r.id ?? `new-${index}`} style={cardStyle}>
-                    <div
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 900,
-                        marginBottom: 10,
-                        color: textMain,
-                      }}
-                    >
+                  <div key={r.id} style={cardStyle}>
+                    <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 10, color: textMain }}>
                       {r.weekLabel}
                     </div>
 
@@ -555,7 +439,7 @@ export default function EditTrainingPage() {
           )}
         </div>
       </main>
-{/*
+
       <div
         style={{
           position: "fixed",
@@ -568,7 +452,6 @@ export default function EditTrainingPage() {
       >
         <BottomNavbar />
       </div>
-*/}
     </>
   );
 }

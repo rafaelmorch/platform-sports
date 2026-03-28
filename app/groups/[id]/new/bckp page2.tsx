@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-// import BottomNavbar from "@/components/BottomNavbar";
+import BottomNavbar from "@/components/BottomNavbar";
 import BackArrow from "@/components/BackArrow";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
@@ -17,7 +17,7 @@ type GroupRow = {
 };
 
 type WeekDraft = {
-  weekIndex: number; // 1..N (UI)
+  week_start: string; // used internally for DB/API, not shown on UI
   title: string;
   content: string;
 };
@@ -45,14 +45,6 @@ function mondayOf(date: Date) {
   return d;
 }
 
-function addDaysISO(isoYYYYMMDD: string, days: number) {
-  const [y, m, d] = isoYYYYMMDD.split("-").map((x) => Number(x));
-  const dt = new Date(y, (m || 1) - 1, d || 1);
-  dt.setDate(dt.getDate() + days);
-  dt.setHours(0, 0, 0, 0);
-  return toISODate(dt);
-}
-
 export default function CreateTrainingPage() {
   const router = useRouter();
   const params = useParams();
@@ -67,10 +59,13 @@ export default function CreateTrainingPage() {
 
   // Weekly only (internal schedule)
   const scheduleType: "weekly" = "weekly";
-  const [weekStart] = useState<string>(() => toISODate(mondayOf(new Date()))); // internal only (not shown)
+  const [weekStart] = useState<string>(() => toISODate(mondayOf(new Date()))); // not shown
 
-  // ✅ Number of weeks MUST start empty
-  const [weeksCountStr, setWeeksCountStr] = useState<string>("");
+  // ✅ must start empty
+  const [weeksCount, setWeeksCount] = useState<string>("");
+
+  // validation message (under the input)
+  const [weeksCountError, setWeeksCountError] = useState<string | null>(null);
 
   // AI + editor
   const [prompt, setPrompt] = useState("");
@@ -95,7 +90,7 @@ export default function CreateTrainingPage() {
     () => ({
       borderRadius: 16,
       border: "1px solid rgba(15,23,42,0.10)",
-      background: "#e5e7eb",
+      background: "#e5e7eb", // light gray card
       boxShadow: "0 8px 20px rgba(15,23,42,0.08)",
       padding: 14,
     }),
@@ -122,7 +117,7 @@ export default function CreateTrainingPage() {
       padding: "12px 14px",
       borderRadius: 14,
       border: "1px solid rgba(15,23,42,0.18)",
-      background: "#111827",
+      background: "#111827", // dark button for contrast
       color: "#ffffff",
       fontWeight: 900 as const,
       cursor: "pointer",
@@ -158,7 +153,7 @@ export default function CreateTrainingPage() {
       if (cancelled) return;
 
       if (!session) {
-        const returnTo = `/groups/${groupId}/new`;
+        const returnTo = `/groups/${groupId}/training/new`;
         try {
           localStorage.setItem("ps:returnTo", returnTo);
         } catch {}
@@ -251,7 +246,7 @@ export default function CreateTrainingPage() {
       setCheckingOwner(true);
 
       if (group.created_by !== userId) {
-        router.replace(`/groups/${groupId}`);
+        router.replace(`/groups/${groupId}/training`);
         return;
       }
 
@@ -276,18 +271,27 @@ export default function CreateTrainingPage() {
     setContent(w.content);
   }, [weeksDraft, selectedIndex]);
 
-  function parseWeeksCountOrError(): number | null {
-    const raw = weeksCountStr.trim();
+  function validateWeeksOrAlert(): number | null {
+    const raw = String(weeksCount ?? "").trim();
+
     if (!raw) {
-      setAiError("Please fill Number of weeks (max 24).");
+      const msg = "Please fill in the number of weeks (max 24).";
+      setWeeksCountError(msg);
+      alert(msg);
       return null;
     }
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      setAiError("Number of weeks must be a valid number (1 to 24).");
+
+    const n = clampInt(raw, 1, 24);
+    if (!Number.isFinite(n) || n < 1 || n > 24) {
+      const msg = "Number of weeks must be between 1 and 24.";
+      setWeeksCountError(msg);
+      alert(msg);
       return null;
     }
-    const n = clampInt(parsed, 1, 24);
+
+    setWeeksCountError(null);
+    // normalize input (ex: "004" -> "4")
+    setWeeksCount(String(n));
     return n;
   }
 
@@ -306,7 +310,7 @@ export default function CreateTrainingPage() {
       return;
     }
 
-    const n = parseWeeksCountOrError();
+    const n = validateWeeksOrAlert();
     if (!n) return;
 
     setAiLoading(true);
@@ -338,24 +342,22 @@ export default function CreateTrainingPage() {
         return;
       }
 
-      // Expect: { weeks: [{ title, content }, ...] }
-      const weeks = Array.isArray(data?.weeks) ? (data.weeks as any[]) : [];
+      const weeks = Array.isArray(data?.weeks) ? (data.weeks as WeekDraft[]) : [];
       if (!weeks.length) {
         setAiError("AI returned empty weeks.");
         setAiLoading(false);
         return;
       }
 
-      const cleaned: WeekDraft[] = weeks
-        .slice(0, n)
-        .map((w, i) => ({
-          weekIndex: i + 1,
-          title: String(w?.title ?? "").trim(),
-          content: String(w?.content ?? "").trim(),
+      const cleaned = weeks
+        .map((w: any) => ({
+          week_start: String(w.week_start ?? "").trim(),
+          title: String(w.title ?? "").trim(),
+          content: String(w.content ?? "").trim(),
         }))
-        .filter((w) => w.title && w.content);
+        .filter((w) => w.week_start && w.title && w.content);
 
-      if (cleaned.length !== Math.min(weeks.length, n)) {
+      if (cleaned.length !== weeks.length) {
         setAiError("AI returned incomplete weeks. Try again.");
         setAiLoading(false);
         return;
@@ -376,8 +378,8 @@ export default function CreateTrainingPage() {
 
     if (!groupId || !userId) return;
 
-    // ✅ Must not allow publish if Number of weeks is empty
-    const n = parseWeeksCountOrError();
+    // also enforce weeksCount filled (even if user only wants to publish)
+    const n = validateWeeksOrAlert();
     if (!n) return;
 
     if (!weeksDraft.length) {
@@ -388,41 +390,26 @@ export default function CreateTrainingPage() {
     setPublishing(true);
 
     try {
-      // ✅ Delete ALL previous weekly trainings for this group first
-      const del = await supabaseBrowser
-        .from("app_group_trainings")
-        .delete()
-        .eq("group_id", groupId)
-        .eq("schedule_type", "weekly");
-
-      if (del.error) {
-        setPublishError(del.error.message);
-        setPublishing(false);
-        return;
-      }
-
-      // ✅ Insert weeks in Week 1..N order
-      const baseWeekStart = weekStart; // Monday ISO
-      const rows = weeksDraft.slice(0, n).map((w, i) => ({
+      const rows = weeksDraft.map((w) => ({
         group_id: groupId,
         created_by: userId,
         title: w.title,
         content: w.content,
         is_published: true,
         schedule_type: "weekly",
-        week_start_date: addDaysISO(baseWeekStart, 7 * i), // internal ordering (not shown)
+        week_start_date: w.week_start, // constraint requires it
         training_date: null,
       }));
 
-      const ins = await supabaseBrowser.from("app_group_trainings").insert(rows);
+      const { error } = await supabaseBrowser.from("app_group_trainings").insert(rows);
 
-      if (ins.error) {
-        setPublishError(ins.error.message);
+      if (error) {
+        setPublishError(error.message);
         setPublishing(false);
         return;
       }
 
-      router.replace(`/groups/${groupId}`);
+      router.replace(`/groups/${groupId}/training`);
     } catch (e: any) {
       setPublishError(e?.message ?? "Publish error.");
       setPublishing(false);
@@ -456,7 +443,7 @@ export default function CreateTrainingPage() {
 
           <div style={{ height: 12 }} />
 
-          {/* Weekly-only + Number of weeks */}
+          {/* Weekly-only schedule info + Number of weeks */}
           <div style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 10 }}>Schedule</div>
 
@@ -469,24 +456,30 @@ export default function CreateTrainingPage() {
 
             <div>
               <div style={{ fontSize: 11, color: textSub, marginBottom: 6 }}>Number of weeks</div>
-
               <input
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={weeksCountStr}
+                type="number"
+                min={1}
+                max={24}
+                value={weeksCount}
                 onChange={(e) => {
-                  const v = e.target.value.replace(/[^\d]/g, "");
-                  setWeeksCountStr(v);
+                  // allow empty; only keep digits
+                  const v = e.target.value;
+                  setWeeksCount(v);
+                  if (String(v).trim()) setWeeksCountError(null);
                 }}
                 placeholder="Max 24 weeks"
                 style={inputStyle}
               />
 
-              <div style={{ marginTop: 6, fontSize: 11, color: textSub }}>
-                Max: <span style={{ color: textMain, fontWeight: 900 }}>24</span> weeks.
-              </div>
-
-              {/* inline alert only when user tries and fails (aiError already shows) */}
+              {weeksCountError ? (
+                <div style={{ marginTop: 8, fontSize: 12, color: "#b91c1c", fontWeight: 900 }}>
+                  {weeksCountError}
+                </div>
+              ) : (
+                <div style={{ marginTop: 6, fontSize: 11, color: textSub }}>
+                  Max: <span style={{ color: textMain, fontWeight: 900 }}>24</span> weeks.
+                </div>
+              )}
             </div>
           </div>
 
@@ -509,9 +502,7 @@ export default function CreateTrainingPage() {
             />
 
             {aiError ? (
-              <div style={{ marginTop: 10, fontSize: 12, color: "#b91c1c", fontWeight: 900 }}>
-                {aiError}
-              </div>
+              <div style={{ marginTop: 10, fontSize: 12, color: "#b91c1c", fontWeight: 900 }}>{aiError}</div>
             ) : (
               <div style={{ marginTop: 10, fontSize: 11, color: textSub }}>
                 Generate drafts, then review before publishing.
@@ -539,7 +530,9 @@ export default function CreateTrainingPage() {
             <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 10 }}>Weeks</div>
 
             {weeksDraft.length === 0 ? (
-              <div style={{ fontSize: 13, color: textSub }}>No draft yet. Generate with AI to create weekly cards.</div>
+              <div style={{ fontSize: 13, color: textSub }}>
+                No draft yet. Generate with AI to create weekly cards.
+              </div>
             ) : (
               <>
                 {/* Week selector: Week 1 / Week 2 ... (NO DATES) */}
@@ -552,7 +545,7 @@ export default function CreateTrainingPage() {
                     marginBottom: 12,
                   }}
                 >
-                  {weeksDraft.map((w, i) => (
+                  {weeksDraft.map((_, i) => (
                     <button
                       key={`week-${i}`}
                       onClick={() => setSelectedIndex(i)}
@@ -566,7 +559,7 @@ export default function CreateTrainingPage() {
                         color: i === selectedIndex ? "#ffffff" : textMain,
                       }}
                     >
-                      {`Week ${w.weekIndex}`}
+                      {`Week ${i + 1}`}
                     </button>
                   ))}
                 </div>
@@ -586,7 +579,7 @@ export default function CreateTrainingPage() {
                           return next;
                         });
                       }}
-                      placeholder={`e.g. Week ${weeksDraft[selectedIndex]?.weekIndex ?? 1} — Base + Technique`}
+                      placeholder="e.g. Week 1 — Base + Technique"
                       style={inputStyle}
                     />
                   </div>
@@ -641,13 +634,11 @@ export default function CreateTrainingPage() {
               {publishing ? "Publishing..." : `Publish ${weeksDraft.length || ""} Weeks`}
             </button>
 
-            <div style={{ marginTop: 8, fontSize: 11, color: textSub }}>
-              This will delete the previous plan and publish one card per week.
-            </div>
+            <div style={{ marginTop: 8, fontSize: 11, color: textSub }}>This will publish one card per week.</div>
           </div>
         </div>
       </main>
-{/*
+
       <div
         style={{
           position: "fixed",
@@ -660,8 +651,6 @@ export default function CreateTrainingPage() {
       >
         <BottomNavbar />
       </div>
-*/}
     </>
   );
 }
-

@@ -1,4 +1,4 @@
-// app/groups/[id]/page.tsx
+// app/groups/[id]/training/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -134,24 +134,6 @@ export default function GroupTrainingPage() {
     []
   );
 
-  const deleteBtnStyle = useMemo(
-    () => ({
-      fontSize: 12,
-      padding: "10px 14px",
-      borderRadius: 999,
-      border: "1px solid rgba(15,23,42,0.18)",
-      background: "#ef4444",
-      color: "#ffffff",
-      textDecoration: "none",
-      fontWeight: 900,
-      height: "fit-content",
-      boxShadow: "0 10px 24px rgba(239,68,68,0.18)",
-      whiteSpace: "nowrap" as const,
-      cursor: "pointer",
-    }),
-    []
-  );
-
   const toggleBtnStyle = useMemo(
     () => ({
       fontSize: 12,
@@ -195,7 +177,7 @@ export default function GroupTrainingPage() {
       if (cancelled) return;
 
       if (!session) {
-        const returnTo = `/groups/${groupId}`;
+        const returnTo = `/groups/${groupId}/training`;
         try {
           localStorage.setItem("ps:returnTo", returnTo);
         } catch {}
@@ -540,25 +522,6 @@ export default function GroupTrainingPage() {
     setSendingForTraining((prev) => ({ ...prev, [trainingId]: false }));
   }
 
-  async function deleteGroup() {
-    if (!groupId) return;
-
-    const confirmDelete = window.confirm("Are you sure you want to delete this group?");
-    if (!confirmDelete) return;
-
-    const { error } = await supabaseBrowser
-      .from("app_groups")
-      .delete()
-      .eq("id", groupId);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    router.replace("/groups");
-  }
-
   if (checkingAuth || checkingMember) return null;
 
   return (
@@ -606,15 +569,12 @@ export default function GroupTrainingPage() {
 
             {isOwner ? (
               <>
-                <Link href={`/groups/${groupId}/new`} style={createBtnStyle}>
+                <Link href={`/groups/${groupId}/training/new`} style={createBtnStyle}>
                   Create Training
                 </Link>
-                <Link href={`/groups/${groupId}/edit`} style={editBtnStyle}>
+                <Link href={`/groups/${groupId}/training/edit`} style={editBtnStyle}>
                   Edit Training
                 </Link>
-                <button onClick={deleteGroup} style={deleteBtnStyle}>
-                  Delete Group
-                </button>
               </>
             ) : null}
           </div>
@@ -691,6 +651,7 @@ export default function GroupTrainingPage() {
 
                     <div style={{ height: 12 }} />
 
+                    {/* counts always visible */}
                     <div
                       style={{
                         display: "flex",
@@ -710,6 +671,7 @@ export default function GroupTrainingPage() {
                       <>
                         <div style={{ height: 12 }} />
 
+                        {/* reactions */}
                         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
                           {REACTIONS.map((reaction) => (
                             <button
@@ -732,6 +694,7 @@ export default function GroupTrainingPage() {
                           ))}
                         </div>
 
+                        {/* completion */}
                         <button
                           onClick={() => toggleCompletion(t.id)}
                           style={{
@@ -749,6 +712,7 @@ export default function GroupTrainingPage() {
                           {hasUserCompleted(t.id) ? "Completed ✔" : "I did this workout"}
                         </button>
 
+                        {/* comments preview */}
                         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
                           {comments.length === 0 ? (
                             <div style={{ fontSize: 12, color: textSub }}>No comments yet.</div>
@@ -771,6 +735,7 @@ export default function GroupTrainingPage() {
                           )}
                         </div>
 
+                        {/* comment input */}
                         <div style={{ display: "flex", gap: 8 }}>
                           <input
                             value={commentDrafts[t.id] ?? ""}
@@ -809,6 +774,7 @@ export default function GroupTrainingPage() {
                           </button>
                         </div>
 
+                        {/* summary */}
                         <div style={{ marginTop: 10, fontSize: 11, color: textSub }}>
                           Showing latest comments.
                         </div>

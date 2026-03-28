@@ -143,7 +143,7 @@ export default function EditTrainingPage() {
       if (cancelled) return;
 
       if (!session) {
-        const returnTo = `/groups/${groupId}/edit`;
+        const returnTo = `/groups/${groupId}/training/edit`;
         try {
           localStorage.setItem("ps:returnTo", returnTo);
         } catch {}
@@ -233,7 +233,7 @@ export default function EditTrainingPage() {
       setCheckingOwner(true);
 
       if (group.created_by !== userId) {
-        router.replace(`/groups/${groupId}`);
+        router.replace(`/groups/${groupId}/training`);
         return;
       }
 
@@ -426,7 +426,7 @@ export default function EditTrainingPage() {
       }
 
       setSaving(false);
-      router.replace(`/groups/${groupId}`);
+      router.replace(`/groups/${groupId}/training`);
     } catch (e: any) {
       setErrorMsg(e?.message ?? "Save error.");
       setSaving(false);

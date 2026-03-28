@@ -158,7 +158,7 @@ export default function CreateTrainingPage() {
       if (cancelled) return;
 
       if (!session) {
-        const returnTo = `/groups/${groupId}/new`;
+        const returnTo = `/groups/${groupId}/training/new`;
         try {
           localStorage.setItem("ps:returnTo", returnTo);
         } catch {}
@@ -251,7 +251,7 @@ export default function CreateTrainingPage() {
       setCheckingOwner(true);
 
       if (group.created_by !== userId) {
-        router.replace(`/groups/${groupId}`);
+        router.replace(`/groups/${groupId}/training`);
         return;
       }
 
@@ -422,7 +422,7 @@ export default function CreateTrainingPage() {
         return;
       }
 
-      router.replace(`/groups/${groupId}`);
+      router.replace(`/groups/${groupId}/training`);
     } catch (e: any) {
       setPublishError(e?.message ?? "Publish error.");
       setPublishing(false);
@@ -664,4 +664,3 @@ export default function CreateTrainingPage() {
     </>
   );
 }
-
