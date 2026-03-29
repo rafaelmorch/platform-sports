@@ -1,8 +1,10 @@
+// app/groups/[id]/page.tsx
 "use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+// import BottomNavbar from "@/components/BottomNavbar";
 import BackArrow from "@/components/BackArrow";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
@@ -14,180 +16,51 @@ type GroupRow = {
   goal: string | null;
   is_public: boolean;
   created_by: string;
-};
-
-type TrainingRow = {
-  id: string;
-  group_id: string;
-  created_by: string;
-  title: string | null;
-  content: string | null;
-  is_published: boolean | null;
-  schedule_type: "weekly" | "daily";
-  training_date: string | null;
-  week_start_date: string | null;
   created_at: string;
 };
 
-type CommentRow = {
-  id: string;
-  training_id: string;
+type MemberCountRow = {
   group_id: string;
-  user_id: string;
-  comment: string;
-  created_at: string;
+  members: number;
 };
 
-type ReactionRow = {
-  id: string;
-  training_id: string;
-  group_id: string;
-  user_id: string;
-  reaction: string;
-  created_at: string;
-};
-
-type CompletionRow = {
-  id: string;
-  training_id: string;
-  group_id: string;
-  user_id: string;
-  completed_at: string;
-};
-
-type WeeklyTrainingView = TrainingRow & {
-  weekLabel: string;
-};
-
-const REACTIONS = ["🔥", "👏", "💪", "🙌"];
-
-export default function GroupTrainingPage() {
+export default function GroupDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const groupId = params?.id as string;
 
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [checkingMember, setCheckingMember] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  const [group, setGroup] = useState<GroupRow | null>(null);
   const [loading, setLoading] = useState(true);
-  const [trainings, setTrainings] = useState<TrainingRow[]>([]);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [group, setGroup] = useState<GroupRow | null>(null);
+  const [membersCount, setMembersCount] = useState<number>(0);
 
-  const [showInteractions, setShowInteractions] = useState(false);
+  const [memberStatus, setMemberStatus] = useState<"none" | "pending" | "active">(
+    "none"
+  );
+  const [joinLoading, setJoinLoading] = useState(false);
 
-  const [commentsByTraining, setCommentsByTraining] = useState<Record<string, CommentRow[]>>({});
-  const [reactionsByTraining, setReactionsByTraining] = useState<Record<string, ReactionRow[]>>({});
-  const [completionsByTraining, setCompletionsByTraining] = useState<Record<string, CompletionRow[]>>({});
-  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
-  const [sendingForTraining, setSendingForTraining] = useState<Record<string, boolean>>({});
-
-  const pageBg = "#f3f4f6";
-  const textMain = "#0f172a";
-  const textSub = "rgba(15,23,42,0.65)";
-
+  // Keep consistent with other pages
   const cardStyle = useMemo(
     () => ({
-      borderRadius: 16,
-      border: "1px solid rgba(15,23,42,0.10)",
-      background: "#e5e7eb",
-      boxShadow: "0 8px 20px rgba(15,23,42,0.08)",
-      padding: 14,
+      borderRadius: 18,
+      border: "1px solid rgba(56,189,248,0.15)",
+      padding: 16,
+      background:
+        "linear-gradient(160deg, rgba(2,6,23,0.98), rgba(2,20,40,0.95))",
+      boxShadow: "0 6px 18px rgba(2,132,199,0.08)",
     }),
     []
   );
 
-  const createBtnStyle = useMemo(
-    () => ({
-      fontSize: 12,
-      padding: "10px 14px",
-      borderRadius: 999,
-      border: "1px solid rgba(15,23,42,0.18)",
-      background: "linear-gradient(180deg, rgba(239,68,68,0.95), rgba(220,38,38,0.92))",
-      color: "#ffffff",
-      textDecoration: "none",
-      fontWeight: 900,
-      height: "fit-content",
-      boxShadow: "0 10px 24px rgba(220,38,38,0.18)",
-      transform: "translateZ(0)",
-      whiteSpace: "nowrap" as const,
-    }),
-    []
-  );
-
-  const editBtnStyle = useMemo(
-    () => ({
-      fontSize: 12,
-      padding: "10px 14px",
-      borderRadius: 999,
-      border: "1px solid rgba(15,23,42,0.18)",
-      background: "#111827",
-      color: "#ffffff",
-      textDecoration: "none",
-      fontWeight: 900,
-      height: "fit-content",
-      boxShadow: "0 10px 20px rgba(15,23,42,0.10)",
-      whiteSpace: "nowrap" as const,
-    }),
-    []
-  );
-
-  const deleteBtnStyle = useMemo(
-    () => ({
-      fontSize: 12,
-      padding: "10px 14px",
-      borderRadius: 999,
-      border: "1px solid rgba(15,23,42,0.18)",
-      background: "#ef4444",
-      color: "#ffffff",
-      textDecoration: "none",
-      fontWeight: 900,
-      height: "fit-content",
-      boxShadow: "0 10px 24px rgba(239,68,68,0.18)",
-      whiteSpace: "nowrap" as const,
-      cursor: "pointer",
-    }),
-    []
-  );
-
-  const toggleBtnStyle = useMemo(
-    () => ({
-      fontSize: 12,
-      padding: "10px 14px",
-      borderRadius: 999,
-      border: "1px solid rgba(15,23,42,0.18)",
-      background: "#ffffff",
-      color: "#111827",
-      textDecoration: "none",
-      fontWeight: 900,
-      height: "fit-content",
-      boxShadow: "0 8px 18px rgba(15,23,42,0.06)",
-      whiteSpace: "nowrap" as const,
-      cursor: "pointer",
-    }),
-    []
-  );
-
-  const inputStyle = useMemo(
-    () => ({
-      width: "100%",
-      borderRadius: 14,
-      border: "1px solid rgba(15,23,42,0.16)",
-      background: "#f9fafb",
-      color: textMain,
-      padding: "10px 12px",
-      outline: "none",
-      fontSize: 13,
-    }),
-    [textMain]
-  );
-
+  // ✅ Require login for Group Details and beyond
   useEffect(() => {
     let cancelled = false;
 
     async function checkAuth() {
       setCheckingAuth(true);
+
       const { data } = await supabaseBrowser.auth.getSession();
       const session = data.session;
 
@@ -209,51 +82,67 @@ export default function GroupTrainingPage() {
     if (groupId) checkAuth();
 
     return () => {
-      cancelled = true;
+      cancelled = true
     };
   }, [groupId, router]);
 
+  // Load group info + members count
   useEffect(() => {
     let cancelled = false;
 
-    async function loadGroup() {
+    async function load() {
       if (!groupId) return;
       if (checkingAuth) return;
 
+      setLoading(true);
+
       const { data: gData, error: gErr } = await supabaseBrowser
         .from("app_groups")
-        .select("id,name,goal,is_public,created_by")
+        .select("id,name,goal,is_public,created_by,created_at")
         .eq("id", groupId)
         .maybeSingle();
 
       if (cancelled) return;
 
-      if (gErr || !gData) {
-        router.replace("/groups");
+      if (gErr) {
+        console.error(gErr);
+        setGroup(null);
+        setLoading(false);
         return;
       }
 
-      setGroup(gData as GroupRow);
+      setGroup((gData ?? null) as GroupRow | null);
+
+      // Count members (active)
+      const { count } = await supabaseBrowser
+        .from("app_group_members")
+        .select("id", { count: "exact", head: true })
+        .eq("group_id", groupId)
+        .eq("status", "active");
+
+      if (cancelled) return;
+
+      setMembersCount(count ?? 0);
+      setLoading(false);
     }
 
-    loadGroup();
+    load();
 
     return () => {
       cancelled = true;
     };
-  }, [groupId, checkingAuth, router]);
+  }, [groupId, checkingAuth]);
 
+  // Load membership status (for join button and to mark seen)
   useEffect(() => {
     let cancelled = false;
 
-    async function checkMember() {
+    async function loadMembership() {
       if (!groupId || !userId) return;
 
-      setCheckingMember(true);
-
-      const { data: memberRow, error } = await supabaseBrowser
+      const { data, error } = await supabaseBrowser
         .from("app_group_members")
-        .select("status")
+        .select("status,last_seen_at")
         .eq("group_id", groupId)
         .eq("user_id", userId)
         .maybeSingle();
@@ -261,565 +150,236 @@ export default function GroupTrainingPage() {
       if (cancelled) return;
 
       if (error) {
-        router.replace("/groups");
+        console.warn("membership read error:", error.message);
+        setMemberStatus("none");
         return;
       }
 
-      if (!memberRow || memberRow.status !== "active") {
-        router.replace("/groups");
-        return;
-      }
+      const status = (data?.status as any) || null;
 
-      setCheckingMember(false);
+      if (status === "active") {
+        setMemberStatus("active");
+
+        // ✅ NEW: mark last_seen_at on Group Details open (clears dot)
+        const { error: uErr } = await supabaseBrowser
+          .from("app_group_members")
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq("group_id", groupId)
+          .eq("user_id", userId);
+
+        if (uErr) console.warn("mark seen (details) error:", uErr.message);
+      } else if (status === "pending") {
+        setMemberStatus("pending");
+      } else {
+        setMemberStatus("none");
+      }
     }
 
-    checkMember();
+    loadMembership();
 
     return () => {
       cancelled = true;
     };
-  }, [groupId, userId, router]);
+  }, [groupId, userId]);
 
-  useEffect(() => {
-    let cancelled = false;
+  async function joinGroup() {
+    if (!groupId || !userId) return;
 
-    async function loadTrainings() {
-      if (!groupId) return;
-      if (checkingAuth || checkingMember) return;
+    setJoinLoading(true);
 
-      setLoading(true);
-      setErrorMsg(null);
-
-      const { data, error } = await supabaseBrowser
-        .from("app_group_trainings")
-        .select("id,group_id,created_by,title,content,is_published,schedule_type,training_date,week_start_date,created_at")
-        .eq("group_id", groupId)
-        .eq("is_published", true)
-        .eq("schedule_type", "weekly")
-        .order("week_start_date", { ascending: true })
-        .order("created_at", { ascending: true })
-        .limit(200);
-
-      if (cancelled) return;
-
-      if (error) {
-        setErrorMsg(error.message);
-        setTrainings([]);
-        setLoading(false);
-        return;
-      }
-
-      setTrainings((data ?? []) as TrainingRow[]);
-      setLoading(false);
-    }
-
-    loadTrainings();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [groupId, checkingAuth, checkingMember]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadInteractionData() {
-      if (!showInteractions) return;
-      if (!groupId) return;
-      if (checkingAuth || checkingMember) return;
-      if (trainings.length === 0) return;
-
-      const trainingIds = trainings.map((t) => t.id);
-
-      const [commentsRes, reactionsRes, completionsRes] = await Promise.all([
-        supabaseBrowser
-          .from("app_training_comments")
-          .select("id,training_id,group_id,user_id,comment,created_at")
-          .eq("group_id", groupId)
-          .in("training_id", trainingIds)
-          .order("created_at", { ascending: true }),
-        supabaseBrowser
-          .from("app_training_reactions")
-          .select("id,training_id,group_id,user_id,reaction,created_at")
-          .eq("group_id", groupId)
-          .in("training_id", trainingIds),
-        supabaseBrowser
-          .from("app_training_completions")
-          .select("id,training_id,group_id,user_id,completed_at")
-          .eq("group_id", groupId)
-          .in("training_id", trainingIds),
-      ]);
-
-      if (cancelled) return;
-
-      const commentsMap: Record<string, CommentRow[]> = {};
-      (commentsRes.data ?? []).forEach((c: any) => {
-        if (!commentsMap[c.training_id]) commentsMap[c.training_id] = [];
-        commentsMap[c.training_id].push(c as CommentRow);
-      });
-
-      const reactionsMap: Record<string, ReactionRow[]> = {};
-      (reactionsRes.data ?? []).forEach((r: any) => {
-        if (!reactionsMap[r.training_id]) reactionsMap[r.training_id] = [];
-        reactionsMap[r.training_id].push(r as ReactionRow);
-      });
-
-      const completionsMap: Record<string, CompletionRow[]> = {};
-      (completionsRes.data ?? []).forEach((c: any) => {
-        if (!completionsMap[c.training_id]) completionsMap[c.training_id] = [];
-        completionsMap[c.training_id].push(c as CompletionRow);
-      });
-
-      setCommentsByTraining(commentsMap);
-      setReactionsByTraining(reactionsMap);
-      setCompletionsByTraining(completionsMap);
-    }
-
-    loadInteractionData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [showInteractions, groupId, checkingAuth, checkingMember, trainings]);
-
-  const isOwner = useMemo(() => {
-    if (!group || !userId) return false;
-    return group.created_by === userId;
-  }, [group, userId]);
-
-  const weekly: WeeklyTrainingView[] = useMemo(() => {
-    const rows = trainings
-      .filter((t) => t.schedule_type === "weekly")
-      .sort((a, b) => {
-        const da = a.week_start_date ?? "";
-        const db = b.week_start_date ?? "";
-        if (da !== db) return da.localeCompare(db);
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      });
-
-    return rows.map((t, idx) => ({
-      ...t,
-      weekLabel: `Week ${idx + 1}`,
-    }));
-  }, [trainings]);
-
-  function getReactionCount(trainingId: string) {
-    return reactionsByTraining[trainingId]?.length ?? 0;
-  }
-
-  function getCommentCount(trainingId: string) {
-    return commentsByTraining[trainingId]?.length ?? 0;
-  }
-
-  function getCompletionCount(trainingId: string) {
-    return completionsByTraining[trainingId]?.length ?? 0;
-  }
-
-  function hasUserCompleted(trainingId: string) {
-    return Boolean(
-      completionsByTraining[trainingId]?.some((c) => c.user_id === userId)
-    );
-  }
-
-  function hasUserReaction(trainingId: string, reaction: string) {
-    return Boolean(
-      reactionsByTraining[trainingId]?.some(
-        (r) => r.user_id === userId && r.reaction === reaction
-      )
-    );
-  }
-
-  async function toggleCompletion(trainingId: string) {
-    if (!userId) return;
-
-    const existing = completionsByTraining[trainingId]?.find((c) => c.user_id === userId);
-
-    if (existing) {
-      const { error } = await supabaseBrowser
-        .from("app_training_completions")
-        .delete()
-        .eq("id", existing.id);
-
-      if (error) return;
-
-      setCompletionsByTraining((prev) => ({
-        ...prev,
-        [trainingId]: (prev[trainingId] ?? []).filter((c) => c.id !== existing.id),
-      }));
-      return;
-    }
-
-    const { data, error } = await supabaseBrowser
-      .from("app_training_completions")
-      .insert({
-        training_id: trainingId,
-        group_id: groupId,
-        user_id: userId,
-      })
-      .select("id,training_id,group_id,user_id,completed_at")
-      .single();
-
-    if (error || !data) return;
-
-    setCompletionsByTraining((prev) => ({
-      ...prev,
-      [trainingId]: [...(prev[trainingId] ?? []), data as CompletionRow],
-    }));
-  }
-
-  async function toggleReaction(trainingId: string, reaction: string) {
-    if (!userId) return;
-
-    const existing = reactionsByTraining[trainingId]?.find(
-      (r) => r.user_id === userId && r.reaction === reaction
-    );
-
-    if (existing) {
-      const { error } = await supabaseBrowser
-        .from("app_training_reactions")
-        .delete()
-        .eq("id", existing.id);
-
-      if (error) return;
-
-      setReactionsByTraining((prev) => ({
-        ...prev,
-        [trainingId]: (prev[trainingId] ?? []).filter((r) => r.id !== existing.id),
-      }));
-      return;
-    }
-
-    const { data, error } = await supabaseBrowser
-      .from("app_training_reactions")
-      .insert({
-        training_id: trainingId,
-        group_id: groupId,
-        user_id: userId,
-        reaction,
-      })
-      .select("id,training_id,group_id,user_id,reaction,created_at")
-      .single();
-
-    if (error || !data) return;
-
-    setReactionsByTraining((prev) => ({
-      ...prev,
-      [trainingId]: [...(prev[trainingId] ?? []), data as ReactionRow],
-    }));
-  }
-
-  async function addComment(trainingId: string) {
-    const text = (commentDrafts[trainingId] ?? "").trim();
-    if (!text || !userId) return;
-
-    setSendingForTraining((prev) => ({ ...prev, [trainingId]: true }));
-
-    const { data, error } = await supabaseBrowser
-      .from("app_training_comments")
-      .insert({
-        training_id: trainingId,
-        group_id: groupId,
-        user_id: userId,
-        comment: text,
-      })
-      .select("id,training_id,group_id,user_id,comment,created_at")
-      .single();
-
-    if (error || !data) {
-      setSendingForTraining((prev) => ({ ...prev, [trainingId]: false }));
-      return;
-    }
-
-    setCommentsByTraining((prev) => ({
-      ...prev,
-      [trainingId]: [...(prev[trainingId] ?? []), data as CommentRow],
-    }));
-
-    setCommentDrafts((prev) => ({ ...prev, [trainingId]: "" }));
-    setSendingForTraining((prev) => ({ ...prev, [trainingId]: false }));
-  }
-
-  async function deleteGroup() {
-    if (!groupId) return;
-
-    const confirmDelete = window.confirm("Are you sure you want to delete this group?");
-    if (!confirmDelete) return;
-
-    const { error } = await supabaseBrowser
-      .from("app_groups")
-      .delete()
-      .eq("id", groupId);
+    // Use insert (no upsert) to avoid policy surprises
+    const { error } = await supabaseBrowser.from("app_group_members").insert({
+      group_id: groupId,
+      user_id: userId,
+      status: "active",
+    });
 
     if (error) {
-      alert(error.message);
+      console.error(error);
+      setJoinLoading(false);
       return;
     }
 
-    router.replace("/groups");
+    setMemberStatus("active");
+    setJoinLoading(false);
+
+    // Mark seen immediately after joining
+    await supabaseBrowser
+      .from("app_group_members")
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq("group_id", groupId)
+      .eq("user_id", userId);
+
+    router.push(`/groups/${groupId}/chat`);
   }
 
-  if (checkingAuth || checkingMember) return null;
+  if (checkingAuth) return null;
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: pageBg,
-        color: textMain,
-        padding: "16px",
-        paddingBottom: "40px",
-      }}
-    >
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <div style={{ marginBottom: 10 }}>
-          <BackArrow />
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900 }}>
-              Training
-            </h1>
-            {group?.name ? (
-              <p style={{ margin: "6px 0 0 0", fontSize: 12, color: textSub }}>
-                Group: <span style={{ color: textMain, fontWeight: 900 }}>{group.name}</span>
-              </p>
-            ) : null}
+    <>
+      <main
+        style={{
+          minHeight: "100vh",
+          background: "#000",
+          color: "#e5e7eb",
+          padding: "16px",
+          paddingBottom: "120px",
+        }}
+      >
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div style={{ marginBottom: 10 }}>
+            <BackArrow />
           </div>
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button
-              onClick={() => setShowInteractions((prev) => !prev)}
-              style={toggleBtnStyle}
-            >
-              {showInteractions ? "Hide Interactions" : "Show Interactions"}
-            </button>
+          <h1 style={{ margin: "0 0 12px 0", fontSize: 22, fontWeight: 900 }}>
+            Group Details
+          </h1>
 
-            {isOwner ? (
-              <>
-                <Link href={`/groups/${groupId}/new`} style={createBtnStyle}>
-                  Create Training
-                </Link>
-                <Link href={`/groups/${groupId}/edit`} style={editBtnStyle}>
-                  Edit Training
-                </Link>
-                <button onClick={deleteGroup} style={deleteBtnStyle}>
-                  Delete Group
-                </button>
-              </>
-            ) : null}
-          </div>
-        </div>
+          {loading ? (
+            <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</p>
+          ) : !group ? (
+            <p style={{ fontSize: 13, color: "#9ca3af" }}>Group not found.</p>
+          ) : (
+            <>
+              {/* Header card */}
+              <div style={{ ...cardStyle, display: "flex", gap: 14, alignItems: "center" }}>
+                <div
+                  style={{
+                    width: 84,
+                    height: 84,
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    flexShrink: 0,
+                    border: "1px solid rgba(56,189,248,0.25)",
+                    background: "#020617",
+                    boxShadow:
+                      "0 10px 18px rgba(2,132,199,0.10), 0 0 0 1px rgba(2,132,199,0.08)",
+                  }}
+                >
+                  <img
+                    src="/ps.png"
+                    alt="Group"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                </div>
 
-        <div style={{ height: 12 }} />
-
-        {loading ? (
-          <div style={cardStyle}>
-            <p style={{ margin: 0, fontSize: 13, color: textSub }}>Loading...</p>
-          </div>
-        ) : errorMsg ? (
-          <div style={cardStyle}>
-            <p style={{ margin: 0, fontSize: 13, color: "#b91c1c", fontWeight: 900 }}>
-              {errorMsg}
-            </p>
-          </div>
-        ) : weekly.length === 0 ? (
-          <div style={cardStyle}>
-            <p style={{ margin: 0, fontSize: 13, color: textSub }}>No trainings yet.</p>
-          </div>
-        ) : (
-          <>
-            <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ fontSize: 12, fontWeight: 900, color: textMain }}>Weekly</div>
-              <div style={{ height: 1, flex: 1, background: "rgba(15,23,42,0.14)" }} />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {weekly.map((t) => {
-                const comments = commentsByTraining[t.id] ?? [];
-                const reactions = reactionsByTraining[t.id] ?? [];
-                const completions = completionsByTraining[t.id] ?? [];
-
-                return (
-                  <div key={t.id} style={cardStyle}>
-                    <div>
-                      <div
-                        style={{
-                          fontSize: 16,
-                          fontWeight: 900,
-                          marginBottom: 6,
-                          color: textMain,
-                        }}
-                      >
-                        {t.weekLabel}
-                      </div>
-
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 800,
-                          color: "rgba(15,23,42,0.78)",
-                        }}
-                      >
-                        {(t.title ?? "").trim() || "Weekly Training"}
-                      </div>
-                    </div>
-
-                    <div style={{ height: 10 }} />
-
-                    <div
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <h2
                       style={{
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                        fontSize: 13,
-                        lineHeight: 1.55,
-                        color: textMain,
-                        fontFamily: "Calibri, Arial, sans-serif",
-                      }}
-                    >
-                      {(t.content ?? "").trim() || "No content."}
-                    </div>
-
-                    <div style={{ height: 12 }} />
-
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 14,
-                        flexWrap: "wrap",
-                        fontSize: 12,
+                        margin: 0,
+                        fontSize: 18,
                         fontWeight: 900,
-                        color: textMain,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
-                      <span>🔥 {getReactionCount(t.id)}</span>
-                      <span>💬 {getCommentCount(t.id)}</span>
-                      <span>✅ {getCompletionCount(t.id)}</span>
-                    </div>
+                      {group.name}
+                    </h2>
 
-                    {showInteractions ? (
-                      <>
-                        <div style={{ height: 12 }} />
-
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-                          {REACTIONS.map((reaction) => (
-                            <button
-                              key={reaction}
-                              onClick={() => toggleReaction(t.id, reaction)}
-                              style={{
-                                fontSize: 18,
-                                padding: "8px 12px",
-                                borderRadius: 999,
-                                border: hasUserReaction(t.id, reaction)
-                                  ? "1px solid rgba(17,24,39,0.55)"
-                                  : "1px solid rgba(15,23,42,0.16)",
-                                background: hasUserReaction(t.id, reaction) ? "#111827" : "#f9fafb",
-                                color: hasUserReaction(t.id, reaction) ? "#ffffff" : textMain,
-                                cursor: "pointer",
-                              }}
-                            >
-                              {reaction}
-                            </button>
-                          ))}
-                        </div>
-
-                        <button
-                          onClick={() => toggleCompletion(t.id)}
-                          style={{
-                            width: "100%",
-                            padding: "12px 14px",
-                            borderRadius: 14,
-                            border: "1px solid rgba(15,23,42,0.18)",
-                            background: hasUserCompleted(t.id) ? "#111827" : "#ffffff",
-                            color: hasUserCompleted(t.id) ? "#ffffff" : "#111827",
-                            fontWeight: 900,
-                            cursor: "pointer",
-                            marginBottom: 12,
-                          }}
-                        >
-                          {hasUserCompleted(t.id) ? "Completed ✔" : "I did this workout"}
-                        </button>
-
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-                          {comments.length === 0 ? (
-                            <div style={{ fontSize: 12, color: textSub }}>No comments yet.</div>
-                          ) : (
-                            comments.slice(-2).map((c) => (
-                              <div
-                                key={c.id}
-                                style={{
-                                  background: "#f9fafb",
-                                  border: "1px solid rgba(15,23,42,0.08)",
-                                  borderRadius: 12,
-                                  padding: "10px 12px",
-                                  fontSize: 13,
-                                  color: textMain,
-                                }}
-                              >
-                                {c.comment}
-                              </div>
-                            ))
-                          )}
-                        </div>
-
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <input
-                            value={commentDrafts[t.id] ?? ""}
-                            onChange={(e) =>
-                              setCommentDrafts((prev) => ({
-                                ...prev,
-                                [t.id]: e.target.value,
-                              }))
-                            }
-                            placeholder="Write a comment..."
-                            style={inputStyle}
-                          />
-
-                          <button
-                            onClick={() => addComment(t.id)}
-                            disabled={sendingForTraining[t.id] || !(commentDrafts[t.id] ?? "").trim()}
-                            style={{
-                              minWidth: 96,
-                              padding: "10px 12px",
-                              borderRadius: 14,
-                              border: "1px solid rgba(15,23,42,0.18)",
-                              background: "#111827",
-                              color: "#ffffff",
-                              fontWeight: 900,
-                              cursor:
-                                sendingForTraining[t.id] || !(commentDrafts[t.id] ?? "").trim()
-                                  ? "not-allowed"
-                                  : "pointer",
-                              opacity:
-                                sendingForTraining[t.id] || !(commentDrafts[t.id] ?? "").trim()
-                                  ? 0.6
-                                  : 1,
-                            }}
-                          >
-                            {sendingForTraining[t.id] ? "..." : "Send"}
-                          </button>
-                        </div>
-
-                        <div style={{ marginTop: 10, fontSize: 11, color: textSub }}>
-                          Showing latest comments.
-                        </div>
-                      </>
-                    ) : null}
+                    <span
+                      style={{
+                        fontSize: 11,
+                        padding: "6px 10px",
+                        borderRadius: 999,
+                        border: "1px solid rgba(56,189,248,0.35)",
+                        background: "rgba(2,132,199,0.12)",
+                        color: "#e0f2fe",
+                        whiteSpace: "nowrap",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {group.is_public ? "Public" : "Private"}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          </>
-        )}
+
+                  <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#9ca3af" }}>
+                    Goal: {group.goal ?? "—"}
+                  </p>
+
+                  <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "#9ca3af" }}>
+                    Members: <span style={{ color: "#e5e7eb", fontWeight: 900 }}>{membersCount}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ marginTop: 14 }}>
+                {memberStatus === "active" ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+                    <Link
+                      href={`/groups/${groupId}/chat`}
+                      style={{
+                        textAlign: "center",
+                        fontSize: 14,
+                        padding: "14px 12px",
+                        borderRadius: 16,
+                        textDecoration: "none",
+                        fontWeight: 900,
+                        color: "#fff",
+                        border: "1px solid rgba(56,189,248,0.35)",
+                        background: "rgba(2,132,199,0.15)",
+                        boxShadow: "0 8px 18px rgba(0,0,0,0.55)",
+                      }}
+                    >
+                      Open Chat
+                    </Link>
+                  </div>
+                ) : memberStatus === "pending" ? (
+                  <div style={{ ...cardStyle }}>
+                    <p style={{ margin: 0, fontSize: 13, color: "#9ca3af" }}>
+                      Your request is pending approval.
+                    </p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={joinGroup}
+                    disabled={joinLoading}
+                    style={{
+                      width: "100%",
+                      textAlign: "center",
+                      fontSize: 14,
+                      padding: "14px 12px",
+                      borderRadius: 16,
+                      fontWeight: 900,
+                      color: joinLoading ? "#94a3b8" : "#e0f2fe",
+                      border: "1px solid rgba(56,189,248,0.35)",
+                      background: joinLoading ? "rgba(148,163,184,0.10)" : "rgba(2,132,199,0.15)",
+                      cursor: joinLoading ? "not-allowed" : "pointer",
+                      boxShadow: "0 8px 18px rgba(0,0,0,0.55)",
+                    }}
+                  >
+                    {joinLoading ? "Joining..." : "Join Group"}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </main>
+{/*
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "#000",
+          borderTop: "1px solid rgba(148,163,184,0.25)",
+        }}
+      >
+        <BottomNavbar />
       </div>
-    </main>
+*/}
+    </>
   );
 }
