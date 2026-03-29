@@ -1,4 +1,3 @@
-// app/groups/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -28,7 +27,9 @@ export default function GroupsPage() {
   const [groups, setGroups] = useState<GroupRow[]>([]);
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [memberships, setMemberships] = useState<Record<string, MembershipRow>>({});
+  const [memberships, setMemberships] = useState<Record<string, MembershipRow>>(
+    {}
+  );
   const [latestByGroup, setLatestByGroup] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -158,13 +159,21 @@ export default function GroupsPage() {
           minHeight: "100vh",
           background: "#000",
           color: "#e5e7eb",
-          padding: "16px",
+          paddingTop: "16px",
+          paddingRight: "0",
           paddingBottom: "100px",
+          paddingLeft: "0",
         }}
       >
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-
-          {/* 🔥 HEADER CORRIGIDO */}
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 900,
+            margin: "0 auto",
+            padding: "0 16px",
+            boxSizing: "border-box",
+          }}
+        >
           <div
             style={{
               display: "flex",
@@ -241,6 +250,7 @@ export default function GroupsPage() {
                           width: "100%",
                           height: "100%",
                           objectFit: "cover",
+                          display: "block",
                         }}
                       />
                     </div>
@@ -250,7 +260,13 @@ export default function GroupsPage() {
                         {g.name}
                       </h2>
 
-                      <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "#9ca3af" }}>
+                      <p
+                        style={{
+                          margin: "6px 0 0 0",
+                          fontSize: 12,
+                          color: "#9ca3af",
+                        }}
+                      >
                         Goal: {g.goal ?? "—"}
                       </p>
                     </div>
@@ -262,18 +278,7 @@ export default function GroupsPage() {
         </div>
       </main>
 
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: "#000",
-          borderTop: "1px solid rgba(148,163,184,0.25)",
-        }}
-      >
-        <BottomNavbar />
-      </div>
+      <BottomNavbar />
     </>
   );
 }
