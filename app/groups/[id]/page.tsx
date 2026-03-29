@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-// import BottomNavbar from "@/components/BottomNavbar";
 import BackArrow from "@/components/BackArrow";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
@@ -15,11 +14,7 @@ type GroupRow = {
   is_public: boolean;
   created_by: string;
   created_at: string;
-};
-
-type MemberCountRow = {
-  group_id: string;
-  members: number;
+  image_url?: string | null; // ✅ NOVO
 };
 
 export default function GroupDetailsPage() {
@@ -34,9 +29,7 @@ export default function GroupDetailsPage() {
   const [group, setGroup] = useState<GroupRow | null>(null);
   const [membersCount, setMembersCount] = useState<number>(0);
 
-  const [memberStatus, setMemberStatus] = useState<"none" | "pending" | "active">(
-    "none"
-  );
+  const [memberStatus, setMemberStatus] = useState<"none" | "pending" | "active">("none");
   const [joinLoading, setJoinLoading] = useState(false);
 
   const cardStyle = useMemo(
@@ -44,8 +37,7 @@ export default function GroupDetailsPage() {
       borderRadius: 18,
       border: "1px solid rgba(56,189,248,0.15)",
       padding: 16,
-      background:
-        "linear-gradient(160deg, rgba(2,6,23,0.98), rgba(2,20,40,0.95))",
+      background: "linear-gradient(160deg, rgba(2,6,23,0.98), rgba(2,20,40,0.95))",
       boxShadow: "0 6px 18px rgba(2,132,199,0.08)",
     }),
     []
@@ -86,14 +78,13 @@ export default function GroupDetailsPage() {
     let cancelled = false;
 
     async function load() {
-      if (!groupId) return;
-      if (checkingAuth) return;
+      if (!groupId || checkingAuth) return;
 
       setLoading(true);
 
       const { data: gData, error: gErr } = await supabaseBrowser
         .from("app_groups")
-        .select("id,name,goal,is_public,created_by,created_at")
+        .select("id,name,goal,is_public,created_by,created_at,image_url") // ✅ NOVO
         .eq("id", groupId)
         .maybeSingle();
 
@@ -127,53 +118,6 @@ export default function GroupDetailsPage() {
     };
   }, [groupId, checkingAuth]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadMembership() {
-      if (!groupId || !userId) return;
-
-      const { data, error } = await supabaseBrowser
-        .from("app_group_members")
-        .select("status,last_seen_at")
-        .eq("group_id", groupId)
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      if (error) {
-        console.warn("membership read error:", error.message);
-        setMemberStatus("none");
-        return;
-      }
-
-      const status = (data?.status as any) || null;
-
-      if (status === "active") {
-        setMemberStatus("active");
-
-        const { error: uErr } = await supabaseBrowser
-          .from("app_group_members")
-          .update({ last_seen_at: new Date().toISOString() })
-          .eq("group_id", groupId)
-          .eq("user_id", userId);
-
-        if (uErr) console.warn("mark seen (details) error:", uErr.message);
-      } else if (status === "pending") {
-        setMemberStatus("pending");
-      } else {
-        setMemberStatus("none");
-      }
-    }
-
-    loadMembership();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [groupId, userId]);
-
   async function handleGroupAction() {
     if (!groupId || !userId || !group) return;
 
@@ -201,13 +145,6 @@ export default function GroupDetailsPage() {
     setMemberStatus(desiredStatus);
 
     if (desiredStatus === "active") {
-      await supabaseBrowser
-        .from("app_group_members")
-        .update({ last_seen_at: new Date().toISOString() })
-        .eq("group_id", groupId)
-        .eq("user_id", userId);
-
-      setJoinLoading(false);
       router.push(`/groups/${groupId}/training`);
       return;
     }
@@ -218,156 +155,87 @@ export default function GroupDetailsPage() {
   if (checkingAuth) return null;
 
   return (
-    <>
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "#000",
-          color: "#e5e7eb",
-          padding: "16px",
-          paddingBottom: "120px",
-        }}
-      >
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ marginBottom: 10 }}>
-            <BackArrow />
-          </div>
-
-          <h1 style={{ margin: "0 0 12px 0", fontSize: 22, fontWeight: 900 }}>
-            Group Details
-          </h1>
-
-          {loading ? (
-            <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</p>
-          ) : !group ? (
-            <p style={{ fontSize: 13, color: "#9ca3af" }}>Group not found.</p>
-          ) : (
-            <>
-              <div style={{ ...cardStyle, display: "flex", gap: 14, alignItems: "center" }}>
-                <div
-                  style={{
-                    width: 84,
-                    height: 84,
-                    borderRadius: 16,
-                    overflow: "hidden",
-                    flexShrink: 0,
-                    border: "1px solid rgba(56,189,248,0.25)",
-                    background: "#020617",
-                    boxShadow:
-                      "0 10px 18px rgba(2,132,199,0.10), 0 0 0 1px rgba(2,132,199,0.08)",
-                  }}
-                >
-                  <img
-                    src="/ps.png"
-                    alt="Group"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                </div>
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 10,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <h2
-                      style={{
-                        margin: 0,
-                        fontSize: 18,
-                        fontWeight: 900,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {group.name}
-                    </h2>
-
-                    <span
-                      style={{
-                        fontSize: 11,
-                        padding: "6px 10px",
-                        borderRadius: 999,
-                        border: "1px solid rgba(56,189,248,0.35)",
-                        background: "rgba(2,132,199,0.12)",
-                        color: "#e0f2fe",
-                        whiteSpace: "nowrap",
-                        fontWeight: 800,
-                      }}
-                    >
-                      {group.is_public ? "Public" : "Private"}
-                    </span>
-                  </div>
-
-                  <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#9ca3af" }}>
-                    Goal: {group.goal ?? "—"}
-                  </p>
-
-                  <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "#9ca3af" }}>
-                    Members: <span style={{ color: "#e5e7eb", fontWeight: 900 }}>{membersCount}</span>
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 14 }}>
-                {memberStatus === "pending" ? (
-                  <div style={{ ...cardStyle }}>
-                    <p style={{ margin: 0, fontSize: 13, color: "#9ca3af" }}>
-                      Your request is pending approval.
-                    </p>
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleGroupAction}
-                    disabled={joinLoading}
-                    style={{
-                      width: "100%",
-                      textAlign: "center",
-                      fontSize: 14,
-                      padding: "14px 12px",
-                      borderRadius: 16,
-                      fontWeight: 900,
-                      color: joinLoading ? "#94a3b8" : "#e0f2fe",
-                      border: "1px solid rgba(56,189,248,0.35)",
-                      background: joinLoading ? "rgba(148,163,184,0.10)" : "rgba(2,132,199,0.15)",
-                      cursor: joinLoading ? "not-allowed" : "pointer",
-                      boxShadow: "0 8px 18px rgba(0,0,0,0.55)",
-                    }}
-                  >
-                    {joinLoading
-                      ? group.is_public || memberStatus === "active"
-                        ? "Entering..."
-                        : "Requesting..."
-                      : memberStatus === "active"
-                      ? "Enter Group"
-                      : group.is_public
-                      ? "Enter Group"
-                      : "Request to Join Group"}
-                  </button>
-                )}
-              </div>
-            </>
-          )}
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#000",
+        color: "#e5e7eb",
+        padding: "16px",
+        paddingBottom: "120px",
+      }}
+    >
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <div style={{ marginBottom: 10 }}>
+          <BackArrow />
         </div>
-      </main>
-{/*
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: "#000",
-          borderTop: "1px solid rgba(148,163,184,0.25)",
-        }}
-      >
-        <BottomNavbar />
+
+        <h1 style={{ margin: "0 0 12px 0", fontSize: 22, fontWeight: 900 }}>
+          Group Details
+        </h1>
+
+        {loading ? (
+          <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</p>
+        ) : !group ? (
+          <p style={{ fontSize: 13, color: "#9ca3af" }}>Group not found.</p>
+        ) : (
+          <>
+            <div style={{ ...cardStyle, display: "flex", gap: 14, alignItems: "center" }}>
+              <div
+                style={{
+                  width: 84,
+                  height: 84,
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  flexShrink: 0,
+                  border: "1px solid rgba(56,189,248,0.25)",
+                  background: "#020617",
+                }}
+              >
+                <img
+                  src={group.image_url || "/ps.png"} // ✅ AQUI É O FIX
+                  alt="Group"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>
+                  {group.name}
+                </h2>
+
+                <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#9ca3af" }}>
+                  Goal: {group.goal ?? "—"}
+                </p>
+
+                <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "#9ca3af" }}>
+                  Members: <span style={{ color: "#e5e7eb", fontWeight: 900 }}>{membersCount}</span>
+                </p>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 14 }}>
+              <button
+                onClick={handleGroupAction}
+                disabled={joinLoading}
+                style={{
+                  width: "100%",
+                  padding: "14px",
+                  borderRadius: 16,
+                  fontWeight: 900,
+                  background: "#111827",
+                  color: "#fff",
+                }}
+              >
+                {memberStatus === "active"
+                  ? "Enter Group"
+                  : group.is_public
+                  ? "Enter Group"
+                  : "Request to Join Group"}
+              </button>
+            </div>
+          </>
+        )}
       </div>
-*/}
-    </>
+    </main>
   );
 }
