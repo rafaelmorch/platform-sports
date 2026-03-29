@@ -1,4 +1,3 @@
-// app/groups/[id]/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -262,12 +261,12 @@ export default function GroupTrainingPage() {
       if (cancelled) return;
 
       if (error) {
-        router.replace(`/groups/${groupId}`);
+        router.replace("/groups");
         return;
       }
 
       if (!memberRow || memberRow.status !== "active") {
-        router.replace(`/groups/${groupId}`);
+        router.replace("/groups");
         return;
       }
 
