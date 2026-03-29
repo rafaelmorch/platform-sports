@@ -4,9 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const tabs = [
-    { href: '/events', label: 'Events' },
+  { href: '/events', label: 'Events' },
   { href: '/activities', label: 'Group\nActivities' }, // 👈 quebra linha
-  { href: '/groups', label: 'Group\nTraining' }, // 👈 renomeado
   { href: '/feed', label: 'Feed' },
   { href: '/profile', label: 'Profile' },
 ];
