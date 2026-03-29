@@ -1,7 +1,5 @@
-// app/groups/[id]/page.tsx
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 // import BottomNavbar from "@/components/BottomNavbar";
@@ -41,7 +39,6 @@ export default function GroupDetailsPage() {
   );
   const [joinLoading, setJoinLoading] = useState(false);
 
-  // Keep consistent with other pages
   const cardStyle = useMemo(
     () => ({
       borderRadius: 18,
@@ -54,7 +51,6 @@ export default function GroupDetailsPage() {
     []
   );
 
-  // ✅ Require login for Group Details and beyond
   useEffect(() => {
     let cancelled = false;
 
@@ -82,11 +78,10 @@ export default function GroupDetailsPage() {
     if (groupId) checkAuth();
 
     return () => {
-      cancelled = true
+      cancelled = true;
     };
   }, [groupId, router]);
 
-  // Load group info + members count
   useEffect(() => {
     let cancelled = false;
 
@@ -113,7 +108,6 @@ export default function GroupDetailsPage() {
 
       setGroup((gData ?? null) as GroupRow | null);
 
-      // Count members (active)
       const { count } = await supabaseBrowser
         .from("app_group_members")
         .select("id", { count: "exact", head: true })
@@ -133,7 +127,6 @@ export default function GroupDetailsPage() {
     };
   }, [groupId, checkingAuth]);
 
-  // Load membership status (for join button and to mark seen)
   useEffect(() => {
     let cancelled = false;
 
@@ -160,7 +153,6 @@ export default function GroupDetailsPage() {
       if (status === "active") {
         setMemberStatus("active");
 
-        // ✅ NEW: mark last_seen_at on Group Details open (clears dot)
         const { error: uErr } = await supabaseBrowser
           .from("app_group_members")
           .update({ last_seen_at: new Date().toISOString() })
@@ -182,16 +174,22 @@ export default function GroupDetailsPage() {
     };
   }, [groupId, userId]);
 
-  async function joinGroup() {
-    if (!groupId || !userId) return;
+  async function handleGroupAction() {
+    if (!groupId || !userId || !group) return;
+
+    if (memberStatus === "active") {
+      router.push(`/groups/${groupId}/training`);
+      return;
+    }
 
     setJoinLoading(true);
 
-    // Use insert (no upsert) to avoid policy surprises
+    const desiredStatus = group.is_public ? "active" : "pending";
+
     const { error } = await supabaseBrowser.from("app_group_members").insert({
       group_id: groupId,
       user_id: userId,
-      status: "active",
+      status: desiredStatus,
     });
 
     if (error) {
@@ -200,17 +198,21 @@ export default function GroupDetailsPage() {
       return;
     }
 
-    setMemberStatus("active");
+    setMemberStatus(desiredStatus);
+
+    if (desiredStatus === "active") {
+      await supabaseBrowser
+        .from("app_group_members")
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq("group_id", groupId)
+        .eq("user_id", userId);
+
+      setJoinLoading(false);
+      router.push(`/groups/${groupId}/training`);
+      return;
+    }
+
     setJoinLoading(false);
-
-    // Mark seen immediately after joining
-    await supabaseBrowser
-      .from("app_group_members")
-      .update({ last_seen_at: new Date().toISOString() })
-      .eq("group_id", groupId)
-      .eq("user_id", userId);
-
-    router.push(`/groups/${groupId}/chat`);
   }
 
   if (checkingAuth) return null;
@@ -241,7 +243,6 @@ export default function GroupDetailsPage() {
             <p style={{ fontSize: 13, color: "#9ca3af" }}>Group not found.</p>
           ) : (
             <>
-              {/* Header card */}
               <div style={{ ...cardStyle, display: "flex", gap: 14, alignItems: "center" }}>
                 <div
                   style={{
@@ -312,29 +313,8 @@ export default function GroupDetailsPage() {
                 </div>
               </div>
 
-              {/* Actions */}
               <div style={{ marginTop: 14 }}>
-                {memberStatus === "active" ? (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
-                    <Link
-                      href={`/groups/${groupId}/chat`}
-                      style={{
-                        textAlign: "center",
-                        fontSize: 14,
-                        padding: "14px 12px",
-                        borderRadius: 16,
-                        textDecoration: "none",
-                        fontWeight: 900,
-                        color: "#fff",
-                        border: "1px solid rgba(56,189,248,0.35)",
-                        background: "rgba(2,132,199,0.15)",
-                        boxShadow: "0 8px 18px rgba(0,0,0,0.55)",
-                      }}
-                    >
-                      Open Chat
-                    </Link>
-                  </div>
-                ) : memberStatus === "pending" ? (
+                {memberStatus === "pending" ? (
                   <div style={{ ...cardStyle }}>
                     <p style={{ margin: 0, fontSize: 13, color: "#9ca3af" }}>
                       Your request is pending approval.
@@ -342,7 +322,7 @@ export default function GroupDetailsPage() {
                   </div>
                 ) : (
                   <button
-                    onClick={joinGroup}
+                    onClick={handleGroupAction}
                     disabled={joinLoading}
                     style={{
                       width: "100%",
@@ -358,7 +338,15 @@ export default function GroupDetailsPage() {
                       boxShadow: "0 8px 18px rgba(0,0,0,0.55)",
                     }}
                   >
-                    {joinLoading ? "Joining..." : "Join Group"}
+                    {joinLoading
+                      ? group.is_public || memberStatus === "active"
+                        ? "Entering..."
+                        : "Requesting..."
+                      : memberStatus === "active"
+                      ? "Enter Group"
+                      : group.is_public
+                      ? "Enter Group"
+                      : "Request to Join Group"}
                   </button>
                 )}
               </div>
