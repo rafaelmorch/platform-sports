@@ -14,6 +14,7 @@ type GroupRow = {
   is_public: boolean;
   created_by: string;
   created_at?: string;
+  image_url?: string | null;
 };
 
 type MembershipRow = {
@@ -48,7 +49,7 @@ export default function GroupsPage() {
 
       const { data, error } = await supabaseBrowser
         .from("app_groups")
-        .select("id,name,goal,is_public,created_by,created_at")
+        .select("id,name,goal,is_public,created_by,created_at,image_url")
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -244,7 +245,7 @@ export default function GroupsPage() {
                       }}
                     >
                       <img
-                        src="/ps.png"
+                        src={g.image_url || "/ps.png"}
                         alt="Group"
                         style={{
                           width: "100%",
