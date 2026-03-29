@@ -7,6 +7,14 @@
   }
 }
 
+/* ✅ FIX: remove borda branca do app (mantém safe area funcionando) */
+html,
+body {
+  background: #000;
+  margin: 0;
+  padding: 0;
+}
+
 /* iPhone notch / Dynamic Island: respeitar safe area */
 body {
   padding-top: env(safe-area-inset-top);
@@ -14,4 +22,3 @@ body {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
-
