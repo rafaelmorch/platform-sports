@@ -15,7 +15,6 @@ type GroupRow = {
   created_by: string;
   created_at: string;
   image_url?: string | null;
-  image_path?: string | null;
 };
 
 type PendingRequestRow = {
@@ -53,23 +52,6 @@ export default function GroupDetailsPage() {
     }),
     []
   );
-
-  function getGroupImageSrc(groupRow: GroupRow | null) {
-    if (!groupRow) return "/ps.png";
-
-    if (groupRow.image_url && groupRow.image_url.trim()) {
-      return groupRow.image_url;
-    }
-
-    if (groupRow.image_path && groupRow.image_path.trim()) {
-      const { data } = supabaseBrowser.storage
-        .from("group-images")
-        .getPublicUrl(groupRow.image_path);
-      return data?.publicUrl || "/ps.png";
-    }
-
-    return "/ps.png";
-  }
 
   useEffect(() => {
     let cancelled = false;
@@ -112,7 +94,7 @@ export default function GroupDetailsPage() {
 
       const { data: gData, error: gErr } = await supabaseBrowser
         .from("app_groups")
-        .select("id,name,goal,is_public,created_by,created_at,image_url,image_path")
+        .select("id,name,goal,is_public,created_by,created_at,image_url")
         .eq("id", groupId)
         .maybeSingle();
 
@@ -381,7 +363,7 @@ export default function GroupDetailsPage() {
                 }}
               >
                 <img
-                  src={getGroupImageSrc(group)}
+                  src={group.image_url || "/ps.png"}
                   alt="Group"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   onError={(e) => {
