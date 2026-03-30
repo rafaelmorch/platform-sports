@@ -15,6 +15,7 @@ type GroupRow = {
   created_by: string;
   created_at: string;
   image_url?: string | null;
+  image_path?: string | null;
 };
 
 type PendingRequestRow = {
@@ -40,6 +41,7 @@ export default function GroupDetailsPage() {
   const [isOwner, setIsOwner] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<PendingRequestRow[]>([]);
   const [requestActionUserId, setRequestActionUserId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const cardStyle = useMemo(
     () => ({
@@ -51,6 +53,23 @@ export default function GroupDetailsPage() {
     }),
     []
   );
+
+  function getGroupImageSrc(groupRow: GroupRow | null) {
+    if (!groupRow) return "/ps.png";
+
+    if (groupRow.image_url && groupRow.image_url.trim()) {
+      return groupRow.image_url;
+    }
+
+    if (groupRow.image_path && groupRow.image_path.trim()) {
+      const { data } = supabaseBrowser.storage
+        .from("group-images")
+        .getPublicUrl(groupRow.image_path);
+      return data?.publicUrl || "/ps.png";
+    }
+
+    return "/ps.png";
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -93,7 +112,7 @@ export default function GroupDetailsPage() {
 
       const { data: gData, error: gErr } = await supabaseBrowser
         .from("app_groups")
-        .select("id,name,goal,is_public,created_by,created_at,image_url")
+        .select("id,name,goal,is_public,created_by,created_at,image_url,image_path")
         .eq("id", groupId)
         .maybeSingle();
 
@@ -295,6 +314,33 @@ export default function GroupDetailsPage() {
     setRequestActionUserId(null);
   }
 
+  async function handleDeleteGroup() {
+    if (!groupId || !isOwner || deleteLoading) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this group? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    setDeleteLoading(true);
+
+    const { error } = await supabaseBrowser
+      .from("app_groups")
+      .delete()
+      .eq("id", groupId)
+      .eq("created_by", userId);
+
+    if (error) {
+      console.error(error);
+      setDeleteLoading(false);
+      alert("Could not delete group.");
+      return;
+    }
+
+    router.push("/groups");
+  }
+
   if (checkingAuth) return null;
 
   return (
@@ -335,9 +381,12 @@ export default function GroupDetailsPage() {
                 }}
               >
                 <img
-                  src={group.image_url || "/ps.png"}
+                  src={getGroupImageSrc(group)}
                   alt="Group"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => {
+                    e.currentTarget.src = "/ps.png";
+                  }}
                 />
               </div>
 
@@ -380,6 +429,28 @@ export default function GroupDetailsPage() {
                   : "Request to Join Group"}
               </button>
             </div>
+
+            {isOwner && (
+              <div style={{ marginTop: 12 }}>
+                <button
+                  onClick={handleDeleteGroup}
+                  disabled={deleteLoading}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    borderRadius: 16,
+                    fontWeight: 900,
+                    background: "rgba(127,29,29,0.95)",
+                    color: "#fff",
+                    border: "1px solid rgba(248,113,113,0.25)",
+                    opacity: deleteLoading ? 0.75 : 1,
+                    cursor: deleteLoading ? "default" : "pointer",
+                  }}
+                >
+                  {deleteLoading ? "Deleting Group..." : "Delete Group"}
+                </button>
+              </div>
+            )}
 
             {isOwner && pendingRequests.length > 0 && (
               <div style={{ ...cardStyle, marginTop: 14 }}>

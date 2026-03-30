@@ -101,15 +101,21 @@ export default function CreateGroupPage() {
 
     setLoading(true);
 
-    let imageUrl: string | null = null;
+    let image_url: string | null = null;
+    let image_path: string | null = null;
 
+    // ✅ FIX JPG + STORAGE
     if (imageFile) {
-      const fileExt = imageFile.name.split(".").pop() || "jpg";
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const fileExt = imageFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      const filePath = `${userId}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabaseBrowser.storage
         .from("group-images")
-        .upload(fileName, imageFile, { upsert: true });
+        .upload(filePath, imageFile, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: imageFile.type || "image/jpeg",
+        });
 
       if (uploadError) {
         setError(uploadError.message);
@@ -119,9 +125,10 @@ export default function CreateGroupPage() {
 
       const { data: publicUrlData } = supabaseBrowser.storage
         .from("group-images")
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
-      imageUrl = publicUrlData.publicUrl;
+      image_path = filePath;
+      image_url = publicUrlData?.publicUrl || null;
     }
 
     const { data, error } = await supabaseBrowser
@@ -131,7 +138,8 @@ export default function CreateGroupPage() {
         goal: goal.trim() || null,
         is_public: isPublic,
         created_by: userId,
-        image_url: imageUrl,
+        image_url,
+        image_path, // ✅ NOVO
       })
       .select("id")
       .single();
@@ -141,8 +149,6 @@ export default function CreateGroupPage() {
       setLoading(false);
       return;
     }
-
-    // ✅ REMOVIDO: insert duplicado (o trigger já cria o member)
 
     router.replace(`/groups/${data.id}`);
   }
