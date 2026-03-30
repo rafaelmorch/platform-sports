@@ -14,7 +14,12 @@ type GroupRow = {
   is_public: boolean;
   created_by: string;
   created_at: string;
-  image_url?: string | null; // ✅ NOVO
+  image_url?: string | null;
+};
+
+type PendingRequestRow = {
+  user_id: string;
+  full_name: string | null;
 };
 
 export default function GroupDetailsPage() {
@@ -31,6 +36,10 @@ export default function GroupDetailsPage() {
 
   const [memberStatus, setMemberStatus] = useState<"none" | "pending" | "active">("none");
   const [joinLoading, setJoinLoading] = useState(false);
+
+  const [isOwner, setIsOwner] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequestRow[]>([]);
+  const [requestActionUserId, setRequestActionUserId] = useState<string | null>(null);
 
   const cardStyle = useMemo(
     () => ({
@@ -78,13 +87,13 @@ export default function GroupDetailsPage() {
     let cancelled = false;
 
     async function load() {
-      if (!groupId || checkingAuth) return;
+      if (!groupId || checkingAuth || !userId) return;
 
       setLoading(true);
 
       const { data: gData, error: gErr } = await supabaseBrowser
         .from("app_groups")
-        .select("id,name,goal,is_public,created_by,created_at,image_url") // ✅ NOVO
+        .select("id,name,goal,is_public,created_by,created_at,image_url")
         .eq("id", groupId)
         .maybeSingle();
 
@@ -97,17 +106,99 @@ export default function GroupDetailsPage() {
         return;
       }
 
-      setGroup((gData ?? null) as GroupRow | null);
+      const groupRow = (gData ?? null) as GroupRow | null;
+      setGroup(groupRow);
 
-      const { count } = await supabaseBrowser
-        .from("app_group_members")
-        .select("id", { count: "exact", head: true })
-        .eq("group_id", groupId)
-        .eq("status", "active");
+      if (!groupRow) {
+        setLoading(false);
+        return;
+      }
+
+      const owner = groupRow.created_by === userId;
+      setIsOwner(owner);
+
+      const [{ count }, memberStatusResult] = await Promise.all([
+        supabaseBrowser
+          .from("app_group_members")
+          .select("id", { count: "exact", head: true })
+          .eq("group_id", groupId)
+          .eq("status", "active"),
+        supabaseBrowser
+          .from("app_group_members")
+          .select("status")
+          .eq("group_id", groupId)
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
 
       if (cancelled) return;
 
       setMembersCount(count ?? 0);
+
+      if (memberStatusResult.error) {
+        console.error(memberStatusResult.error);
+        setMemberStatus("none");
+      } else if (!memberStatusResult.data) {
+        setMemberStatus("none");
+      } else if (memberStatusResult.data.status === "active") {
+        setMemberStatus("active");
+      } else if (memberStatusResult.data.status === "pending") {
+        setMemberStatus("pending");
+      } else {
+        setMemberStatus("none");
+      }
+
+      if (owner) {
+        const { data: pendingRows, error: pendingErr } = await supabaseBrowser
+          .from("app_group_members")
+          .select("user_id")
+          .eq("group_id", groupId)
+          .eq("status", "pending");
+
+        if (cancelled) return;
+
+        if (pendingErr) {
+          console.error(pendingErr);
+          setPendingRequests([]);
+        } else {
+          const userIds = (pendingRows ?? []).map((row) => row.user_id);
+
+          if (userIds.length === 0) {
+            setPendingRequests([]);
+          } else {
+            const { data: profilesData, error: profilesErr } = await supabaseBrowser
+              .from("app_profiles_public")
+              .select("id,full_name")
+              .in("id", userIds);
+
+            if (cancelled) return;
+
+            if (profilesErr) {
+              console.error(profilesErr);
+              setPendingRequests(
+                userIds.map((id) => ({
+                  user_id: id,
+                  full_name: null,
+                }))
+              );
+            } else {
+              const profilesMap = new Map(
+                (profilesData ?? []).map((profile) => [profile.id, profile.full_name ?? null])
+              );
+
+              setPendingRequests(
+                userIds.map((id) => ({
+                  user_id: id,
+                  full_name: profilesMap.get(id) ?? null,
+                }))
+              );
+            }
+          }
+        }
+      } else {
+        setPendingRequests([]);
+      }
+
       setLoading(false);
     }
 
@@ -116,7 +207,7 @@ export default function GroupDetailsPage() {
     return () => {
       cancelled = true;
     };
-  }, [groupId, checkingAuth]);
+  }, [groupId, checkingAuth, userId]);
 
   async function handleGroupAction() {
     if (!groupId || !userId || !group) return;
@@ -126,20 +217,22 @@ export default function GroupDetailsPage() {
       return;
     }
 
+    if (memberStatus === "pending") {
+      return;
+    }
+
     setJoinLoading(true);
 
     const desiredStatus = group.is_public ? "active" : "pending";
 
-    const { error } = await supabaseBrowser
-  .from("app_group_members")
-  .upsert(
-    {
-      group_id: groupId,
-      user_id: userId,
-      status: desiredStatus,
-    },
-    { onConflict: "group_id,user_id" }
-  );
+    const { error } = await supabaseBrowser.from("app_group_members").upsert(
+      {
+        group_id: groupId,
+        user_id: userId,
+        status: desiredStatus,
+      },
+      { onConflict: "group_id,user_id" }
+    );
 
     if (error) {
       console.error(error);
@@ -150,11 +243,56 @@ export default function GroupDetailsPage() {
     setMemberStatus(desiredStatus);
 
     if (desiredStatus === "active") {
+      setMembersCount((prev) => prev + 1);
       router.push(`/groups/${groupId}/training`);
       return;
     }
 
     setJoinLoading(false);
+  }
+
+  async function handleApproveRequest(targetUserId: string) {
+    if (!groupId) return;
+
+    setRequestActionUserId(targetUserId);
+
+    const { error } = await supabaseBrowser
+      .from("app_group_members")
+      .update({ status: "active" })
+      .eq("group_id", groupId)
+      .eq("user_id", targetUserId);
+
+    if (error) {
+      console.error(error);
+      setRequestActionUserId(null);
+      return;
+    }
+
+    setPendingRequests((prev) => prev.filter((item) => item.user_id !== targetUserId));
+    setMembersCount((prev) => prev + 1);
+    setRequestActionUserId(null);
+  }
+
+  async function handleRejectRequest(targetUserId: string) {
+    if (!groupId) return;
+
+    setRequestActionUserId(targetUserId);
+
+    const { error } = await supabaseBrowser
+      .from("app_group_members")
+      .delete()
+      .eq("group_id", groupId)
+      .eq("user_id", targetUserId)
+      .eq("status", "pending");
+
+    if (error) {
+      console.error(error);
+      setRequestActionUserId(null);
+      return;
+    }
+
+    setPendingRequests((prev) => prev.filter((item) => item.user_id !== targetUserId));
+    setRequestActionUserId(null);
   }
 
   if (checkingAuth) return null;
@@ -197,7 +335,7 @@ export default function GroupDetailsPage() {
                 }}
               >
                 <img
-                  src={group.image_url || "/ps.png"} // ✅ AQUI É O FIX
+                  src={group.image_url || "/ps.png"}
                   alt="Group"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
@@ -221,7 +359,7 @@ export default function GroupDetailsPage() {
             <div style={{ marginTop: 14 }}>
               <button
                 onClick={handleGroupAction}
-                disabled={joinLoading}
+                disabled={joinLoading || memberStatus === "pending"}
                 style={{
                   width: "100%",
                   padding: "14px",
@@ -229,15 +367,113 @@ export default function GroupDetailsPage() {
                   fontWeight: 900,
                   background: "#111827",
                   color: "#fff",
+                  opacity: joinLoading || memberStatus === "pending" ? 0.75 : 1,
+                  cursor: joinLoading || memberStatus === "pending" ? "default" : "pointer",
                 }}
               >
                 {memberStatus === "active"
                   ? "Enter Group"
+                  : memberStatus === "pending"
+                  ? "Request Pending"
                   : group.is_public
                   ? "Enter Group"
                   : "Request to Join Group"}
               </button>
             </div>
+
+            {isOwner && pendingRequests.length > 0 && (
+              <div style={{ ...cardStyle, marginTop: 14 }}>
+                <h3 style={{ margin: "0 0 12px 0", fontSize: 16, fontWeight: 900 }}>
+                  Pending Requests
+                </h3>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {pendingRequests.map((request) => {
+                    const isActing = requestActionUserId === request.user_id;
+
+                    return (
+                      <div
+                        key={request.user_id}
+                        style={{
+                          borderRadius: 14,
+                          border: "1px solid rgba(56,189,248,0.12)",
+                          padding: 12,
+                          background: "rgba(15,23,42,0.55)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: 12,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <p
+                              style={{
+                                margin: 0,
+                                fontSize: 14,
+                                fontWeight: 800,
+                                color: "#e5e7eb",
+                              }}
+                            >
+                              {request.full_name?.trim() || "User"}
+                            </p>
+
+                            <p
+                              style={{
+                                margin: "4px 0 0 0",
+                                fontSize: 11,
+                                color: "#9ca3af",
+                                wordBreak: "break-all",
+                              }}
+                            >
+                              {request.user_id}
+                            </p>
+                          </div>
+
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button
+                              onClick={() => handleApproveRequest(request.user_id)}
+                              disabled={isActing}
+                              style={{
+                                borderRadius: 12,
+                                border: "1px solid rgba(34,197,94,0.35)",
+                                background: "rgba(34,197,94,0.14)",
+                                color: "#dcfce7",
+                                padding: "10px 12px",
+                                fontWeight: 900,
+                                cursor: isActing ? "default" : "pointer",
+                              }}
+                            >
+                              Approve
+                            </button>
+
+                            <button
+                              onClick={() => handleRejectRequest(request.user_id)}
+                              disabled={isActing}
+                              style={{
+                                borderRadius: 12,
+                                border: "1px solid rgba(239,68,68,0.35)",
+                                background: "rgba(239,68,68,0.14)",
+                                color: "#fee2e2",
+                                padding: "10px 12px",
+                                fontWeight: 900,
+                                cursor: isActing ? "default" : "pointer",
+                              }}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
