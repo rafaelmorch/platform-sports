@@ -21,7 +21,6 @@ export default function CreateGroupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ===== styles =====
   const pageBg = "#f3f4f6";
   const textMain = "#0f172a";
   const textSub = "rgba(15,23,42,0.65)";
@@ -65,7 +64,6 @@ export default function CreateGroupPage() {
     []
   );
 
-  // ✅ auth
   useEffect(() => {
     let cancelled = false;
 
@@ -144,19 +142,7 @@ export default function CreateGroupPage() {
       return;
     }
 
-    const { error: memberError } = await supabaseBrowser
-      .from("app_group_members")
-      .insert({
-        group_id: data.id,
-        user_id: userId,
-        status: "active",
-      });
-
-    if (memberError) {
-      setError(memberError.message);
-      setLoading(false);
-      return;
-    }
+    // ✅ REMOVIDO: insert duplicado (o trigger já cria o member)
 
     router.replace(`/groups/${data.id}`);
   }
@@ -183,7 +169,6 @@ export default function CreateGroupPage() {
 
         <div style={{ height: 12 }} />
 
-        {/* FORM */}
         <div style={cardStyle}>
           <div style={{ display: "grid", gap: 12 }}>
             <div>
@@ -273,7 +258,6 @@ export default function CreateGroupPage() {
 
         <div style={{ height: 12 }} />
 
-        {/* ERROR */}
         {error && (
           <div style={cardStyle}>
             <p style={{ margin: 0, color: "#b91c1c", fontWeight: 900 }}>
@@ -284,7 +268,6 @@ export default function CreateGroupPage() {
 
         <div style={{ height: 12 }} />
 
-        {/* BUTTON */}
         <div style={cardStyle}>
           <button
             onClick={createGroup}

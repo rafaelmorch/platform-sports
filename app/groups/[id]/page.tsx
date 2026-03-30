@@ -130,11 +130,16 @@ export default function GroupDetailsPage() {
 
     const desiredStatus = group.is_public ? "active" : "pending";
 
-    const { error } = await supabaseBrowser.from("app_group_members").insert({
+    const { error } = await supabaseBrowser
+  .from("app_group_members")
+  .upsert(
+    {
       group_id: groupId,
       user_id: userId,
       status: desiredStatus,
-    });
+    },
+    { onConflict: "group_id,user_id" }
+  );
 
     if (error) {
       console.error(error);
