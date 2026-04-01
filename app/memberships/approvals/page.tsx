@@ -21,7 +21,7 @@ type RequestRow = {
   payment_proof_path: string | null;
   app_membership_communities: {
     name: string | null;
-  } | null;
+  }[] | null; // ✅ CORREÇÃO
 };
 
 type ProfileRow = {
@@ -89,7 +89,8 @@ export default function MembershipApprovalsPage() {
       return;
     }
 
-    const rows = requestData as RequestRow[];
+    const rows = requestData as unknown as RequestRow[]; // ✅ FIX TYPESCRIPT
+
     const userIds = Array.from(new Set(rows.map((row) => row.user_id)));
 
     const { data: profileData } = await supabase
@@ -113,7 +114,7 @@ export default function MembershipApprovalsPage() {
         created_at: row.created_at,
         payment_proof_url: row.payment_proof_url ?? null,
         payment_proof_path: row.payment_proof_path ?? null,
-        community_name: row.app_membership_communities?.name ?? null,
+        community_name: row.app_membership_communities?.[0]?.name ?? null, // ✅ CORREÇÃO
         full_name: profile?.full_name ?? null,
         email: profile?.email ?? null,
       };
