@@ -1,3 +1,4 @@
+@import "react-quill-new/dist/quill.snow.css";
 /* iOS Safari/Capacitor: evita zoom ao focar em input/textarea/select */
 @supports (-webkit-touch-callout: none) {
   input,
