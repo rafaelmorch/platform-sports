@@ -5,14 +5,14 @@ import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/600.css";
 import "@fontsource/montserrat/700.css";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import BackArrow from "@/components/BackArrow";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 export const dynamic = "force-dynamic";
 
-export default function PendingMembershipPage() {
+function PendingMembershipContent() {
   const supabase = useMemo(() => supabaseBrowser, []);
   const searchParams = useSearchParams();
 
@@ -95,7 +95,7 @@ export default function PendingMembershipPage() {
         return;
       }
 
-setMessage("Payment proof uploaded successfully.");
+      setMessage("Payment proof uploaded successfully.");
     } catch (err: any) {
       setMessage(err?.message || "Unexpected error.");
     } finally {
@@ -103,6 +103,242 @@ setMessage("Payment proof uploaded successfully.");
     }
   }
 
+  return (
+    <main
+      className="pending-page"
+      style={{
+        minHeight: "100vh",
+        width: "100%",
+        background:
+          "linear-gradient(180deg, #eef1f5 0%, #e5e7eb 45%, #dfe3e8 100%)",
+        padding: 16,
+      }}
+    >
+      <div style={{ maxWidth: 900, margin: "0 auto 16px auto" }}>
+        <BackArrow />
+      </div>
+
+      <div
+        style={{
+          maxWidth: 900,
+          margin: "0 auto",
+          borderRadius: 28,
+          padding: 28,
+          border: "1px solid #d6dbe4",
+          background: "linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%)",
+          boxShadow:
+            "8px 8px 24px rgba(148,163,184,0.18), -6px -6px 20px rgba(255,255,255,0.9)",
+          textAlign: "center",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 26,
+            fontWeight: 800,
+            marginBottom: 16,
+            color: "#0f172a",
+          }}
+        >
+          You're almost in 🚀
+        </h1>
+
+        <p
+          style={{
+            fontSize: 16,
+            lineHeight: 1.7,
+            color: "#334155",
+            marginBottom: 24,
+          }}
+        >
+          Your request to join this community has been received.
+        </p>
+
+        <div
+          style={{
+            borderRadius: 20,
+            padding: 20,
+            background: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            marginBottom: 24,
+          }}
+        >
+          <p
+            style={{
+              fontSize: 15,
+              lineHeight: 1.7,
+              color: "#0f172a",
+              margin: 0,
+              fontWeight: 500,
+            }}
+          >
+            Please wait for payment confirmation to be approved and gain full
+            access to the community.
+          </p>
+        </div>
+
+        <div
+          style={{
+            maxWidth: 560,
+            margin: "0 auto 24px auto",
+            borderRadius: 24,
+            padding: 22,
+            border: "1px solid #d6dbe4",
+            background: "linear-gradient(180deg, #f8fafc 0%, #edf1f5 100%)",
+            boxShadow:
+              "8px 8px 24px rgba(148,163,184,0.14), -6px -6px 20px rgba(255,255,255,0.9)",
+            textAlign: "left",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: 18,
+              fontWeight: 700,
+              margin: "0 0 10px 0",
+              color: "#0f172a",
+            }}
+          >
+            Optional payment proof
+          </h2>
+
+          <p
+            style={{
+              fontSize: 14,
+              lineHeight: 1.7,
+              color: "#475569",
+              marginTop: 0,
+              marginBottom: 14,
+            }}
+          >
+            You may upload a screenshot of your payment to help speed up manual verification.
+            This is optional.
+          </p>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleProofChange(e.target.files?.[0] ?? null)}
+            style={{
+              width: "100%",
+              borderRadius: 18,
+              border: "1px solid #d6dbe4",
+              background: "linear-gradient(180deg, #ffffff 0%, #edf2f7 100%)",
+              color: "#111827",
+              padding: "12px 14px",
+              fontSize: 14,
+              boxShadow:
+                "inset 1px 1px 0 rgba(255,255,255,0.98), inset -2px -2px 6px rgba(203,213,225,0.45)",
+              marginBottom: 10,
+            }}
+          />
+
+          <div
+            style={{
+              fontSize: 12,
+              color: "#64748b",
+              marginBottom: 14,
+              lineHeight: 1.5,
+            }}
+          >
+            Recommended: JPG or PNG • up to 3 MB
+          </div>
+
+          <div
+            style={{
+              width: "100%",
+              minHeight: 220,
+              borderRadius: 20,
+              overflow: "hidden",
+              border: "1px solid #d6dbe4",
+              background: "linear-gradient(180deg, #ffffff 0%, #e5e7eb 100%)",
+              boxShadow:
+                "inset 1px 1px 0 rgba(255,255,255,0.95), inset -2px -2px 6px rgba(203,213,225,0.45)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 16,
+            }}
+          >
+            {proofPreview ? (
+              <img
+                src={proofPreview}
+                alt="Payment proof preview"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  color: "#64748b",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                Proof preview
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleUploadProof}
+            disabled={uploading}
+            style={{
+              width: "100%",
+              border: "1px solid #cbd5e1",
+              borderRadius: 999,
+              padding: "14px 18px",
+              fontSize: 13,
+              fontWeight: 700,
+              background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)",
+              color: "#f8fafc",
+              boxShadow:
+                "0 14px 28px rgba(15,23,42,0.18), inset 1px 1px 0 rgba(255,255,255,0.1)",
+              cursor: uploading ? "not-allowed" : "pointer",
+              opacity: uploading ? 0.7 : 1,
+            }}
+          >
+            {uploading ? "Uploading..." : "Upload payment proof"}
+          </button>
+
+          {message && (
+            <div
+              style={{
+                marginTop: 14,
+                fontSize: 13,
+                lineHeight: 1.6,
+                color: message.toLowerCase().includes("success") ? "#166534" : "#9a3412",
+                background: message.toLowerCase().includes("success") ? "#f0fdf4" : "#fff7ed",
+                border: `1px solid ${
+                  message.toLowerCase().includes("success") ? "#86efac" : "#fdba74"
+                }`,
+                borderRadius: 14,
+                padding: "10px 12px",
+              }}
+            >
+              {message}
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            fontSize: 13,
+            color: "#64748b",
+            lineHeight: 1.6,
+          }}
+        >
+          You will be notified once your access is approved.
+        </div>
+      </div>
+    </main>
+  );
+}
+
+export default function PendingMembershipPage() {
   return (
     <>
       <style jsx global>{`
@@ -121,237 +357,9 @@ setMessage("Payment proof uploaded successfully.");
         }
       `}</style>
 
-      <main
-        className="pending-page"
-        style={{
-          minHeight: "100vh",
-          width: "100%",
-          background:
-            "linear-gradient(180deg, #eef1f5 0%, #e5e7eb 45%, #dfe3e8 100%)",
-          padding: 16,
-        }}
-      >
-        <div style={{ maxWidth: 900, margin: "0 auto 16px auto" }}>
-          <BackArrow />
-        </div>
-
-        <div
-          style={{
-            maxWidth: 900,
-            margin: "0 auto",
-            borderRadius: 28,
-            padding: 28,
-            border: "1px solid #d6dbe4",
-            background: "linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%)",
-            boxShadow:
-              "8px 8px 24px rgba(148,163,184,0.18), -6px -6px 20px rgba(255,255,255,0.9)",
-            textAlign: "center",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: 26,
-              fontWeight: 800,
-              marginBottom: 16,
-              color: "#0f172a",
-            }}
-          >
-            You're almost in 🚀
-          </h1>
-
-          <p
-            style={{
-              fontSize: 16,
-              lineHeight: 1.7,
-              color: "#334155",
-              marginBottom: 24,
-            }}
-          >
-            Your request to join this community has been received.
-          </p>
-
-          <div
-            style={{
-              borderRadius: 20,
-              padding: 20,
-              background: "#f8fafc",
-              border: "1px solid #e2e8f0",
-              marginBottom: 24,
-            }}
-          >
-            <p
-              style={{
-                fontSize: 15,
-                lineHeight: 1.7,
-                color: "#0f172a",
-                margin: 0,
-                fontWeight: 500,
-              }}
-            >
-              Please wait for payment confirmation to be approved and gain full
-              access to the community.
-            </p>
-          </div>
-
-          <div
-            style={{
-              maxWidth: 560,
-              margin: "0 auto 24px auto",
-              borderRadius: 24,
-              padding: 22,
-              border: "1px solid #d6dbe4",
-              background: "linear-gradient(180deg, #f8fafc 0%, #edf1f5 100%)",
-              boxShadow:
-                "8px 8px 24px rgba(148,163,184,0.14), -6px -6px 20px rgba(255,255,255,0.9)",
-              textAlign: "left",
-            }}
-          >
-            <h2
-              style={{
-                fontSize: 18,
-                fontWeight: 700,
-                margin: "0 0 10px 0",
-                color: "#0f172a",
-              }}
-            >
-              Optional payment proof
-            </h2>
-
-            <p
-              style={{
-                fontSize: 14,
-                lineHeight: 1.7,
-                color: "#475569",
-                marginTop: 0,
-                marginBottom: 14,
-              }}
-            >
-              You may upload a screenshot of your payment to help speed up manual verification.
-              This is optional.
-            </p>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleProofChange(e.target.files?.[0] ?? null)}
-              style={{
-                width: "100%",
-                borderRadius: 18,
-                border: "1px solid #d6dbe4",
-                background: "linear-gradient(180deg, #ffffff 0%, #edf2f7 100%)",
-                color: "#111827",
-                padding: "12px 14px",
-                fontSize: 14,
-                boxShadow:
-                  "inset 1px 1px 0 rgba(255,255,255,0.98), inset -2px -2px 6px rgba(203,213,225,0.45)",
-                marginBottom: 10,
-              }}
-            />
-
-            <div
-              style={{
-                fontSize: 12,
-                color: "#64748b",
-                marginBottom: 14,
-                lineHeight: 1.5,
-              }}
-            >
-              Recommended: JPG or PNG • up to 3 MB
-            </div>
-
-            <div
-              style={{
-                width: "100%",
-                minHeight: 220,
-                borderRadius: 20,
-                overflow: "hidden",
-                border: "1px solid #d6dbe4",
-                background: "linear-gradient(180deg, #ffffff 0%, #e5e7eb 100%)",
-                boxShadow:
-                  "inset 1px 1px 0 rgba(255,255,255,0.95), inset -2px -2px 6px rgba(203,213,225,0.45)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
-              {proofPreview ? (
-                <img
-                  src={proofPreview}
-                  alt="Payment proof preview"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    display: "block",
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    color: "#64748b",
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
-                >
-                  Proof preview
-                </div>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleUploadProof}
-              disabled={uploading}
-              style={{
-                width: "100%",
-                border: "1px solid #cbd5e1",
-                borderRadius: 999,
-                padding: "14px 18px",
-                fontSize: 13,
-                fontWeight: 700,
-                background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)",
-                color: "#f8fafc",
-                boxShadow:
-                  "0 14px 28px rgba(15,23,42,0.18), inset 1px 1px 0 rgba(255,255,255,0.1)",
-                cursor: uploading ? "not-allowed" : "pointer",
-                opacity: uploading ? 0.7 : 1,
-              }}
-            >
-              {uploading ? "Uploading..." : "Upload payment proof"}
-            </button>
-
-            {message && (
-              <div
-                style={{
-                  marginTop: 14,
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  color: message.toLowerCase().includes("success") ? "#166534" : "#9a3412",
-                  background: message.toLowerCase().includes("success") ? "#f0fdf4" : "#fff7ed",
-                  border: `1px solid ${
-                    message.toLowerCase().includes("success") ? "#86efac" : "#fdba74"
-                  }`,
-                  borderRadius: 14,
-                  padding: "10px 12px",
-                }}
-              >
-                {message}
-              </div>
-            )}
-          </div>
-
-          <div
-            style={{
-              fontSize: 13,
-              color: "#64748b",
-              lineHeight: 1.6,
-            }}
-          >
-            You will be notified once your access is approved.
-          </div>
-        </div>
-      </main>
+      <Suspense fallback={null}>
+        <PendingMembershipContent />
+      </Suspense>
     </>
   );
 }
