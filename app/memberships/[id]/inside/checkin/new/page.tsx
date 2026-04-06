@@ -58,15 +58,11 @@ export default function NewCheckinPage() {
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select("full_name")
       .eq("id", user.id)
       .maybeSingle();
-
-    if (profileError) {
-      console.error("Error loading profile:", profileError);
-    }
 
     const authorName =
       profile?.full_name?.trim() || user.email?.split("@")[0] || "Athlete";
@@ -83,8 +79,6 @@ export default function NewCheckinPage() {
       setErrorText(
         [
           uploadError.message,
-          uploadError.details,
-          uploadError.hint,
           uploadError.name,
         ]
           .filter(Boolean)
@@ -116,8 +110,6 @@ export default function NewCheckinPage() {
       setErrorText(
         [
           insertError.message,
-          insertError.details,
-          insertError.hint,
           insertError.code,
           insertError.name,
         ]
