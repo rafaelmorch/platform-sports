@@ -73,8 +73,6 @@ export default function NewMembershipPostPage() {
         setErrorText(
           [
             uploadError.message,
-            uploadError.details,
-            uploadError.hint,
             uploadError.name,
           ]
             .filter(Boolean)
@@ -111,8 +109,6 @@ export default function NewMembershipPostPage() {
       setErrorText(
         [
           error.message,
-          error.details,
-          error.hint,
           error.code,
           error.name,
         ]
