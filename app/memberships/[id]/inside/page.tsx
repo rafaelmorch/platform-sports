@@ -67,6 +67,7 @@ type CheckinRow = {
   image_path: string | null;
   points: number;
   created_at: string;
+  challenge_id?: string | null;
 };
 
 type RankingRow = {
@@ -82,6 +83,21 @@ type LeaderRow = {
   author_name: string;
   total_points: number;
   total_checkins: number;
+};
+
+type ChallengeRow = {
+  id: string;
+  community_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  activity_type: string;
+  goal_criteria: string | null;
+  deadline: string;
+  points_active: number;
+  points_late: number;
+  is_active: boolean;
+  created_at: string;
 };
 
 function getTypeLabel(type: string | null): string {
@@ -277,11 +293,44 @@ function calculateStreakFromRows(rows: Array<{ created_at: string }>): number {
   return streak;
 }
 
+function formatEndsLabel(deadline: string): string {
+  const d = new Date(deadline);
+  if (Number.isNaN(d.getTime())) return "Ends soon";
+  return `Ends ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+}
+
+function isChallengeExpired(deadline: string): boolean {
+  const d = new Date(deadline);
+  if (Number.isNaN(d.getTime())) return false;
+  return d.getTime() < Date.now();
+}
+
+function sortChallenges(rows: ChallengeRow[]): ChallengeRow[] {
+  return [...rows].sort((a, b) => {
+    const aExpired = isChallengeExpired(a.deadline);
+    const bExpired = isChallengeExpired(b.deadline);
+
+    if (aExpired !== bExpired) {
+      return aExpired ? 1 : -1;
+    }
+
+    const aTime = new Date(a.deadline).getTime();
+    const bTime = new Date(b.deadline).getTime();
+
+    if (!aExpired && !bExpired) {
+      return aTime - bTime;
+    }
+
+    return bTime - aTime;
+  });
+}
+
 export default function MembershipInsidePage() {
   const supabase = useMemo(() => supabaseBrowser, []);
   const params = useParams();
   const router = useRouter();
   const carouselRef = useRef<HTMLDivElement | null>(null);
+  const challengeCarouselRef = useRef<HTMLDivElement | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
@@ -321,6 +370,10 @@ export default function MembershipInsidePage() {
   const [leaderRow, setLeaderRow] = useState<LeaderRow | null>(null);
 
   const [myStreak, setMyStreak] = useState(0);
+
+  const [challengesLoading, setChallengesLoading] = useState(true);
+  const [challenges, setChallenges] = useState<ChallengeRow[]>([]);
+  const [openChallenges, setOpenChallenges] = useState<Set<string>>(new Set());
 
   async function loadFeed(targetCommunityId: string, currentUserId: string | null) {
     setFeedLoading(true);
@@ -555,6 +608,27 @@ export default function MembershipInsidePage() {
     setLeaderLoading(false);
   }
 
+  async function loadChallenges(targetCommunityId: string) {
+    setChallengesLoading(true);
+
+    const { data, error } = await supabase
+      .from("app_membership_challenges")
+      .select("*")
+      .eq("community_id", targetCommunityId)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) {
+      console.error("Error loading membership challenges:", error);
+      setChallenges([]);
+      setChallengesLoading(false);
+      return;
+    }
+
+    const rows = sortChallenges((data as ChallengeRow[]) ?? []);
+    setChallenges(rows);
+    setChallengesLoading(false);
+  }
+
   useEffect(() => {
     async function checkAccessAndLoad() {
       const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
@@ -644,6 +718,7 @@ export default function MembershipInsidePage() {
         loadCheckins(id),
         loadRanking(id, user.id),
         loadLeaderOfMonth(id),
+        loadChallenges(id),
       ]);
 
       setAllowed(true);
@@ -941,6 +1016,18 @@ export default function MembershipInsidePage() {
     });
   }
 
+  function toggleChallenge(challengeId: string) {
+    setOpenChallenges((prev) => {
+      const copy = new Set(prev);
+      if (copy.has(challengeId)) {
+        copy.delete(challengeId);
+      } else {
+        copy.add(challengeId);
+      }
+      return copy;
+    });
+  }
+
   if (loading) return null;
   if (!allowed) return null;
 
@@ -1027,7 +1114,8 @@ export default function MembershipInsidePage() {
           background: linear-gradient(270deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 100%);
         }
 
-        .membership-feed-carousel {
+        .membership-feed-carousel,
+        .membership-challenge-carousel {
           display: flex;
           gap: 16px;
           overflow-x: auto;
@@ -1041,22 +1129,29 @@ export default function MembershipInsidePage() {
           scrollbar-width: none;
         }
 
-        .membership-feed-carousel::-webkit-scrollbar {
+        .membership-feed-carousel::-webkit-scrollbar,
+        .membership-challenge-carousel::-webkit-scrollbar {
           display: none;
         }
 
         .membership-feed-carousel::before,
-        .membership-feed-carousel::after {
+        .membership-feed-carousel::after,
+        .membership-challenge-carousel::before,
+        .membership-challenge-carousel::after {
           content: "";
           flex: 0 0 max(4px, calc(50% - 170px));
         }
 
-        .membership-feed-card {
+        .membership-feed-card,
+        .membership-challenge-card {
           flex: 0 0 340px;
           width: 340px;
           max-width: 340px;
           scroll-snap-align: center;
           min-width: 0;
+        }
+
+        .membership-feed-card {
           transition:
             transform 0.28s ease,
             opacity 0.28s ease,
@@ -1096,7 +1191,8 @@ export default function MembershipInsidePage() {
             width: 24px;
           }
 
-          .membership-feed-carousel {
+          .membership-feed-carousel,
+          .membership-challenge-carousel {
             gap: 12px;
             padding: 8px 14px 18px 14px;
             margin: 0 -14px;
@@ -1105,11 +1201,14 @@ export default function MembershipInsidePage() {
           }
 
           .membership-feed-carousel::before,
-          .membership-feed-carousel::after {
+          .membership-feed-carousel::after,
+          .membership-challenge-carousel::before,
+          .membership-challenge-carousel::after {
             flex: 0 0 max(4px, calc(50% - 140px));
           }
 
-          .membership-feed-card {
+          .membership-feed-card,
+          .membership-challenge-card {
             flex: 0 0 280px;
             width: 280px;
             max-width: 280px;
@@ -1392,15 +1491,335 @@ export default function MembershipInsidePage() {
             <div
               style={{
                 display: "flex",
-                alignItems: "center",
                 justifyContent: "space-between",
+                alignItems: "center",
                 gap: 12,
                 marginBottom: 12,
+                flexWrap: "wrap",
               }}
             >
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: "#0f172a" }}>
-                🔥 Highlights
-              </h2>
+              <div>
+                <h2
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    margin: "0 0 4px 0",
+                    color: "#0f172a",
+                  }}
+                >
+                  🎯 Challenges
+                </h2>
+                <div style={{ color: "#64748b", fontSize: 13 }}>
+                  Active challenges come first. Tap any card to expand and check in.
+                </div>
+              </div>
+            </div>
+
+            {challengesLoading ? (
+              <div style={{ color: "#64748b", fontSize: 14 }}>Loading challenges...</div>
+            ) : challenges.length === 0 ? (
+              <div
+                style={{
+                  borderRadius: 20,
+                  padding: 18,
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  color: "#475569",
+                  fontSize: 14,
+                  lineHeight: 1.7,
+                }}
+              >
+                No challenges yet.
+              </div>
+            ) : (
+              <div ref={challengeCarouselRef} className="membership-challenge-carousel">
+                {challenges.map((challenge) => {
+                  const isOpen = openChallenges.has(challenge.id);
+                  const expired = isChallengeExpired(challenge.deadline);
+
+                  return (
+                    <article
+                      key={challenge.id}
+                      className="membership-challenge-card"
+                      style={{
+                        borderRadius: 24,
+                        border: expired ? "1px solid #e5e7eb" : "1px solid #fcd34d",
+                        background: expired
+                          ? "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)"
+                          : "linear-gradient(135deg, #fff7ed 0%, #ffffff 55%, #f8fafc 100%)",
+                        padding: 16,
+                        boxShadow: expired
+                          ? "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.82)"
+                          : "10px 10px 24px rgba(245,158,11,0.10), -6px -6px 20px rgba(255,255,255,0.92)",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleChallenge(challenge.id)}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          border: "none",
+                          background: "transparent",
+                          padding: 0,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            justifyContent: "space-between",
+                            gap: 10,
+                            marginBottom: 10,
+                          }}
+                        >
+                          <div
+                            style={{
+                              borderRadius: 999,
+                              padding: "6px 10px",
+                              background: expired ? "#e2e8f0" : "#fef3c7",
+                              color: expired ? "#475569" : "#b45309",
+                              border: expired ? "1px solid #cbd5e1" : "1px solid #fcd34d",
+                              fontSize: 11,
+                              fontWeight: 800,
+                              whiteSpace: "nowrap",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {expired ? "Expired" : "Active"}
+                          </div>
+
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#64748b",
+                              fontWeight: 700,
+                              whiteSpace: "nowrap",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {formatEndsLabel(challenge.deadline)}
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: "#0f172a",
+                            lineHeight: 1.25,
+                            marginBottom: 10,
+                            display: "-webkit-box",
+                            WebkitLineClamp: isOpen ? "unset" : 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {challenge.title}
+                        </div>
+
+                        {!isOpen && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 10,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color: "#64748b",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {formatActivityType(challenge.activity_type)}
+                            </div>
+
+                            <div
+                              style={{
+                                borderRadius: 999,
+                                padding: "6px 10px",
+                                background: "#dcfce7",
+                                color: "#166534",
+                                border: "1px solid #86efac",
+                                fontSize: 11,
+                                fontWeight: 800,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              +{challenge.points_active} pts
+                            </div>
+                          </div>
+                        )}
+                      </button>
+
+                      {isOpen && (
+                        <div
+                          style={{
+                            marginTop: 14,
+                            paddingTop: 14,
+                            borderTop: "1px solid #e2e8f0",
+                            display: "grid",
+                            gap: 10,
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: 8,
+                            }}
+                          >
+                            <div
+                              style={{
+                                borderRadius: 999,
+                                padding: "6px 10px",
+                                background: "#ede9fe",
+                                color: "#6d28d9",
+                                border: "1px solid #c4b5fd",
+                                fontSize: 11,
+                                fontWeight: 800,
+                              }}
+                            >
+                              {formatActivityType(challenge.activity_type)}
+                            </div>
+
+                            <div
+                              style={{
+                                borderRadius: 999,
+                                padding: "6px 10px",
+                                background: "#dcfce7",
+                                color: "#166534",
+                                border: "1px solid #86efac",
+                                fontSize: 11,
+                                fontWeight: 800,
+                              }}
+                            >
+                              +{challenge.points_active} pts on time
+                            </div>
+
+                            <div
+                              style={{
+                                borderRadius: 999,
+                                padding: "6px 10px",
+                                background: "#dbeafe",
+                                color: "#1d4ed8",
+                                border: "1px solid #93c5fd",
+                                fontSize: 11,
+                                fontWeight: 800,
+                              }}
+                            >
+                              +{challenge.points_late} pts late
+                            </div>
+                          </div>
+
+                          {challenge.goal_criteria && (
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: "#334155",
+                                  marginBottom: 4,
+                                  textTransform: "uppercase",
+                                  letterSpacing: 0.3,
+                                }}
+                              >
+                                Goal
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  color: "#475569",
+                                  lineHeight: 1.55,
+                                }}
+                              >
+                                {challenge.goal_criteria}
+                              </div>
+                            </div>
+                          )}
+
+                          {challenge.description && (
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: "#334155",
+                                  marginBottom: 4,
+                                  textTransform: "uppercase",
+                                  letterSpacing: 0.3,
+                                }}
+                              >
+                                Details
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  color: "#475569",
+                                  lineHeight: 1.55,
+                                }}
+                              >
+                                {challenge.description}
+                              </div>
+                            </div>
+                          )}
+
+                          <Link
+                            href={`/memberships/${communityId}/inside/checkin/new?challenge_id=${challenge.id}`}
+                            style={{
+                              textDecoration: "none",
+                              marginTop: 2,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: 999,
+                              padding: "10px 14px",
+                              background: "#0f172a",
+                              color: "#fff",
+                              fontWeight: 800,
+                              fontSize: 13,
+                              width: "fit-content",
+                            }}
+                          >
+                            Check in this challenge
+                          </Link>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: 28 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                marginBottom: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    margin: "0 0 4px 0",
+                    color: "#0f172a",
+                  }}
+                >
+                  🔥 Highlights
+                </h2>
+              </div>
             </div>
 
             {highlights.length === 0 ? (
