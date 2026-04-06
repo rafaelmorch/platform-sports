@@ -330,7 +330,6 @@ export default function MembershipInsidePage() {
   const params = useParams();
   const router = useRouter();
   const carouselRef = useRef<HTMLDivElement | null>(null);
-  const challengeCarouselRef = useRef<HTMLDivElement | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
@@ -1507,316 +1506,6 @@ export default function MembershipInsidePage() {
                     color: "#0f172a",
                   }}
                 >
-                  🎯 Challenges
-                </h2>
-                <div style={{ color: "#64748b", fontSize: 13 }}>
-                  Active challenges come first. Tap any card to expand and check in.
-                </div>
-              </div>
-            </div>
-
-            {challengesLoading ? (
-              <div style={{ color: "#64748b", fontSize: 14 }}>Loading challenges...</div>
-            ) : challenges.length === 0 ? (
-              <div
-                style={{
-                  borderRadius: 20,
-                  padding: 18,
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
-                  color: "#475569",
-                  fontSize: 14,
-                  lineHeight: 1.7,
-                }}
-              >
-                No challenges yet.
-              </div>
-            ) : (
-              <div ref={challengeCarouselRef} className="membership-challenge-carousel">
-                {challenges.map((challenge) => {
-                  const isOpen = openChallenges.has(challenge.id);
-                  const expired = isChallengeExpired(challenge.deadline);
-
-                  return (
-                    <article
-                      key={challenge.id}
-                      className="membership-challenge-card"
-                      style={{
-                        borderRadius: 24,
-                        border: expired ? "1px solid #e5e7eb" : "1px solid #fcd34d",
-                        background: expired
-                          ? "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)"
-                          : "linear-gradient(135deg, #fff7ed 0%, #ffffff 55%, #f8fafc 100%)",
-                        padding: 16,
-                        boxShadow: expired
-                          ? "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.82)"
-                          : "10px 10px 24px rgba(245,158,11,0.10), -6px -6px 20px rgba(255,255,255,0.92)",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => toggleChallenge(challenge.id)}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          border: "none",
-                          background: "transparent",
-                          padding: 0,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            justifyContent: "space-between",
-                            gap: 10,
-                            marginBottom: 10,
-                          }}
-                        >
-                          <div
-                            style={{
-                              borderRadius: 999,
-                              padding: "6px 10px",
-                              background: expired ? "#e2e8f0" : "#fef3c7",
-                              color: expired ? "#475569" : "#b45309",
-                              border: expired ? "1px solid #cbd5e1" : "1px solid #fcd34d",
-                              fontSize: 11,
-                              fontWeight: 800,
-                              whiteSpace: "nowrap",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {expired ? "Expired" : "Active"}
-                          </div>
-
-                          <div
-                            style={{
-                              fontSize: 11,
-                              color: "#64748b",
-                              fontWeight: 700,
-                              whiteSpace: "nowrap",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {formatEndsLabel(challenge.deadline)}
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            fontSize: 16,
-                            fontWeight: 800,
-                            color: "#0f172a",
-                            lineHeight: 1.25,
-                            marginBottom: 10,
-                            display: "-webkit-box",
-                            WebkitLineClamp: isOpen ? "unset" : 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {challenge.title}
-                        </div>
-
-                        {!isOpen && (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: 10,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "#64748b",
-                                fontWeight: 700,
-                              }}
-                            >
-                              {formatActivityType(challenge.activity_type)}
-                            </div>
-
-                            <div
-                              style={{
-                                borderRadius: 999,
-                                padding: "6px 10px",
-                                background: "#dcfce7",
-                                color: "#166534",
-                                border: "1px solid #86efac",
-                                fontSize: 11,
-                                fontWeight: 800,
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              +{challenge.points_active} pts
-                            </div>
-                          </div>
-                        )}
-                      </button>
-
-                      {isOpen && (
-                        <div
-                          style={{
-                            marginTop: 14,
-                            paddingTop: 14,
-                            borderTop: "1px solid #e2e8f0",
-                            display: "grid",
-                            gap: 10,
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              flexWrap: "wrap",
-                              gap: 8,
-                            }}
-                          >
-                            <div
-                              style={{
-                                borderRadius: 999,
-                                padding: "6px 10px",
-                                background: "#ede9fe",
-                                color: "#6d28d9",
-                                border: "1px solid #c4b5fd",
-                                fontSize: 11,
-                                fontWeight: 800,
-                              }}
-                            >
-                              {formatActivityType(challenge.activity_type)}
-                            </div>
-
-                            <div
-                              style={{
-                                borderRadius: 999,
-                                padding: "6px 10px",
-                                background: "#dcfce7",
-                                color: "#166534",
-                                border: "1px solid #86efac",
-                                fontSize: 11,
-                                fontWeight: 800,
-                              }}
-                            >
-                              +{challenge.points_active} pts on time
-                            </div>
-
-                            <div
-                              style={{
-                                borderRadius: 999,
-                                padding: "6px 10px",
-                                background: "#dbeafe",
-                                color: "#1d4ed8",
-                                border: "1px solid #93c5fd",
-                                fontSize: 11,
-                                fontWeight: 800,
-                              }}
-                            >
-                              +{challenge.points_late} pts late
-                            </div>
-                          </div>
-
-                          {challenge.goal_criteria && (
-                            <div>
-                              <div
-                                style={{
-                                  fontSize: 12,
-                                  fontWeight: 800,
-                                  color: "#334155",
-                                  marginBottom: 4,
-                                  textTransform: "uppercase",
-                                  letterSpacing: 0.3,
-                                }}
-                              >
-                                Goal
-                              </div>
-                              <div
-                                style={{
-                                  fontSize: 13,
-                                  color: "#475569",
-                                  lineHeight: 1.55,
-                                }}
-                              >
-                                {challenge.goal_criteria}
-                              </div>
-                            </div>
-                          )}
-
-                          {challenge.description && (
-                            <div>
-                              <div
-                                style={{
-                                  fontSize: 12,
-                                  fontWeight: 800,
-                                  color: "#334155",
-                                  marginBottom: 4,
-                                  textTransform: "uppercase",
-                                  letterSpacing: 0.3,
-                                }}
-                              >
-                                Details
-                              </div>
-                              <div
-                                style={{
-                                  fontSize: 13,
-                                  color: "#475569",
-                                  lineHeight: 1.55,
-                                }}
-                              >
-                                {challenge.description}
-                              </div>
-                            </div>
-                          )}
-
-                          <Link
-                            href={`/memberships/${communityId}/inside/checkin/new?challenge_id=${challenge.id}`}
-                            style={{
-                              textDecoration: "none",
-                              marginTop: 2,
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              borderRadius: 999,
-                              padding: "10px 14px",
-                              background: "#0f172a",
-                              color: "#fff",
-                              fontWeight: 800,
-                              fontSize: 13,
-                              width: "fit-content",
-                            }}
-                          >
-                            Check in this challenge
-                          </Link>
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div style={{ marginBottom: 28 }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
-                marginBottom: 12,
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <h2
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    margin: "0 0 4px 0",
-                    color: "#0f172a",
-                  }}
-                >
                   🔥 Highlights
                 </h2>
               </div>
@@ -2332,6 +2021,316 @@ export default function MembershipInsidePage() {
                     color: "#0f172a",
                   }}
                 >
+                  🎯 Challenges
+                </h2>
+                <div style={{ color: "#64748b", fontSize: 13 }}>
+                  Active challenges come first. Tap any card to expand and check in.
+                </div>
+              </div>
+            </div>
+
+            {challengesLoading ? (
+              <div style={{ color: "#64748b", fontSize: 14 }}>Loading challenges...</div>
+            ) : challenges.length === 0 ? (
+              <div
+                style={{
+                  borderRadius: 20,
+                  padding: 18,
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  color: "#475569",
+                  fontSize: 14,
+                  lineHeight: 1.7,
+                }}
+              >
+                No challenges yet.
+              </div>
+            ) : (
+              <div className="membership-challenge-carousel">
+                {challenges.map((challenge) => {
+                  const isOpen = openChallenges.has(challenge.id);
+                  const expired = isChallengeExpired(challenge.deadline);
+
+                  return (
+                    <article
+                      key={challenge.id}
+                      className="membership-challenge-card"
+                      style={{
+                        borderRadius: 24,
+                        border: expired ? "1px solid #e5e7eb" : "1px solid #fcd34d",
+                        background: expired
+                          ? "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)"
+                          : "linear-gradient(135deg, #fff7ed 0%, #ffffff 55%, #f8fafc 100%)",
+                        padding: 16,
+                        boxShadow: expired
+                          ? "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.82)"
+                          : "10px 10px 24px rgba(245,158,11,0.10), -6px -6px 20px rgba(255,255,255,0.92)",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleChallenge(challenge.id)}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          border: "none",
+                          background: "transparent",
+                          padding: 0,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            justifyContent: "space-between",
+                            gap: 10,
+                            marginBottom: 10,
+                          }}
+                        >
+                          <div
+                            style={{
+                              borderRadius: 999,
+                              padding: "6px 10px",
+                              background: expired ? "#e2e8f0" : "#fef3c7",
+                              color: expired ? "#475569" : "#b45309",
+                              border: expired ? "1px solid #cbd5e1" : "1px solid #fcd34d",
+                              fontSize: 11,
+                              fontWeight: 800,
+                              whiteSpace: "nowrap",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {expired ? "Expired" : "Active"}
+                          </div>
+
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#64748b",
+                              fontWeight: 700,
+                              whiteSpace: "nowrap",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {formatEndsLabel(challenge.deadline)}
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: "#0f172a",
+                            lineHeight: 1.25,
+                            marginBottom: 10,
+                            display: "-webkit-box",
+                            WebkitLineClamp: isOpen ? "unset" : 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {challenge.title}
+                        </div>
+
+                        {!isOpen && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 10,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color: "#64748b",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {formatActivityType(challenge.activity_type)}
+                            </div>
+
+                            <div
+                              style={{
+                                borderRadius: 999,
+                                padding: "6px 10px",
+                                background: "#dcfce7",
+                                color: "#166534",
+                                border: "1px solid #86efac",
+                                fontSize: 11,
+                                fontWeight: 800,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              +{challenge.points_active} pts
+                            </div>
+                          </div>
+                        )}
+                      </button>
+
+                      {isOpen && (
+                        <div
+                          style={{
+                            marginTop: 14,
+                            paddingTop: 14,
+                            borderTop: "1px solid #e2e8f0",
+                            display: "grid",
+                            gap: 10,
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: 8,
+                            }}
+                          >
+                            <div
+                              style={{
+                                borderRadius: 999,
+                                padding: "6px 10px",
+                                background: "#ede9fe",
+                                color: "#6d28d9",
+                                border: "1px solid #c4b5fd",
+                                fontSize: 11,
+                                fontWeight: 800,
+                              }}
+                            >
+                              {formatActivityType(challenge.activity_type)}
+                            </div>
+
+                            <div
+                              style={{
+                                borderRadius: 999,
+                                padding: "6px 10px",
+                                background: "#dcfce7",
+                                color: "#166534",
+                                border: "1px solid #86efac",
+                                fontSize: 11,
+                                fontWeight: 800,
+                              }}
+                            >
+                              +{challenge.points_active} pts on time
+                            </div>
+
+                            <div
+                              style={{
+                                borderRadius: 999,
+                                padding: "6px 10px",
+                                background: "#dbeafe",
+                                color: "#1d4ed8",
+                                border: "1px solid #93c5fd",
+                                fontSize: 11,
+                                fontWeight: 800,
+                              }}
+                            >
+                              +{challenge.points_late} pts late
+                            </div>
+                          </div>
+
+                          {challenge.goal_criteria && (
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: "#334155",
+                                  marginBottom: 4,
+                                  textTransform: "uppercase",
+                                  letterSpacing: 0.3,
+                                }}
+                              >
+                                Goal
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  color: "#475569",
+                                  lineHeight: 1.55,
+                                }}
+                              >
+                                {challenge.goal_criteria}
+                              </div>
+                            </div>
+                          )}
+
+                          {challenge.description && (
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: "#334155",
+                                  marginBottom: 4,
+                                  textTransform: "uppercase",
+                                  letterSpacing: 0.3,
+                                }}
+                              >
+                                Details
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  color: "#475569",
+                                  lineHeight: 1.55,
+                                }}
+                              >
+                                {challenge.description}
+                              </div>
+                            </div>
+                          )}
+
+                          <Link
+                            href={`/memberships/${communityId}/inside/checkin/new?challenge_id=${challenge.id}`}
+                            style={{
+                              textDecoration: "none",
+                              marginTop: 2,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: 999,
+                              padding: "10px 14px",
+                              background: "#0f172a",
+                              color: "#fff",
+                              fontWeight: 800,
+                              fontSize: 13,
+                              width: "fit-content",
+                            }}
+                          >
+                            Check in this challenge
+                          </Link>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: 28 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                marginBottom: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    margin: "0 0 4px 0",
+                    color: "#0f172a",
+                  }}
+                >
                   ➕ Check-in
                 </h2>
                 <div style={{ color: "#64748b", fontSize: 13 }}>
@@ -2446,6 +2445,7 @@ export default function MembershipInsidePage() {
                     {recentCheckins.map((item) => {
                       const authorLabel = getDisplayName(item.author_name);
                       const isImageOpen = openCheckinImages.has(item.id);
+                      const isChallengeCheckin = Boolean(item.challenge_id);
 
                       return (
                         <article
@@ -2543,6 +2543,23 @@ export default function MembershipInsidePage() {
                                 {formatActivityType(item.activity_type)}
                               </div>
 
+                              {isChallengeCheckin && (
+                                <div
+                                  style={{
+                                    borderRadius: 999,
+                                    padding: "6px 10px",
+                                    background: "#dbeafe",
+                                    color: "#1d4ed8",
+                                    border: "1px solid #93c5fd",
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  Challenge
+                                </div>
+                              )}
+
                               <div
                                 style={{
                                   borderRadius: 999,
@@ -2576,7 +2593,9 @@ export default function MembershipInsidePage() {
                                 lineHeight: 1.5,
                               }}
                             >
-                              Workout proof submitted.
+                              {isChallengeCheckin
+                                ? "Challenge proof submitted."
+                                : "Workout proof submitted."}
                             </div>
 
                             {item.image_url && (
