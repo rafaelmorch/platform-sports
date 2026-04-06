@@ -21,6 +21,7 @@ type CheckinRow = {
   image_path: string | null;
   points: number;
   created_at: string;
+  challenge_id: string | null;
 };
 
 function getDisplayName(name: string | null): string {
@@ -208,6 +209,7 @@ export default function MembershipCheckinsHistoryPage() {
             {checkins.map((item) => {
               const authorLabel = getDisplayName(item.author_name);
               const isImageOpen = openImages.has(item.id);
+              const isChallengeCheckin = Boolean(item.challenge_id);
 
               return (
                 <article
@@ -300,6 +302,23 @@ export default function MembershipCheckinsHistoryPage() {
                         {formatActivityType(item.activity_type)}
                       </div>
 
+                      {isChallengeCheckin && (
+                        <div
+                          style={{
+                            borderRadius: 999,
+                            padding: "6px 10px",
+                            background: "#dbeafe",
+                            color: "#1d4ed8",
+                            border: "1px solid #93c5fd",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Challenge
+                        </div>
+                      )}
+
                       <div
                         style={{
                           borderRadius: 999,
@@ -327,7 +346,9 @@ export default function MembershipCheckinsHistoryPage() {
                     }}
                   >
                     <div style={{ color: "#475569", fontSize: 13 }}>
-                      Workout proof submitted.
+                      {isChallengeCheckin
+                        ? "Challenge proof submitted."
+                        : "Workout proof submitted."}
                     </div>
 
                     {item.image_url && (
