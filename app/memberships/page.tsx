@@ -52,6 +52,7 @@ export default function MembershipsPage() {
   const [approvedIds, setApprovedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [warning, setWarning] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,6 +77,7 @@ export default function MembershipsPage() {
           setWarning("I couldn't load the memberships right now.");
           setCommunities([]);
           setApprovedIds([]);
+          setIsAdmin(false);
           setLoading(false);
           return;
         }
@@ -90,19 +92,34 @@ export default function MembershipsPage() {
         if (cancelled) return;
 
         if (user) {
-          const { data: requestData, error: requestError } = await supabase
-            .from("app_membership_requests")
-            .select("community_id")
-            .eq("user_id", user.id)
-            .eq("status", "approved");
+          const [{ data: requestData, error: requestError }, { data: profileData, error: profileError }] =
+            await Promise.all([
+              supabase
+                .from("app_membership_requests")
+                .select("community_id")
+                .eq("user_id", user.id)
+                .eq("status", "approved"),
+              supabase
+                .from("profiles")
+                .select("is_admin")
+                .eq("id", user.id)
+                .maybeSingle(),
+            ]);
 
           if (!requestError && requestData) {
             setApprovedIds(requestData.map((row) => row.community_id));
           } else {
             setApprovedIds([]);
           }
+
+          if (!profileError && profileData?.is_admin === true) {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
         } else {
           setApprovedIds([]);
+          setIsAdmin(false);
         }
 
         if (rows.length === 0) {
@@ -114,6 +131,7 @@ export default function MembershipsPage() {
           setWarning("Failed to connect to Supabase.");
           setCommunities([]);
           setApprovedIds([]);
+          setIsAdmin(false);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -303,191 +321,260 @@ export default function MembershipsPage() {
                   : `/memberships/${community.id}`;
 
                 return (
-                  <Link
+                  <div
                     key={community.id}
-                    href={href}
-                    style={{ textDecoration: "none", color: "inherit" }}
+                    style={{
+                      position: "relative",
+                    }}
                   >
-                    <div
-                      style={{
-                        borderRadius: 24,
-                        overflow: "hidden",
-                        border: "1px solid rgba(30,41,59,0.92)",
-                        background:
-                          "linear-gradient(145deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92))",
-                        boxShadow: "0 26px 80px rgba(0,0,0,0.72)",
-                        transform: "translateY(0px)",
-                        transition: "transform 0.18s ease, box-shadow 0.18s ease",
-                      }}
+                    <Link
+                      href={href}
+                      style={{ textDecoration: "none", color: "inherit", display: "block" }}
                     >
                       <div
                         style={{
-                          position: "relative",
-                          width: "100%",
-                          aspectRatio: "16 / 10",
+                          borderRadius: 24,
+                          overflow: "hidden",
+                          border: "1px solid rgba(30,41,59,0.92)",
                           background:
-                            "linear-gradient(135deg, rgba(30,41,59,0.96), rgba(37,99,235,0.30))",
+                            "linear-gradient(145deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92))",
+                          boxShadow: "0 26px 80px rgba(0,0,0,0.72)",
+                          transform: "translateY(0px)",
+                          transition: "transform 0.18s ease, box-shadow 0.18s ease",
                         }}
                       >
-                        {image ? (
-                          <img
-                            src={image}
-                            alt={community.name ?? "Membership"}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
+                        <div
+                          style={{
+                            position: "relative",
+                            width: "100%",
+                            aspectRatio: "16 / 10",
+                            background:
+                              "linear-gradient(135deg, rgba(30,41,59,0.96), rgba(37,99,235,0.30))",
+                          }}
+                        >
+                          {image ? (
+                            <img
+                              src={image}
+                              alt={community.name ?? "Membership"}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 42,
+                                fontWeight: 900,
+                                color: "rgba(255,255,255,0.92)",
+                                letterSpacing: "0.06em",
+                              }}
+                            >
+                              {getInitials(community.name)}
+                            </div>
+                          )}
+
                           <div
                             style={{
-                              width: "100%",
-                              height: "100%",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 42,
-                              fontWeight: 900,
-                              color: "rgba(255,255,255,0.92)",
-                              letterSpacing: "0.06em",
+                              position: "absolute",
+                              inset: 0,
+                              background:
+                                "linear-gradient(to top, rgba(2,6,23,0.88) 0%, rgba(2,6,23,0.20) 45%, rgba(2,6,23,0.08) 100%)",
                             }}
-                          >
-                            {getInitials(community.name)}
-                          </div>
-                        )}
+                          />
 
-                        <div
-                          style={{
-                            position: "absolute",
-                            inset: 0,
-                            background:
-                              "linear-gradient(to top, rgba(2,6,23,0.88) 0%, rgba(2,6,23,0.20) 45%, rgba(2,6,23,0.08) 100%)",
-                          }}
-                        />
-
-                        <div
-                          style={{
-                            position: "absolute",
-                            left: 12,
-                            top: 12,
-                            padding: "6px 10px",
-                            borderRadius: 999,
-                            fontSize: 11,
-                            fontWeight: 900,
-                            background: "rgba(2,6,23,0.68)",
-                            border: "1px solid rgba(148,163,184,0.18)",
-                            backdropFilter: "blur(8px)",
-                          }}
-                        >
-                          {isApproved ? "MEMBER AREA" : "MEMBERSHIP"}
-                        </div>
-
-                        <div
-                          style={{
-                            position: "absolute",
-                            right: 12,
-                            top: 12,
-                            padding: "6px 10px",
-                            borderRadius: 999,
-                            fontSize: 11,
-                            fontWeight: 900,
-                            background: "linear-gradient(135deg,#3b82f6,#2563eb)",
-                            color: "#eff6ff",
-                            boxShadow: "0 8px 24px rgba(37,99,235,0.38)",
-                          }}
-                        >
-                          {priceLabel}
-                        </div>
-
-                        {community.card_highlight && (
                           <div
                             style={{
                               position: "absolute",
                               left: 12,
-                              bottom: 12,
-                              padding: "7px 11px",
+                              top: 12,
+                              padding: "6px 10px",
                               borderRadius: 999,
                               fontSize: 11,
                               fontWeight: 900,
-                              background: "rgba(255,255,255,0.10)",
-                              color: "#f8fafc",
-                              border: "1px solid rgba(255,255,255,0.14)",
+                              background: "rgba(2,6,23,0.68)",
+                              border: "1px solid rgba(148,163,184,0.18)",
                               backdropFilter: "blur(8px)",
-                              maxWidth: "calc(100% - 24px)",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
                             }}
                           >
-                            {community.card_highlight}
-                          </div>
-                        )}
-                      </div>
-
-                      <div style={{ padding: 16 }}>
-                        <div
-                          style={{
-                            fontSize: 18,
-                            fontWeight: 900,
-                            lineHeight: 1.1,
-                            marginBottom: 8,
-                          }}
-                        >
-                          {community.name ?? "Membership"}
-                        </div>
-
-                        <div
-                          style={{
-                            fontSize: 13,
-                            color: "#cbd5e1",
-                            lineHeight: 1.45,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            minHeight: 56,
-                            marginBottom: 14,
-                          }}
-                        >
-                          {community.short_description || "Exclusive community access with premium experience inside the app."}
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            gap: 12,
-                          }}
-                        >
-                          <div style={{ fontSize: 12, color: "#93c5fd", fontWeight: 700 }}>
-                            {isApproved ? "Tap to enter community →" : "Tap to explore membership →"}
+                            {isApproved ? "MEMBER AREA" : "MEMBERSHIP"}
                           </div>
 
                           <div
                             style={{
+                              position: "absolute",
+                              right: 12,
+                              top: 12,
+                              padding: "6px 10px",
                               borderRadius: 999,
-                              padding: "10px 14px",
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: 900,
-                              background: "linear-gradient(135deg,#2563eb,#1d4ed8)",
+                              background: "linear-gradient(135deg,#3b82f6,#2563eb)",
                               color: "#eff6ff",
-                              boxShadow: "0 10px 28px rgba(37,99,235,0.32)",
-                              whiteSpace: "nowrap",
+                              boxShadow: "0 8px 24px rgba(37,99,235,0.38)",
                             }}
                           >
-                            {isApproved ? "Enter" : "View"}
+                            {priceLabel}
+                          </div>
+
+                          {community.card_highlight && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: 12,
+                                bottom: 12,
+                                padding: "7px 11px",
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 900,
+                                background: "rgba(255,255,255,0.10)",
+                                color: "#f8fafc",
+                                border: "1px solid rgba(255,255,255,0.14)",
+                                backdropFilter: "blur(8px)",
+                                maxWidth: "calc(100% - 24px)",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
+                              {community.card_highlight}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ padding: 16 }}>
+                          <div
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 900,
+                              lineHeight: 1.1,
+                              marginBottom: 8,
+                            }}
+                          >
+                            {community.name ?? "Membership"}
+                          </div>
+
+                          <div
+                            style={{
+                              fontSize: 13,
+                              color: "#cbd5e1",
+                              lineHeight: 1.45,
+                              display: "-webkit-box",
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              minHeight: 56,
+                              marginBottom: 14,
+                            }}
+                          >
+                            {community.short_description || "Exclusive community access with premium experience inside the app."}
+                          </div>
+
+                          {isAdmin && (
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                marginBottom: 10,
+                              }}
+                            >
+                              <Link
+                                href={`/memberships/${community.id}/edit`}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                  textDecoration: "none",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    borderRadius: 999,
+                                    padding: "10px 14px",
+                                    fontSize: 12,
+                                    fontWeight: 900,
+                                    background: "rgba(15,23,42,0.92)",
+                                    color: "#f8fafc",
+                                    border: "1px solid rgba(148,163,184,0.22)",
+                                    boxShadow: "0 10px 24px rgba(0,0,0,0.35)",
+                                    whiteSpace: "nowrap",
+                                    backdropFilter: "blur(8px)",
+                                  }}
+                                >
+                                  Edit
+                                </div>
+                              </Link>
+                            </div>
+                          )}
+
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              gap: 12,
+                            }}
+                          >
+                            <div style={{ fontSize: 12, color: "#93c5fd", fontWeight: 700 }}>
+                              {isApproved ? "Tap to enter community →" : "Tap to explore membership →"}
+                            </div>
+
+                            <div
+                              style={{
+                                borderRadius: 999,
+                                padding: "10px 14px",
+                                fontSize: 12,
+                                fontWeight: 900,
+                                background: "linear-gradient(135deg,#2563eb,#1d4ed8)",
+                                color: "#eff6ff",
+                                boxShadow: "0 10px 28px rgba(37,99,235,0.32)",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {isApproved ? "Enter" : "View"}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  </div>
                 );
               })
             )}
           </div>
         </div>
+
+        {isAdmin && (
+          <Link
+            href="/memberships/new"
+            style={{
+              position: "fixed",
+              right: 18,
+              bottom: 108,
+              width: 58,
+              height: 58,
+              borderRadius: 999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textDecoration: "none",
+              background: "linear-gradient(135deg,#2563eb,#1d4ed8)",
+              color: "#eff6ff",
+              fontSize: 34,
+              fontWeight: 700,
+              boxShadow: "0 16px 40px rgba(37,99,235,0.40)",
+              zIndex: 20,
+            }}
+            aria-label="Create community"
+            title="Create community"
+          >
+            +
+          </Link>
+        )}
 
         <BottomNavbar />
       </main>
