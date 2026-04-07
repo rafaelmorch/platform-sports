@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "https://www.platformsports.app/login",
+        redirectTo: "https://www.platformsports.app/update-password",
       });
 
       if (error) {
