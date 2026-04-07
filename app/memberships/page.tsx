@@ -183,34 +183,13 @@ export default function MembershipsPage() {
             style={{
               marginBottom: 18,
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "center",
               gap: 12,
+              textAlign: "center",
             }}
           >
-            <div>
-              <p
-                style={{
-                  fontSize: 11,
-                  letterSpacing: "0.16em",
-                  textTransform: "uppercase",
-                  color: "#60a5fa",
-                  margin: 0,
-                  fontWeight: 800,
-                }}
-              >
-                Memberships
-              </p>
-
-              <h1 style={{ fontSize: 26, fontWeight: 900, margin: "8px 0 0 0" }}>
-                Memberships
-              </h1>
-
-              <p style={{ fontSize: 13, color: "#94a3b8", margin: "8px 0 0 0", maxWidth: 540 }}>
-                Join premium communities, unlock exclusive access, and build your journey with the right tribe.
-              </p>
-            </div>
-
             <img
               src="/Platform_Logo.png"
               alt="Platform Sports"
@@ -221,6 +200,16 @@ export default function MembershipsPage() {
                 opacity: 0.95,
               }}
             />
+
+            <div>
+              <h1 style={{ fontSize: 26, fontWeight: 900, margin: 0 }}>
+                Communities
+              </h1>
+
+              <p style={{ fontSize: 13, color: "#94a3b8", margin: "8px 0 0 0", maxWidth: 540 }}>
+                Join premium communities, unlock exclusive access, and build your journey with the right tribe.
+              </p>
+            </div>
           </header>
 
           <section
