@@ -171,6 +171,18 @@ export default function LoginPage() {
               {showPassword ? "Hide password" : "Show password"}
             </button>
 
+            <Link
+              href="/forgot-password"
+              style={{
+                color: "#9ca3af",
+                fontSize: 12,
+                textAlign: "right",
+                textDecoration: "underline",
+              }}
+            >
+              Forgot password?
+            </Link>
+
             <button
               type="submit"
               disabled={loading}
