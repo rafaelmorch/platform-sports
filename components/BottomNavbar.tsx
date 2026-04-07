@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation';
 
 const tabs = [
   { href: '/events', label: 'Events' },
-  { href: '/activities', label: 'Group\nActivities' }, // 👈 quebra linha
+  { href: '/memberships', label: 'Communities' },
+  { href: '/activities', label: 'Group\nActivities' },
   { href: '/feed', label: 'Feed' },
   { href: '/profile', label: 'Profile' },
 ];
@@ -45,13 +46,13 @@ export default function BottomNavbar() {
               textDecoration: 'none',
               color: active ? '#fff' : 'rgba(255,255,255,0.6)',
               fontFamily: 'Arial',
-              fontSize: 12, // 👈 levemente menor pra caber melhor
+              fontSize: 12,
               fontWeight: active ? 700 : 500,
               padding: '6px 8px',
               borderRadius: 12,
               background: active ? 'rgba(255,255,255,0.10)' : 'transparent',
               textAlign: 'center',
-              whiteSpace: 'pre-line', // 👈 ESSENCIAL pra quebrar linha
+              whiteSpace: 'pre-line',
               lineHeight: '14px',
             }}
           >
