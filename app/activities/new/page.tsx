@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 export const dynamic = "force-dynamic";
@@ -74,8 +74,7 @@ function CalendarIcon() {
 export default function NewActivityPage() {
   const supabase = useMemo(() => supabaseBrowser, []);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const communityId = searchParams.get("community_id");
+  const [communityId, setCommunityId] = useState<string | null>(null);
 
   // ✅ auth guard
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -655,3 +654,4 @@ export default function NewActivityPage() {
     </main>
   );
 }
+
