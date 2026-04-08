@@ -325,19 +325,6 @@ function sortChallenges(rows: ChallengeRow[]): ChallengeRow[] {
   });
 }
 
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function getHighlightPreview(item: HighlightRow): string {
-  const rich = item.content_rich?.html ? stripHtml(item.content_rich.html) : "";
-  const plain = item.content?.trim() || "";
-  const base = rich || plain;
-
-  if (!base) return "Open to view details.";
-  return base.length > 120 ? `${base.slice(0, 120).trim()}...` : base;
-}
-
 export default function MembershipInsidePage() {
   const supabase = useMemo(() => supabaseBrowser, []);
   const params = useParams();
@@ -1274,7 +1261,7 @@ export default function MembershipInsidePage() {
               justifyContent: "space-between",
               alignItems: "center",
               gap: 12,
-              marginBottom: 12,
+              marginBottom: 20,
             }}
           >
             <h1
@@ -1289,105 +1276,24 @@ export default function MembershipInsidePage() {
               {communityName}
             </h1>
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {canManageHighlights && communityId && (
-                <Link
-                  href={`/memberships/${communityId}/inside/challenges/new`}
-                  style={{
-                    textDecoration: "none",
-                    borderRadius: 999,
-                    padding: "10px 16px",
-                    background: "#f8fafc",
-                    color: "#0f172a",
-                    border: "1px solid #cbd5e1",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  New Challenge
-                </Link>
-              )}
-
-              {canManageHighlights && communityId && (
-                <Link
-                  href={`/memberships/${communityId}/inside/highlights/new`}
-                  style={{
-                    textDecoration: "none",
-                    borderRadius: 999,
-                    padding: "10px 16px",
-                    background: "#0f172a",
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  New Highlight
-                </Link>
-              )}
-            </div>
-          </div>
-
-          {communityId && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 36,
-                borderBottom: "1px solid #e2e8f0",
-                marginBottom: 22,
-                overflowX: "auto",
-                paddingBottom: 2,
-              }}
-            >
+            {canManageHighlights && communityId && (
               <Link
-                href={`/memberships/${communityId}/inside`}
+                href={`/memberships/${communityId}/inside/highlights/new`}
                 style={{
                   textDecoration: "none",
-                  color: "#0f172a",
-                  fontSize: 14,
+                  borderRadius: 999,
+                  padding: "10px 16px",
+                  background: "#0f172a",
+                  color: "#fff",
                   fontWeight: 700,
-                  padding: "10px 0 12px 0",
-                  borderBottom: "3px solid #facc15",
+                  fontSize: 13,
                   whiteSpace: "nowrap",
                 }}
               >
-                Home
+                New Highlight
               </Link>
-
-              <Link
-                href={`/memberships/${communityId}/inside/chat`}
-                style={{
-                  textDecoration: "none",
-                  color: "#64748b",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  padding: "10px 0 12px 0",
-                  borderBottom: "3px solid transparent",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Chat
-              </Link>
-
-              <Link
-                href={`/memberships/${communityId}/inside/events`}
-                style={{
-                  textDecoration: "none",
-                  color: "#64748b",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  padding: "10px 0 12px 0",
-                  borderBottom: "3px solid transparent",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Events
-              </Link>
-            </div>
-          )}
+            )}
+          </div>
 
           <div style={{ marginBottom: 28 }}>
             <div
@@ -1739,77 +1645,36 @@ export default function MembershipInsidePage() {
                 No active highlights right now.
               </div>
             ) : (
-              <div style={{ borderTop: "1px solid #e2e8f0" }}>
-                {highlights.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/memberships/${communityId}/inside/highlights/${item.id}`}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "92px minmax(0, 1fr)",
-                      gap: 14,
-                      alignItems: "center",
-                      padding: "14px 0",
-                      textDecoration: "none",
-                      color: "inherit",
-                      borderBottom: "1px solid #e2e8f0",
-                    }}
-                  >
-                    <div
+              <div style={{ display: "grid", gap: 16 }}>
+                {highlights.map((item) => {
+                  const embedUrl = getVideoEmbedUrl(item.video_url);
+
+                  return (
+                    <article
+                      key={item.id}
                       style={{
-                        width: 92,
-                        height: 68,
-                        borderRadius: 12,
-                        overflow: "hidden",
-                        background: "#eef2f7",
-                        border: "1px solid #dbe2ea",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
+                        borderRadius: 22,
+                        padding: "clamp(16px, 3vw, 20px)",
+                        background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                        border: "1px solid #e2e8f0",
+                        boxShadow:
+                          "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
                       }}
                     >
-                      {item.image_url ? (
-                        <img
-                          src={item.image_url}
-                          alt={item.title}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            display: "block",
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "#64748b",
-                            fontWeight: 700,
-                            textAlign: "center",
-                            padding: 6,
-                          }}
-                        >
-                          Highlight
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ minWidth: 0 }}>
                       <div
                         style={{
                           display: "flex",
-                          alignItems: "center",
-                          gap: 8,
                           flexWrap: "wrap",
-                          marginBottom: 6,
+                          alignItems: "center",
+                          gap: 10,
+                          marginBottom: 12,
                         }}
                       >
                         <div
                           style={{
                             ...getTypeBadgeStyle(item.type),
                             borderRadius: 999,
-                            padding: "5px 9px",
+                            padding: "6px 10px",
                             fontSize: 11,
                             fontWeight: 700,
                             whiteSpace: "nowrap",
@@ -1821,51 +1686,144 @@ export default function MembershipInsidePage() {
                         {item.expires_at && (
                           <div
                             style={{
-                              fontSize: 11,
+                              fontSize: 12,
                               color: "#64748b",
-                              whiteSpace: "nowrap",
                             }}
                           >
-                            Until {new Date(item.expires_at).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
+                            Visible until {new Date(item.expires_at).toLocaleString()}
                           </div>
                         )}
                       </div>
 
-                      <div
+                      <h3
                         style={{
-                          fontSize: 15,
+                          fontSize: "clamp(18px, 3vw, 22px)",
                           fontWeight: 800,
                           color: "#0f172a",
-                          lineHeight: 1.25,
-                          marginBottom: 4,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
+                          margin: "0 0 14px 0",
+                          lineHeight: 1.2,
                         }}
                       >
                         {item.title}
-                      </div>
+                      </h3>
+
+                      {item.image_url && (
+                        <div
+                          style={{
+                            width: "100%",
+                            borderRadius: 18,
+                            overflow: "hidden",
+                            marginBottom: 16,
+                            border: "1px solid #dbe2ea",
+                            background: "#f1f5f9",
+                          }}
+                        >
+                          <img
+                            src={item.image_url}
+                            alt={item.title}
+                            style={{
+                              width: "100%",
+                              maxHeight: 420,
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                        </div>
+                      )}
 
                       <div
-                        style={{
-                          fontSize: 13,
-                          color: "#64748b",
-                          lineHeight: 1.45,
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                          wordBreak: "break-word",
+                        className="highlight-rich-content"
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            item.content_rich?.html ||
+                            (item.content ? `<p>${item.content}</p>` : "<p></p>"),
                         }}
-                      >
-                        {getHighlightPreview(item)}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                      />
+
+                      {embedUrl && (
+                        <div
+                          style={{
+                            marginTop: 16,
+                            borderRadius: 18,
+                            overflow: "hidden",
+                            background: "#e2e8f0",
+                            border: "1px solid #cbd5e1",
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: "relative",
+                              width: "100%",
+                              paddingTop: "56.25%",
+                            }}
+                          >
+                            <iframe
+                              src={embedUrl}
+                              title={item.title}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              style={{
+                                position: "absolute",
+                                inset: 0,
+                                width: "100%",
+                                height: "100%",
+                                border: 0,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {!embedUrl && item.video_url && (
+                        <div style={{ marginTop: 16 }}>
+                          <a
+                            href={item.video_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              textDecoration: "none",
+                              borderRadius: 999,
+                              padding: "10px 14px",
+                              background: "#1d4ed8",
+                              color: "#fff",
+                              fontSize: 13,
+                              fontWeight: 700,
+                            }}
+                          >
+                            Open video
+                          </a>
+                        </div>
+                      )}
+
+                      {item.link_url && (
+                        <div style={{ marginTop: 16 }}>
+                          <a
+                            href={item.link_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              textDecoration: "none",
+                              borderRadius: 999,
+                              padding: "10px 14px",
+                              background: "#0f172a",
+                              color: "#fff",
+                              fontSize: 13,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {item.link_label || "Open link"}
+                          </a>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -3215,4 +3173,3 @@ export default function MembershipInsidePage() {
     </>
   );
 }
-

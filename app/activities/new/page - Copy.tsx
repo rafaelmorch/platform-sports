@@ -1,8 +1,7 @@
-// app/activities/new/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 export const dynamic = "force-dynamic";
@@ -74,8 +73,6 @@ function CalendarIcon() {
 export default function NewActivityPage() {
   const supabase = useMemo(() => supabaseBrowser, []);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const communityId = searchParams.get("community_id");
 
   // ✅ auth guard
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -126,7 +123,7 @@ export default function NewActivityPage() {
     };
   }, [router]);
 
-  // back: try history; fallback list or membership events
+  // back: try history; fallback list
   function handleBack() {
     try {
       if (typeof window !== "undefined" && window.history.length > 1) {
@@ -134,12 +131,6 @@ export default function NewActivityPage() {
         return;
       }
     } catch {}
-
-    if (communityId) {
-      router.push(`/memberships/${communityId}/inside/events`);
-      return;
-    }
-
     router.push("/activities");
   }
 
@@ -302,7 +293,6 @@ export default function NewActivityPage() {
           organizer_whatsapp: whatsappValue, // ✅ nullable
 
           image_path: imagePath,
-          community_id: communityId,
 
           is_public: true,
           published: true,
@@ -314,12 +304,6 @@ export default function NewActivityPage() {
 
       const created = (data ?? []) as { id: string }[];
       setInfo(`Published activities: ${created.length}`);
-
-      if (communityId) {
-        router.push(`/memberships/${communityId}/inside/events`);
-        return;
-      }
-
       router.push("/activities");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to create activity.";
@@ -345,6 +329,7 @@ export default function NewActivityPage() {
           <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Loading...</p>
         </div>
 
+        {/* ✅ remove contorno branco (sem mexer em globals.css) */}
         <style jsx global>{`
           html,
           body {
@@ -383,6 +368,7 @@ export default function NewActivityPage() {
     >
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
         <header style={{ marginBottom: 20, display: "flex", flexDirection: "column", gap: 8 }}>
+          {/* ✅ standardized back button (NOT alone) */}
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <BackButton onClick={handleBack} />
 
@@ -391,14 +377,14 @@ export default function NewActivityPage() {
                 Activities
               </p>
 
-              <h1 style={{ fontSize: 24, fontWeight: 700, margin: "6px 0 0 0" }}>
-                {communityId ? "Create community event" : "Create activity"}
-              </h1>
+              <h1 style={{ fontSize: 24, fontWeight: 700, margin: "6px 0 0 0" }}>Create activity</h1>
 
               <p style={{ fontSize: 13, color: "#9ca3af", margin: "6px 0 0 0" }}>
                 Fields marked with <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span> are required.
               </p>
             </div>
+
+            {/* ✅ (logo removido) */}
           </div>
         </header>
 
@@ -439,6 +425,7 @@ export default function NewActivityPage() {
 
             {dates.map((d, idx) => (
               <div key={idx} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                {/* ✅ input with our calendar icon + Pick */}
                 <div style={{ position: "relative", flex: "1 1 260px", minWidth: 260 }}>
                   <div
                     style={{
@@ -458,8 +445,8 @@ export default function NewActivityPage() {
                     style={{
                       ...inputStyle,
                       marginTop: 0,
-                      paddingLeft: 42,
-                      paddingRight: 92,
+                      paddingLeft: 42, // space for icon
+                      paddingRight: 92, // space for Pick button
                     }}
                     type="datetime-local"
                     value={d}
@@ -615,9 +602,7 @@ export default function NewActivityPage() {
           </label>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 10, flexWrap: "wrap", marginTop: 6 }}>
-            <p style={{ fontSize: 12, color: "#60a5fa", margin: 0 }}>
-              When publishing, it will create 1 activity per date.
-            </p>
+            <p style={{ fontSize: 12, color: "#60a5fa", margin: 0 }}>When publishing, it will create 1 activity per date.</p>
 
             <button
               onClick={handleCreate}
@@ -640,6 +625,7 @@ export default function NewActivityPage() {
         </section>
       </div>
 
+      {/* ✅ remove contorno branco (sem mexer em globals.css) */}
       <style jsx global>{`
         html,
         body {
