@@ -1,8 +1,8 @@
-// app/activities/page.tsx
 "use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import BottomNavbar from "@/components/BottomNavbar";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
@@ -60,13 +60,23 @@ function getPublicImageUrl(path: string | null): string | null {
 
 export default function ActivitiesPage() {
   const supabase = useMemo(() => supabaseBrowser, []);
+  const router = useRouter();
   const [activities, setActivities] = useState<ActivityRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
+    async function checkAuthAndLoad() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
       const nowIso = new Date().toISOString();
 
       const { data } = await supabase
@@ -82,17 +92,15 @@ export default function ActivitiesPage() {
       }
     }
 
-    load();
+    checkAuthAndLoad();
+
     return () => {
       cancelled = true;
     };
-  }, [supabase]);
+  }, [supabase, router]);
 
-  // Responsivo sem CSS extra (evita styled-jsx dentro de map)
   const thumbW = "clamp(96px, 24vw, 132px)";
   const thumbH = "clamp(72px, 18vw, 92px)";
-
-  // Espaço pro navbar fixo
   const navSafe = 88;
 
   return (
@@ -101,6 +109,7 @@ export default function ActivitiesPage() {
         style={{
           minHeight: "100vh",
           width: "100%",
+          maxWidth: "100vw",
           backgroundColor: "#000000",
           color: "#e5e7eb",
           padding: 16,
@@ -109,7 +118,15 @@ export default function ActivitiesPage() {
           overflowX: "hidden",
         }}
       >
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <div
+          style={{
+            maxWidth: 900,
+            width: "100%",
+            margin: "0 auto",
+            overflowX: "hidden",
+            boxSizing: "border-box",
+          }}
+        >
           <header style={{ marginBottom: 16 }}>
             <p
               style={{
@@ -123,7 +140,6 @@ export default function ActivitiesPage() {
               Activities
             </p>
 
-            {/* ✅ Título + botão New activity (sem mudar layout dos cards) */}
             <div
               style={{
                 display: "flex",
@@ -131,6 +147,9 @@ export default function ActivitiesPage() {
                 gap: 12,
                 flexWrap: "wrap",
                 marginTop: 6,
+                width: "100%",
+                maxWidth: "100%",
+                boxSizing: "border-box",
               }}
             >
               <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>Activities</h1>
@@ -148,6 +167,8 @@ export default function ActivitiesPage() {
                   textDecoration: "none",
                   fontWeight: 900,
                   whiteSpace: "nowrap",
+                  maxWidth: "100%",
+                  boxSizing: "border-box",
                 }}
               >
                 + New activity
@@ -164,7 +185,17 @@ export default function ActivitiesPage() {
           ) : activities.length === 0 ? (
             <p style={{ fontSize: 13, color: "#9ca3af" }}>No upcoming activities.</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                width: "100%",
+                maxWidth: "100%",
+                overflowX: "hidden",
+                boxSizing: "border-box",
+              }}
+            >
               {activities.map((a) => {
                 const img = getPublicImageUrl(a.image_path) || a.image_url || null;
 
@@ -174,9 +205,12 @@ export default function ActivitiesPage() {
                     href={`/activities/${a.id}`}
                     style={{
                       display: "block",
+                      width: "100%",
                       maxWidth: "100%",
                       textDecoration: "none",
                       color: "inherit",
+                      boxSizing: "border-box",
+                      overflow: "hidden",
                     }}
                   >
                     <article
@@ -189,6 +223,7 @@ export default function ActivitiesPage() {
                         background: "linear-gradient(145deg,#020617,#000000)",
                         boxSizing: "border-box",
                         overflow: "hidden",
+                        width: "100%",
                         maxWidth: "100%",
                         alignItems: "stretch",
                       }}
@@ -206,10 +241,10 @@ export default function ActivitiesPage() {
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
+                          boxSizing: "border-box",
                         }}
                       >
                         {img ? (
-                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={img}
                             alt={a.title ?? "activity"}
@@ -225,7 +260,15 @@ export default function ActivitiesPage() {
                         )}
                       </div>
 
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          maxWidth: "100%",
+                          overflow: "hidden",
+                          boxSizing: "border-box",
+                        }}
+                      >
                         <h2
                           style={{
                             margin: 0,
@@ -291,32 +334,43 @@ export default function ActivitiesPage() {
         </div>
       </main>
 
-      {/* Navbar FIXO (sem depender do componente ser fixed) */}
       <div
         style={{
           position: "fixed",
           left: 0,
           right: 0,
           bottom: 0,
+          width: "100%",
+          maxWidth: "100vw",
           zIndex: 9999,
           background: "#000000",
           borderTop: "1px solid rgba(148,163,184,0.18)",
           paddingBottom: "env(safe-area-inset-bottom)",
+          overflowX: "hidden",
+          boxSizing: "border-box",
         }}
       >
         <BottomNavbar />
       </div>
 
-      {/* ✅ Mata o contorno branco (sem mexer no globals.css) */}
       <style jsx global>{`
         html,
         body {
           margin: 0 !important;
           padding: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
           background: #000 !important;
           overflow-x: hidden !important;
         }
-        /* evita “borda” por highlight/outline em alguns browsers */
+
+        body > div,
+        #__next {
+          width: 100% !important;
+          max-width: 100% !important;
+          overflow-x: hidden !important;
+        }
+
         * {
           outline-color: transparent;
         }
