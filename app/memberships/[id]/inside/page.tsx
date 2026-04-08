@@ -374,6 +374,11 @@ export default function MembershipInsidePage() {
   const [challenges, setChallenges] = useState<ChallengeRow[]>([]);
   const [openChallenges, setOpenChallenges] = useState<Set<string>>(new Set());
 
+  const dividerSectionStyle: React.CSSProperties = {
+    borderTop: "1px solid rgba(226,232,240,0.9)",
+    paddingTop: 24,
+  };
+
   async function loadFeed(targetCommunityId: string, currentUserId: string | null) {
     setFeedLoading(true);
 
@@ -1290,202 +1295,6 @@ export default function MembershipInsidePage() {
             )}
           </div>
 
-          {leaderLoading ? (
-            <div style={{ marginBottom: 22, color: "#64748b", fontSize: 14 }}>Loading leader...</div>
-          ) : leaderRow ? (
-            <div
-              style={{
-                marginBottom: 22,
-                borderRadius: 26,
-                padding: "18px 20px",
-                background: "linear-gradient(135deg, #fef3c7 0%, #fff7ed 50%, #ffffff 100%)",
-                border: "1px solid #fcd34d",
-                boxShadow:
-                  "10px 10px 24px rgba(245,158,11,0.12), -6px -6px 20px rgba(255,255,255,0.92)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 16,
-                flexWrap: "wrap",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  minWidth: 0,
-                  flex: 1,
-                }}
-              >
-                <div
-                  style={{
-                    width: 58,
-                    height: 58,
-                    borderRadius: 999,
-                    background: getAvatarBackground(leaderRow.author_name),
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#f8fafc",
-                    fontWeight: 800,
-                    fontSize: 20,
-                    flexShrink: 0,
-                  }}
-                >
-                  {getInitials(leaderRow.author_name)}
-                </div>
-
-                <div style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 800,
-                      color: "#b45309",
-                      letterSpacing: 0.4,
-                      textTransform: "uppercase",
-                      marginBottom: 4,
-                    }}
-                  >
-                    🥇 Leader of the Month
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: "clamp(18px, 3vw, 24px)",
-                      fontWeight: 800,
-                      color: "#0f172a",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      marginBottom: 4,
-                    }}
-                  >
-                    {leaderRow.author_name}
-                  </div>
-
-                  <div style={{ fontSize: 13, color: "#475569" }}>
-                    {leaderRow.total_checkins} check-in{leaderRow.total_checkins === 1 ? "" : "s"} this month
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  borderRadius: 999,
-                  padding: "10px 14px",
-                  background: "#ffffff",
-                  border: "1px solid #fcd34d",
-                  color: "#b45309",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {leaderRow.total_points} pts
-              </div>
-            </div>
-          ) : (
-            <div
-              style={{
-                marginBottom: 22,
-                borderRadius: 22,
-                padding: 16,
-                background: "#fff7ed",
-                border: "1px solid #fed7aa",
-                color: "#9a3412",
-                fontSize: 14,
-              }}
-            >
-              No leader yet for this month. The first completed check-in of the month will start the race.
-            </div>
-          )}
-
-          <div
-            style={{
-              marginBottom: 22,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                borderRadius: 22,
-                padding: 16,
-                background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                border: "1px solid #e2e8f0",
-                boxShadow:
-                  "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 800,
-                  color: "#2563eb",
-                  textTransform: "uppercase",
-                  letterSpacing: 0.4,
-                  marginBottom: 6,
-                }}
-              >
-                Your streak
-              </div>
-              <div
-                style={{
-                  fontSize: 28,
-                  fontWeight: 800,
-                  color: "#0f172a",
-                  lineHeight: 1,
-                  marginBottom: 6,
-                }}
-              >
-                {myStreak} 🔥
-              </div>
-              <div style={{ fontSize: 13, color: "#64748b" }}>
-                Consecutive active day{myStreak === 1 ? "" : "s"} based on your check-ins.
-              </div>
-            </div>
-
-            <div
-              style={{
-                borderRadius: 22,
-                padding: 16,
-                background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                border: "1px solid #e2e8f0",
-                boxShadow:
-                  "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 800,
-                  color: "#16a34a",
-                  textTransform: "uppercase",
-                  letterSpacing: 0.4,
-                  marginBottom: 6,
-                }}
-              >
-                Community pulse
-              </div>
-              <div
-                style={{
-                  fontSize: 28,
-                  fontWeight: 800,
-                  color: "#0f172a",
-                  lineHeight: 1,
-                  marginBottom: 6,
-                }}
-              >
-                {checkinTotalCount}
-              </div>
-              <div style={{ fontSize: 13, color: "#64748b" }}>
-                Total check-ins registered by this membership.
-              </div>
-            </div>
-          </div>
-
           <div style={{ marginBottom: 28 }}>
             <div
               style={{
@@ -1506,522 +1315,7 @@ export default function MembershipInsidePage() {
                     color: "#0f172a",
                   }}
                 >
-                  🔥 Highlights
-                </h2>
-              </div>
-            </div>
-
-            {highlights.length === 0 ? (
-              <div
-                style={{
-                  borderRadius: 20,
-                  padding: 18,
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
-                  color: "#475569",
-                  fontSize: 14,
-                  lineHeight: 1.7,
-                }}
-              >
-                No active highlights right now.
-              </div>
-            ) : (
-              <div style={{ display: "grid", gap: 16 }}>
-                {highlights.map((item) => {
-                  const embedUrl = getVideoEmbedUrl(item.video_url);
-
-                  return (
-                    <article
-                      key={item.id}
-                      style={{
-                        borderRadius: 22,
-                        padding: "clamp(16px, 3vw, 20px)",
-                        background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                        border: "1px solid #e2e8f0",
-                        boxShadow:
-                          "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          alignItems: "center",
-                          gap: 10,
-                          marginBottom: 12,
-                        }}
-                      >
-                        <div
-                          style={{
-                            ...getTypeBadgeStyle(item.type),
-                            borderRadius: 999,
-                            padding: "6px 10px",
-                            fontSize: 11,
-                            fontWeight: 700,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {getTypeLabel(item.type)}
-                        </div>
-
-                        {item.expires_at && (
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: "#64748b",
-                            }}
-                          >
-                            Visible until {new Date(item.expires_at).toLocaleString()}
-                          </div>
-                        )}
-                      </div>
-
-                      <h3
-                        style={{
-                          fontSize: "clamp(18px, 3vw, 22px)",
-                          fontWeight: 800,
-                          color: "#0f172a",
-                          margin: "0 0 14px 0",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {item.title}
-                      </h3>
-
-                      {item.image_url && (
-                        <div
-                          style={{
-                            width: "100%",
-                            borderRadius: 18,
-                            overflow: "hidden",
-                            marginBottom: 16,
-                            border: "1px solid #dbe2ea",
-                            background: "#f1f5f9",
-                          }}
-                        >
-                          <img
-                            src={item.image_url}
-                            alt={item.title}
-                            style={{
-                              width: "100%",
-                              maxHeight: 420,
-                              objectFit: "cover",
-                              display: "block",
-                            }}
-                          />
-                        </div>
-                      )}
-
-                      <div
-                        className="highlight-rich-content"
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            item.content_rich?.html ||
-                            (item.content ? `<p>${item.content}</p>` : "<p></p>"),
-                        }}
-                      />
-
-                      {embedUrl && (
-                        <div
-                          style={{
-                            marginTop: 16,
-                            borderRadius: 18,
-                            overflow: "hidden",
-                            background: "#e2e8f0",
-                            border: "1px solid #cbd5e1",
-                          }}
-                        >
-                          <div
-                            style={{
-                              position: "relative",
-                              width: "100%",
-                              paddingTop: "56.25%",
-                            }}
-                          >
-                            <iframe
-                              src={embedUrl}
-                              title={item.title}
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                              style={{
-                                position: "absolute",
-                                inset: 0,
-                                width: "100%",
-                                height: "100%",
-                                border: 0,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {!embedUrl && item.video_url && (
-                        <div style={{ marginTop: 16 }}>
-                          <a
-                            href={item.video_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              textDecoration: "none",
-                              borderRadius: 999,
-                              padding: "10px 14px",
-                              background: "#1d4ed8",
-                              color: "#fff",
-                              fontSize: 13,
-                              fontWeight: 700,
-                            }}
-                          >
-                            Open video
-                          </a>
-                        </div>
-                      )}
-
-                      {item.link_url && (
-                        <div style={{ marginTop: 16 }}>
-                          <a
-                            href={item.link_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              textDecoration: "none",
-                              borderRadius: 999,
-                              padding: "10px 14px",
-                              background: "#0f172a",
-                              color: "#fff",
-                              fontSize: 13,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {item.link_label || "Open link"}
-                          </a>
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div style={{ marginBottom: 28 }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
-                marginBottom: 12,
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <h2
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    margin: "0 0 4px 0",
-                    color: "#0f172a",
-                  }}
-                >
-                  🏆 Ranking
-                </h2>
-                <div style={{ color: "#64748b", fontSize: 13 }}>
-                  Community points based on completed check-ins.
-                </div>
-              </div>
-            </div>
-
-            {rankingLoading ? (
-              <div style={{ color: "#64748b", fontSize: 14 }}>Loading ranking...</div>
-            ) : rankingRows.length === 0 ? (
-              <div
-                style={{
-                  borderRadius: 20,
-                  padding: 18,
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
-                  color: "#475569",
-                  fontSize: 14,
-                  lineHeight: 1.7,
-                }}
-              >
-                No ranking yet. Check-ins will appear here as soon as members start posting.
-              </div>
-            ) : (
-              <>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: 12,
-                    marginBottom: 14,
-                  }}
-                >
-                  {topThree.map((row, index) => {
-                    const authorLabel = getDisplayName(row.author_name);
-                    const isFirst = index === 0;
-
-                    return (
-                      <article
-                        key={row.user_id}
-                        style={{
-                          borderRadius: 24,
-                          padding: isFirst ? "18px 18px 20px 18px" : "16px",
-                          background: isFirst
-                            ? "linear-gradient(135deg, #fef3c7 0%, #fff7ed 50%, #ffffff 100%)"
-                            : "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                          border: isFirst ? "1px solid #fcd34d" : "1px solid #e2e8f0",
-                          boxShadow: isFirst
-                            ? "10px 10px 24px rgba(245,158,11,0.12), -6px -6px 20px rgba(255,255,255,0.92)"
-                            : "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 10,
-                            marginBottom: 14,
-                          }}
-                        >
-                          <div
-                            style={{
-                              borderRadius: 999,
-                              padding: "6px 10px",
-                              background: isFirst ? "#ffffff" : "#e2e8f0",
-                              border: isFirst ? "1px solid #fcd34d" : "1px solid #cbd5e1",
-                              color: isFirst ? "#b45309" : "#334155",
-                              fontSize: 12,
-                              fontWeight: 800,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {index === 0 ? "🥇 #1" : index === 1 ? "🥈 #2" : "🥉 #3"}
-                          </div>
-
-                          <div
-                            style={{
-                              borderRadius: 999,
-                              padding: "6px 10px",
-                              background: "#dcfce7",
-                              border: "1px solid #86efac",
-                              color: "#166534",
-                              fontSize: 12,
-                              fontWeight: 800,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {row.total_points} pts
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                            marginBottom: 12,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: isFirst ? 56 : 48,
-                              height: isFirst ? 56 : 48,
-                              borderRadius: 999,
-                              background: getAvatarBackground(authorLabel),
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: isFirst ? 18 : 15,
-                              fontWeight: 800,
-                              color: "#f8fafc",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {getInitials(authorLabel)}
-                          </div>
-
-                          <div style={{ minWidth: 0 }}>
-                            <div
-                              style={{
-                                fontSize: isFirst ? 18 : 15,
-                                fontWeight: 800,
-                                color: "#0f172a",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                              }}
-                            >
-                              {authorLabel}
-                            </div>
-
-                            <div style={{ fontSize: 12, color: "#64748b" }}>
-                              {row.total_checkins} check-in{row.total_checkins === 1 ? "" : "s"}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            borderRadius: 16,
-                            padding: "10px 12px",
-                            background: "#ffffff",
-                            border: "1px solid #e2e8f0",
-                            color: "#0f172a",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            gap: 10,
-                            fontSize: 13,
-                            fontWeight: 700,
-                          }}
-                        >
-                          <span>🔥 Streak</span>
-                          <span>{row.streak} day{row.streak === 1 ? "" : "s"}</span>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-
-                {restRanking.length > 0 && (
-                  <div style={{ display: "grid", gap: 10 }}>
-                    {restRanking.map((row, index) => {
-                      const authorLabel = getDisplayName(row.author_name);
-
-                      return (
-                        <article
-                          key={row.user_id}
-                          style={{
-                            borderRadius: 20,
-                            padding: 14,
-                            background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                            border: "1px solid #e2e8f0",
-                            boxShadow:
-                              "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 12,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 12,
-                              minWidth: 0,
-                              flex: 1,
-                            }}
-                          >
-                            <div
-                              style={{
-                                minWidth: 38,
-                                height: 38,
-                                borderRadius: 999,
-                                background: "#e2e8f0",
-                                color: "#334155",
-                                border: "1px solid #cbd5e1",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: 13,
-                                fontWeight: 800,
-                                flexShrink: 0,
-                              }}
-                            >
-                              #{index + 4}
-                            </div>
-
-                            <div
-                              style={{
-                                width: 42,
-                                height: 42,
-                                borderRadius: 999,
-                                background: getAvatarBackground(authorLabel),
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: 14,
-                                fontWeight: 700,
-                                color: "#f8fafc",
-                                flexShrink: 0,
-                              }}
-                            >
-                              {getInitials(authorLabel)}
-                            </div>
-
-                            <div style={{ minWidth: 0 }}>
-                              <div
-                                style={{
-                                  fontSize: 14,
-                                  fontWeight: 700,
-                                  color: "#0f172a",
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                }}
-                              >
-                                {authorLabel}
-                              </div>
-
-                              <div style={{ fontSize: 12, color: "#64748b" }}>
-                                {row.total_checkins} check-in{row.total_checkins === 1 ? "" : "s"} • 🔥 {row.streak}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div
-                            style={{
-                              borderRadius: 999,
-                              padding: "8px 12px",
-                              background: "#dcfce7",
-                              color: "#166534",
-                              border: "1px solid #86efac",
-                              fontSize: 12,
-                              fontWeight: 800,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {row.total_points} pts
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          <div style={{ marginBottom: 28 }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
-                marginBottom: 12,
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <h2
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    margin: "0 0 4px 0",
-                    color: "#0f172a",
-                  }}
-                >
-                  🎯 Challenges
+                  Challenges
                 </h2>
                 <div style={{ color: "#64748b", fontSize: 13 }}>
                   Active challenges come first. Tap any card to expand and check in.
@@ -2311,7 +1605,7 @@ export default function MembershipInsidePage() {
             )}
           </div>
 
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ ...dividerSectionStyle, marginBottom: 28 }}>
             <div
               style={{
                 display: "flex",
@@ -2331,62 +1625,12 @@ export default function MembershipInsidePage() {
                     color: "#0f172a",
                   }}
                 >
-                  ➕ Check-in
+                  Highlights
                 </h2>
-                <div style={{ color: "#64748b", fontSize: 13 }}>
-                  Register your activity and earn 10 points for the ranking.
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  flexWrap: "wrap",
-                }}
-              >
-                {communityId && (
-                  <Link
-                    href={`/memberships/${communityId}/inside/checkins`}
-                    style={{
-                      textDecoration: "none",
-                      borderRadius: 999,
-                      padding: "10px 16px",
-                      background: "#e2e8f0",
-                      color: "#0f172a",
-                      fontWeight: 700,
-                      fontSize: 13,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    View History
-                  </Link>
-                )}
-
-                {communityId && (
-                  <Link
-                    href={`/memberships/${communityId}/inside/checkin/new`}
-                    style={{
-                      textDecoration: "none",
-                      borderRadius: 999,
-                      padding: "10px 16px",
-                      background: "#0f172a",
-                      color: "#fff",
-                      fontWeight: 700,
-                      fontSize: 13,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    New Check-in
-                  </Link>
-                )}
               </div>
             </div>
 
-            {checkinsLoading ? (
-              <div style={{ color: "#64748b", fontSize: 14 }}>Loading check-ins...</div>
-            ) : recentCheckins.length === 0 ? (
+            {highlights.length === 0 ? (
               <div
                 style={{
                   borderRadius: 20,
@@ -2398,262 +1642,193 @@ export default function MembershipInsidePage() {
                   lineHeight: 1.7,
                 }}
               >
-                No check-ins yet. Start registering activities to build the ranking.
+                No active highlights right now.
               </div>
             ) : (
-              <div style={{ display: "grid", gap: 12 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 2,
-                  }}
-                >
-                  <div
-                    style={{
-                      borderRadius: 999,
-                      padding: "6px 10px",
-                      background: "#dcfce7",
-                      color: "#166534",
-                      border: "1px solid #86efac",
-                      fontSize: 12,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {checkinTotalCount} total check-in{checkinTotalCount === 1 ? "" : "s"}
-                  </div>
+              <div style={{ display: "grid", gap: 16 }}>
+                {highlights.map((item) => {
+                  const embedUrl = getVideoEmbedUrl(item.video_url);
 
-                  <div
-                    style={{
-                      borderRadius: 999,
-                      padding: "6px 10px",
-                      background: "#dbeafe",
-                      color: "#1d4ed8",
-                      border: "1px solid #93c5fd",
-                      fontSize: 12,
-                      fontWeight: 700,
-                    }}
-                  >
-                    +10 points each
-                  </div>
-                </div>
-
-                <div className="membership-checkin-scroll">
-                  <div style={{ display: "grid", gap: 12 }}>
-                    {recentCheckins.map((item) => {
-                      const authorLabel = getDisplayName(item.author_name);
-                      const isImageOpen = openCheckinImages.has(item.id);
-                      const isChallengeCheckin = Boolean(item.challenge_id);
-
-                      return (
-                        <article
-                          key={item.id}
+                  return (
+                    <article
+                      key={item.id}
+                      style={{
+                        borderRadius: 22,
+                        padding: "clamp(16px, 3vw, 20px)",
+                        background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                        border: "1px solid #e2e8f0",
+                        boxShadow:
+                          "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                          gap: 10,
+                          marginBottom: 12,
+                        }}
+                      >
+                        <div
                           style={{
-                            borderRadius: 20,
-                            padding: 14,
-                            background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                            border: "1px solid #e2e8f0",
-                            boxShadow:
-                              "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+                            ...getTypeBadgeStyle(item.type),
+                            borderRadius: 999,
+                            padding: "6px 10px",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {getTypeLabel(item.type)}
+                        </div>
+
+                        {item.expires_at && (
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#64748b",
+                            }}
+                          >
+                            Visible until {new Date(item.expires_at).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+
+                      <h3
+                        style={{
+                          fontSize: "clamp(18px, 3vw, 22px)",
+                          fontWeight: 800,
+                          color: "#0f172a",
+                          margin: "0 0 14px 0",
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {item.title}
+                      </h3>
+
+                      {item.image_url && (
+                        <div
+                          style={{
+                            width: "100%",
+                            borderRadius: 18,
+                            overflow: "hidden",
+                            marginBottom: 16,
+                            border: "1px solid #dbe2ea",
+                            background: "#f1f5f9",
+                          }}
+                        >
+                          <img
+                            src={item.image_url}
+                            alt={item.title}
+                            style={{
+                              width: "100%",
+                              maxHeight: 420,
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      <div
+                        className="highlight-rich-content"
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            item.content_rich?.html ||
+                            (item.content ? `<p>${item.content}</p>` : "<p></p>"),
+                        }}
+                      />
+
+                      {embedUrl && (
+                        <div
+                          style={{
+                            marginTop: 16,
+                            borderRadius: 18,
+                            overflow: "hidden",
+                            background: "#e2e8f0",
+                            border: "1px solid #cbd5e1",
                           }}
                         >
                           <div
                             style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: 12,
-                              flexWrap: "wrap",
-                              marginBottom: 10,
+                              position: "relative",
+                              width: "100%",
+                              paddingTop: "56.25%",
                             }}
                           >
-                            <div
+                            <iframe
+                              src={embedUrl}
+                              title={item.title}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
                               style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 10,
-                                minWidth: 0,
+                                position: "absolute",
+                                inset: 0,
+                                width: "100%",
+                                height: "100%",
+                                border: 0,
                               }}
-                            >
-                              <div
-                                style={{
-                                  width: 38,
-                                  height: 38,
-                                  borderRadius: 999,
-                                  background: getAvatarBackground(authorLabel),
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontSize: 13,
-                                  fontWeight: 700,
-                                  color: "#f8fafc",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {getInitials(authorLabel)}
-                              </div>
-
-                              <div style={{ minWidth: 0 }}>
-                                <div
-                                  style={{
-                                    fontSize: 13,
-                                    fontWeight: 700,
-                                    color: "#0f172a",
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                  }}
-                                >
-                                  {authorLabel}
-                                </div>
-
-                                <div
-                                  style={{
-                                    fontSize: 11,
-                                    color: "#64748b",
-                                  }}
-                                >
-                                  {new Date(item.created_at).toLocaleString()}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 8,
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  borderRadius: 999,
-                                  padding: "6px 10px",
-                                  background: "#ede9fe",
-                                  color: "#6d28d9",
-                                  border: "1px solid #c4b5fd",
-                                  fontSize: 11,
-                                  fontWeight: 700,
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {formatActivityType(item.activity_type)}
-                              </div>
-
-                              {isChallengeCheckin && (
-                                <div
-                                  style={{
-                                    borderRadius: 999,
-                                    padding: "6px 10px",
-                                    background: "#dbeafe",
-                                    color: "#1d4ed8",
-                                    border: "1px solid #93c5fd",
-                                    fontSize: 11,
-                                    fontWeight: 700,
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  Challenge
-                                </div>
-                              )}
-
-                              <div
-                                style={{
-                                  borderRadius: 999,
-                                  padding: "6px 10px",
-                                  background: "#fef3c7",
-                                  color: "#b45309",
-                                  border: "1px solid #fcd34d",
-                                  fontSize: 11,
-                                  fontWeight: 700,
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                +{item.points} pts
-                              </div>
-                            </div>
+                            />
                           </div>
+                        </div>
+                      )}
 
-                          <div
+                      {!embedUrl && item.video_url && (
+                        <div style={{ marginTop: 16 }}>
+                          <a
+                            href={item.video_url}
+                            target="_blank"
+                            rel="noreferrer"
                             style={{
-                              display: "flex",
+                              display: "inline-flex",
                               alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: 10,
-                              flexWrap: "wrap",
+                              justifyContent: "center",
+                              textDecoration: "none",
+                              borderRadius: 999,
+                              padding: "10px 14px",
+                              background: "#1d4ed8",
+                              color: "#fff",
+                              fontSize: 13,
+                              fontWeight: 700,
                             }}
                           >
-                            <div
-                              style={{
-                                color: "#475569",
-                                fontSize: 13,
-                                lineHeight: 1.5,
-                              }}
-                            >
-                              {isChallengeCheckin
-                                ? "Challenge proof submitted."
-                                : "Workout proof submitted."}
-                            </div>
+                            Open video
+                          </a>
+                        </div>
+                      )}
 
-                            {item.image_url && (
-                              <button
-                                type="button"
-                                onClick={() => toggleCheckinImage(item.id)}
-                                style={{
-                                  border: "none",
-                                  background: "transparent",
-                                  color: "#2563eb",
-                                  fontSize: 12,
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  padding: 0,
-                                }}
-                              >
-                                {isImageOpen ? "Hide photo" : "View photo"}
-                              </button>
-                            )}
-                          </div>
-
-                          {isImageOpen && item.image_url && (
-                            <div
-                              style={{
-                                marginTop: 12,
-                                borderRadius: 18,
-                                overflow: "hidden",
-                                border: "1px solid #dbe2ea",
-                                background: "#eef2f7",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: 8,
-                              }}
-                            >
-                              <img
-                                src={item.image_url}
-                                alt="Check-in proof"
-                                style={{
-                                  width: "100%",
-                                  maxHeight: 300,
-                                  objectFit: "contain",
-                                  display: "block",
-                                  borderRadius: 12,
-                                }}
-                              />
-                            </div>
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                </div>
+                      {item.link_url && (
+                        <div style={{ marginTop: 16 }}>
+                          <a
+                            href={item.link_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              textDecoration: "none",
+                              borderRadius: 999,
+                              padding: "10px 14px",
+                              background: "#0f172a",
+                              color: "#fff",
+                              fontSize: 13,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {item.link_label || "Open link"}
+                          </a>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ ...dividerSectionStyle, marginBottom: 28 }}>
             <div
               style={{
                 display: "flex",
@@ -2673,7 +1848,7 @@ export default function MembershipInsidePage() {
                     color: "#0f172a",
                   }}
                 >
-                  📸 Community Feed
+                  Community Feed
                 </h2>
                 <div style={{ color: "#64748b", fontSize: 13 }}>
                   Swipe sideways to explore the latest community posts.
@@ -3160,6 +2335,837 @@ export default function MembershipInsidePage() {
                   })}
                 </div>
               </div>
+            )}
+          </div>
+
+          <div style={{ ...dividerSectionStyle, marginBottom: 22 }}>
+            {leaderLoading ? (
+              <div style={{ color: "#64748b", fontSize: 14 }}>Loading leader...</div>
+            ) : leaderRow ? (
+              <div
+                style={{
+                  borderRadius: 26,
+                  padding: "18px 20px",
+                  background: "linear-gradient(135deg, #fef3c7 0%, #fff7ed 50%, #ffffff 100%)",
+                  border: "1px solid #fcd34d",
+                  boxShadow:
+                    "10px 10px 24px rgba(245,158,11,0.12), -6px -6px 20px rgba(255,255,255,0.92)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    minWidth: 0,
+                    flex: 1,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 58,
+                      height: 58,
+                      borderRadius: 999,
+                      background: getAvatarBackground(leaderRow.author_name),
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#f8fafc",
+                      fontWeight: 800,
+                      fontSize: 20,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {getInitials(leaderRow.author_name)}
+                  </div>
+
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: "#b45309",
+                        letterSpacing: 0.4,
+                        textTransform: "uppercase",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Leader of the Month
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: "clamp(18px, 3vw, 24px)",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        marginBottom: 4,
+                      }}
+                    >
+                      {leaderRow.author_name}
+                    </div>
+
+                    <div style={{ fontSize: 13, color: "#475569" }}>
+                      {leaderRow.total_checkins} check-in{leaderRow.total_checkins === 1 ? "" : "s"} this month
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: 999,
+                    padding: "10px 14px",
+                    background: "#ffffff",
+                    border: "1px solid #fcd34d",
+                    color: "#b45309",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {leaderRow.total_points} pts
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  borderRadius: 22,
+                  padding: 16,
+                  background: "#fff7ed",
+                  border: "1px solid #fed7aa",
+                  color: "#9a3412",
+                  fontSize: 14,
+                }}
+              >
+                No leader yet for this month. The first completed check-in of the month will start the race.
+              </div>
+            )}
+          </div>
+
+          <div
+            style={{
+              ...dividerSectionStyle,
+              marginBottom: 22,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                borderRadius: 22,
+                padding: 16,
+                background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                border: "1px solid #e2e8f0",
+                boxShadow:
+                  "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: "#2563eb",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.4,
+                  marginBottom: 6,
+                }}
+              >
+                Your streak
+              </div>
+              <div
+                style={{
+                  fontSize: 28,
+                  fontWeight: 800,
+                  color: "#0f172a",
+                  lineHeight: 1,
+                  marginBottom: 6,
+                }}
+              >
+                {myStreak} 🔥
+              </div>
+              <div style={{ fontSize: 13, color: "#64748b" }}>
+                Consecutive active day{myStreak === 1 ? "" : "s"} based on your check-ins.
+              </div>
+            </div>
+
+            <div
+              style={{
+                borderRadius: 22,
+                padding: 16,
+                background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                border: "1px solid #e2e8f0",
+                boxShadow:
+                  "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: "#16a34a",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.4,
+                  marginBottom: 6,
+                }}
+              >
+                Community pulse
+              </div>
+              <div
+                style={{
+                  fontSize: 28,
+                  fontWeight: 800,
+                  color: "#0f172a",
+                  lineHeight: 1,
+                  marginBottom: 6,
+                }}
+              >
+                {checkinTotalCount}
+              </div>
+              <div style={{ fontSize: 13, color: "#64748b" }}>
+                Total check-ins registered by this membership.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ ...dividerSectionStyle, marginBottom: 28 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                marginBottom: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    margin: "0 0 4px 0",
+                    color: "#0f172a",
+                  }}
+                >
+                  Check-in
+                </h2>
+                <div style={{ color: "#64748b", fontSize: 13 }}>
+                  Register your activity and earn 10 points for the ranking.
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  flexWrap: "wrap",
+                }}
+              >
+                {communityId && (
+                  <Link
+                    href={`/memberships/${communityId}/inside/checkins`}
+                    style={{
+                      textDecoration: "none",
+                      borderRadius: 999,
+                      padding: "10px 16px",
+                      background: "#e2e8f0",
+                      color: "#0f172a",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    View History
+                  </Link>
+                )}
+
+                {communityId && (
+                  <Link
+                    href={`/memberships/${communityId}/inside/checkin/new`}
+                    style={{
+                      textDecoration: "none",
+                      borderRadius: 999,
+                      padding: "10px 16px",
+                      background: "#0f172a",
+                      color: "#fff",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    New Check-in
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {checkinsLoading ? (
+              <div style={{ color: "#64748b", fontSize: 14 }}>Loading check-ins...</div>
+            ) : recentCheckins.length === 0 ? (
+              <div
+                style={{
+                  borderRadius: 20,
+                  padding: 18,
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  color: "#475569",
+                  fontSize: 14,
+                  lineHeight: 1.7,
+                }}
+              >
+                No check-ins yet. Start registering activities to build the ranking.
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 12 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: 10,
+                    marginBottom: 2,
+                  }}
+                >
+                  <div
+                    style={{
+                      borderRadius: 999,
+                      padding: "6px 10px",
+                      background: "#dcfce7",
+                      color: "#166534",
+                      border: "1px solid #86efac",
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {checkinTotalCount} total check-in{checkinTotalCount === 1 ? "" : "s"}
+                  </div>
+
+                  <div
+                    style={{
+                      borderRadius: 999,
+                      padding: "6px 10px",
+                      background: "#dbeafe",
+                      color: "#1d4ed8",
+                      border: "1px solid #93c5fd",
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}
+                  >
+                    +10 points each
+                  </div>
+                </div>
+
+                <div className="membership-checkin-scroll">
+                  <div style={{ display: "grid", gap: 12 }}>
+                    {recentCheckins.map((item) => {
+                      const authorLabel = getDisplayName(item.author_name);
+                      const isImageOpen = openCheckinImages.has(item.id);
+                      const isChallengeCheckin = Boolean(item.challenge_id);
+
+                      return (
+                        <article
+                          key={item.id}
+                          style={{
+                            borderRadius: 20,
+                            padding: 14,
+                            background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                            border: "1px solid #e2e8f0",
+                            boxShadow:
+                              "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 12,
+                              flexWrap: "wrap",
+                              marginBottom: 10,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 10,
+                                minWidth: 0,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: 38,
+                                  height: 38,
+                                  borderRadius: 999,
+                                  background: getAvatarBackground(authorLabel),
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: 13,
+                                  fontWeight: 700,
+                                  color: "#f8fafc",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {getInitials(authorLabel)}
+                              </div>
+
+                              <div style={{ minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    fontSize: 13,
+                                    fontWeight: 700,
+                                    color: "#0f172a",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                  }}
+                                >
+                                  {authorLabel}
+                                </div>
+
+                                <div
+                                  style={{
+                                    fontSize: 11,
+                                    color: "#64748b",
+                                  }}
+                                >
+                                  {new Date(item.created_at).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  borderRadius: 999,
+                                  padding: "6px 10px",
+                                  background: "#ede9fe",
+                                  color: "#6d28d9",
+                                  border: "1px solid #c4b5fd",
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {formatActivityType(item.activity_type)}
+                              </div>
+
+                              {isChallengeCheckin && (
+                                <div
+                                  style={{
+                                    borderRadius: 999,
+                                    padding: "6px 10px",
+                                    background: "#dbeafe",
+                                    color: "#1d4ed8",
+                                    border: "1px solid #93c5fd",
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  Challenge
+                                </div>
+                              )}
+
+                              <div
+                                style={{
+                                  borderRadius: 999,
+                                  padding: "6px 10px",
+                                  background: "#fef3c7",
+                                  color: "#b45309",
+                                  border: "1px solid #fcd34d",
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                +{item.points} pts
+                              </div>
+                            </div>
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 10,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <div
+                              style={{
+                                color: "#475569",
+                                fontSize: 13,
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              {isChallengeCheckin
+                                ? "Challenge proof submitted."
+                                : "Workout proof submitted."}
+                            </div>
+
+                            {item.image_url && (
+                              <button
+                                type="button"
+                                onClick={() => toggleCheckinImage(item.id)}
+                                style={{
+                                  border: "none",
+                                  background: "transparent",
+                                  color: "#2563eb",
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                  padding: 0,
+                                }}
+                              >
+                                {isImageOpen ? "Hide photo" : "View photo"}
+                              </button>
+                            )}
+                          </div>
+
+                          {isImageOpen && item.image_url && (
+                            <div
+                              style={{
+                                marginTop: 12,
+                                borderRadius: 18,
+                                overflow: "hidden",
+                                border: "1px solid #dbe2ea",
+                                background: "#eef2f7",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: 8,
+                              }}
+                            >
+                              <img
+                                src={item.image_url}
+                                alt="Check-in proof"
+                                style={{
+                                  width: "100%",
+                                  maxHeight: 300,
+                                  objectFit: "contain",
+                                  display: "block",
+                                  borderRadius: 12,
+                                }}
+                              />
+                            </div>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={dividerSectionStyle}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                marginBottom: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    margin: "0 0 4px 0",
+                    color: "#0f172a",
+                  }}
+                >
+                  Ranking
+                </h2>
+                <div style={{ color: "#64748b", fontSize: 13 }}>
+                  Community points based on completed check-ins.
+                </div>
+              </div>
+            </div>
+
+            {rankingLoading ? (
+              <div style={{ color: "#64748b", fontSize: 14 }}>Loading ranking...</div>
+            ) : rankingRows.length === 0 ? (
+              <div
+                style={{
+                  borderRadius: 20,
+                  padding: 18,
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  color: "#475569",
+                  fontSize: 14,
+                  lineHeight: 1.7,
+                }}
+              >
+                No ranking yet. Check-ins will appear here as soon as members start posting.
+              </div>
+            ) : (
+              <>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gap: 12,
+                    marginBottom: 14,
+                  }}
+                >
+                  {topThree.map((row, index) => {
+                    const authorLabel = getDisplayName(row.author_name);
+                    const isFirst = index === 0;
+
+                    return (
+                      <article
+                        key={row.user_id}
+                        style={{
+                          borderRadius: 24,
+                          padding: isFirst ? "18px 18px 20px 18px" : "16px",
+                          background: isFirst
+                            ? "linear-gradient(135deg, #fef3c7 0%, #fff7ed 50%, #ffffff 100%)"
+                            : "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                          border: isFirst ? "1px solid #fcd34d" : "1px solid #e2e8f0",
+                          boxShadow: isFirst
+                            ? "10px 10px 24px rgba(245,158,11,0.12), -6px -6px 20px rgba(255,255,255,0.92)"
+                            : "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 10,
+                            marginBottom: 14,
+                          }}
+                        >
+                          <div
+                            style={{
+                              borderRadius: 999,
+                              padding: "6px 10px",
+                              background: isFirst ? "#ffffff" : "#e2e8f0",
+                              border: isFirst ? "1px solid #fcd34d" : "1px solid #cbd5e1",
+                              color: isFirst ? "#b45309" : "#334155",
+                              fontSize: 12,
+                              fontWeight: 800,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {index === 0 ? "🥇 #1" : index === 1 ? "🥈 #2" : "🥉 #3"}
+                          </div>
+
+                          <div
+                            style={{
+                              borderRadius: 999,
+                              padding: "6px 10px",
+                              background: "#dcfce7",
+                              border: "1px solid #86efac",
+                              color: "#166534",
+                              fontSize: 12,
+                              fontWeight: 800,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {row.total_points} pts
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                            marginBottom: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: isFirst ? 56 : 48,
+                              height: isFirst ? 56 : 48,
+                              borderRadius: 999,
+                              background: getAvatarBackground(authorLabel),
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: isFirst ? 18 : 15,
+                              fontWeight: 800,
+                              color: "#f8fafc",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {getInitials(authorLabel)}
+                          </div>
+
+                          <div style={{ minWidth: 0 }}>
+                            <div
+                              style={{
+                                fontSize: isFirst ? 18 : 15,
+                                fontWeight: 800,
+                                color: "#0f172a",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
+                              {authorLabel}
+                            </div>
+
+                            <div style={{ fontSize: 12, color: "#64748b" }}>
+                              {row.total_checkins} check-in{row.total_checkins === 1 ? "" : "s"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            borderRadius: 16,
+                            padding: "10px 12px",
+                            background: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            color: "#0f172a",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: 10,
+                            fontSize: 13,
+                            fontWeight: 700,
+                          }}
+                        >
+                          <span>🔥 Streak</span>
+                          <span>{row.streak} day{row.streak === 1 ? "" : "s"}</span>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                {restRanking.length > 0 && (
+                  <div style={{ display: "grid", gap: 10 }}>
+                    {restRanking.map((row, index) => {
+                      const authorLabel = getDisplayName(row.author_name);
+
+                      return (
+                        <article
+                          key={row.user_id}
+                          style={{
+                            borderRadius: 20,
+                            padding: 14,
+                            background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                            border: "1px solid #e2e8f0",
+                            boxShadow:
+                              "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 12,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 12,
+                              minWidth: 0,
+                              flex: 1,
+                            }}
+                          >
+                            <div
+                              style={{
+                                minWidth: 38,
+                                height: 38,
+                                borderRadius: 999,
+                                background: "#e2e8f0",
+                                color: "#334155",
+                                border: "1px solid #cbd5e1",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 13,
+                                fontWeight: 800,
+                                flexShrink: 0,
+                              }}
+                            >
+                              #{index + 4}
+                            </div>
+
+                            <div
+                              style={{
+                                width: 42,
+                                height: 42,
+                                borderRadius: 999,
+                                background: getAvatarBackground(authorLabel),
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 14,
+                                fontWeight: 700,
+                                color: "#f8fafc",
+                                flexShrink: 0,
+                              }}
+                            >
+                              {getInitials(authorLabel)}
+                            </div>
+
+                            <div style={{ minWidth: 0 }}>
+                              <div
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 700,
+                                  color: "#0f172a",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {authorLabel}
+                              </div>
+
+                              <div style={{ fontSize: 12, color: "#64748b" }}>
+                                {row.total_checkins} check-in{row.total_checkins === 1 ? "" : "s"} • 🔥 {row.streak}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div
+                            style={{
+                              borderRadius: 999,
+                              padding: "8px 12px",
+                              background: "#dcfce7",
+                              color: "#166534",
+                              border: "1px solid #86efac",
+                              fontSize: 12,
+                              fontWeight: 800,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {row.total_points} pts
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
