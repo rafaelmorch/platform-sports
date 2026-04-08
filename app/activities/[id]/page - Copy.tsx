@@ -743,6 +743,58 @@ export default function ActivityDetailPage() {
                 </span>
               </div>
 
+              <div>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: "10px 0 6px 0" }}>Preview</h2>
+                <div style={{ padding: 12, ...boxStyle }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, color: "#60a5fa" }}>Title</p>
+                        <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#9ca3af", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                          {fieldValue(activity?.title ?? null)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, color: "#60a5fa" }}>Activity type</p>
+                        <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#9ca3af", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                          {fieldValue(activity?.activity_type ?? null)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, color: "#60a5fa" }}>Start date</p>
+                        <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#9ca3af", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                          {formatDateTime(activity?.start_date ?? null)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, color: "#60a5fa" }}>Address</p>
+                        <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#9ca3af", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                          {fieldValue(activity?.address_text ?? null)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, color: "#60a5fa" }}>City</p>
+                        <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#9ca3af", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                          {fieldValue(activity?.city ?? null)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, color: "#60a5fa" }}>State</p>
+                        <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#9ca3af", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                          {fieldValue(activity?.state ?? null)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div
                 style={{
@@ -1247,4 +1299,3 @@ export default function ActivityDetailPage() {
     </>
   );
 }
-

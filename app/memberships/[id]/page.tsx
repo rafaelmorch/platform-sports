@@ -50,6 +50,15 @@ export default function MembershipCommunityPage() {
 
   useEffect(() => {
     async function load() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
       const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
       const { data } = await supabase
@@ -271,3 +280,4 @@ export default function MembershipCommunityPage() {
     </>
   );
 }
+

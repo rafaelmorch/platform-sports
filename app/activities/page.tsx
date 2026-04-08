@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import BottomNavbar from "@/components/BottomNavbar";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
@@ -45,7 +44,7 @@ function buildAddress(a: ActivityRow): string {
   const state = (a.state ?? "").trim();
 
   if (addr) parts.push(addr);
-  if (city && state) parts.push(`${city}, ${state}`);
+  if (city && state) parts.push("${city}, ${state}");
   else if (city) parts.push(city);
   else if (state) parts.push(state);
 
@@ -60,23 +59,13 @@ function getPublicImageUrl(path: string | null): string | null {
 
 export default function ActivitiesPage() {
   const supabase = useMemo(() => supabaseBrowser, []);
-  const router = useRouter();
   const [activities, setActivities] = useState<ActivityRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function checkAuthAndLoad() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.replace("/login");
-        return;
-      }
-
+    async function load() {
       const nowIso = new Date().toISOString();
 
       const { data } = await supabase
@@ -92,12 +81,12 @@ export default function ActivitiesPage() {
       }
     }
 
-    checkAuthAndLoad();
+    load();
 
     return () => {
       cancelled = true;
     };
-  }, [supabase, router]);
+  }, [supabase]);
 
   const thumbW = "clamp(96px, 24vw, 132px)";
   const thumbH = "clamp(72px, 18vw, 92px)";

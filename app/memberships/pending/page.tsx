@@ -112,18 +112,21 @@ function PendingMembershipContent() {
         background:
           "linear-gradient(180deg, #eef1f5 0%, #e5e7eb 45%, #dfe3e8 100%)",
         padding: 16,
+        boxSizing: "border-box",
       }}
     >
-      <div style={{ maxWidth: 900, margin: "0 auto 16px auto" }}>
+      <div style={{ width: "100%", maxWidth: 900, margin: "0 auto 16px auto", boxSizing: "border-box" }}>
         <BackArrow />
       </div>
 
       <div
         style={{
+          width: "100%",
           maxWidth: 900,
           margin: "0 auto",
           borderRadius: 28,
-          padding: 28,
+          padding: "clamp(18px, 4vw, 28px)",
+          boxSizing: "border-box",
           border: "1px solid #d6dbe4",
           background: "linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%)",
           boxShadow:
@@ -160,6 +163,7 @@ function PendingMembershipContent() {
             background: "#f8fafc",
             border: "1px solid #e2e8f0",
             marginBottom: 24,
+            boxSizing: "border-box",
           }}
         >
           <p
@@ -178,15 +182,18 @@ function PendingMembershipContent() {
 
         <div
           style={{
+            width: "100%",
             maxWidth: 560,
             margin: "0 auto 24px auto",
             borderRadius: 24,
-            padding: 22,
+            padding: "clamp(16px, 4vw, 22px)",
+            boxSizing: "border-box",
             border: "1px solid #d6dbe4",
             background: "linear-gradient(180deg, #f8fafc 0%, #edf1f5 100%)",
             boxShadow:
               "8px 8px 24px rgba(148,163,184,0.14), -6px -6px 20px rgba(255,255,255,0.9)",
             textAlign: "left",
+            overflow: "hidden",
           }}
         >
           <h2
@@ -214,11 +221,20 @@ function PendingMembershipContent() {
           </p>
 
           <input
+            id="payment-proof-input"
             type="file"
             accept="image/*"
             onChange={(e) => handleProofChange(e.target.files?.[0] ?? null)}
+            style={{ display: "none" }}
+          />
+
+          <label
+            htmlFor="payment-proof-input"
             style={{
+              display: "block",
               width: "100%",
+              maxWidth: "100%",
+              boxSizing: "border-box",
               borderRadius: 18,
               border: "1px solid #d6dbe4",
               background: "linear-gradient(180deg, #ffffff 0%, #edf2f7 100%)",
@@ -228,8 +244,15 @@ function PendingMembershipContent() {
               boxShadow:
                 "inset 1px 1px 0 rgba(255,255,255,0.98), inset -2px -2px 6px rgba(203,213,225,0.45)",
               marginBottom: 10,
+              cursor: "pointer",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              textAlign: "center",
             }}
-          />
+          >
+            {proofFile ? proofFile.name : "Choose payment proof image"}
+          </label>
 
           <div
             style={{
@@ -256,6 +279,7 @@ function PendingMembershipContent() {
               alignItems: "center",
               justifyContent: "center",
               marginBottom: 16,
+              boxSizing: "border-box",
             }}
           >
             {proofPreview ? (

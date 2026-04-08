@@ -134,10 +134,6 @@ export default function NewMembershipPage() {
       return;
     }
 
-    if (!cleanCheckoutUrl) {
-      setWarning("External membership link is required.");
-      return;
-    }
 
     if (!cleanCheckoutButtonText) {
       setWarning("Button text is required.");
@@ -197,7 +193,7 @@ export default function NewMembershipPage() {
           banner_image_url: bannerUpload.url,
           card_highlight: cleanCardHighlight || null,
           gallery_urls: galleryUrls.length > 0 ? galleryUrls : null,
-          checkout_url: cleanCheckoutUrl,
+          checkout_url: cleanCheckoutUrl || null,
           checkout_button_text: cleanCheckoutButtonText,
           is_active: true,
           created_by: user.id
@@ -342,16 +338,7 @@ export default function NewMembershipPage() {
               </p>
             </div>
 
-            <img
-              src="/Platform_Logo.png"
-              alt="Platform Sports"
-              style={{
-                height: 60,
-                width: "auto",
-                display: "block",
-                opacity: 1,
-              }}
-            />
+
           </header>
 
           {warning && (
@@ -756,3 +743,4 @@ const emptyPreviewTextStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
 };
+
