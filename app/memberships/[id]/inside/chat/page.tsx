@@ -1,4 +1,3 @@
-// app/memberships/[id]/inside/chat/page.tsx
 "use client";
 
 import "@fontsource/montserrat/400.css";
@@ -24,34 +23,30 @@ type ChatRow = {
   id: string;
   community_id: string;
   user_id: string;
-  author_name: string | null;
   message: string;
   created_at: string;
 };
 
-function getInitials(name: string | null): string {
-  if (!name) return "AT";
-  const parts = name.trim().split(" ").filter(Boolean);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
-}
-
-function getAvatarBackground(seed: string): string {
-  const palettes = [
-    "radial-gradient(circle at 30% 30%, #38bdf8, #0f172a)",
-    "radial-gradient(circle at 30% 30%, #22c55e, #0f172a)",
-    "radial-gradient(circle at 30% 30%, #f59e0b, #0f172a)",
-    "radial-gradient(circle at 30% 30%, #a78bfa, #0f172a)",
-    "radial-gradient(circle at 30% 30%, #fb7185, #0f172a)",
-  ];
-
-  let sum = 0;
-  for (let i = 0; i < seed.length; i += 1) sum += seed.charCodeAt(i);
-  return palettes[sum % palettes.length];
-}
+type ProfileRow = {
+  id: string;
+  full_name: string | null;
+};
 
 function getDisplayName(name: string | null): string {
   return name?.trim() ? name.trim() : "Athlete";
+}
+
+function formatMessageDateTime(value: string): string {
+  try {
+    return new Date(value).toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return value;
+  }
 }
 
 export default function MembershipChatPage() {
@@ -67,14 +62,52 @@ export default function MembershipChatPage() {
   const [communityName, setCommunityName] = useState<string | null>(null);
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
-
   const [messages, setMessages] = useState<ChatRow[]>([]);
+  const [profilesMap, setProfilesMap] = useState<Record<string, string>>({});
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
 
   function scrollToBottom() {
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  }
+
+  async function fetchMessages(currentCommunityId: string) {
+    const { data: rows, error } = await supabase
+      .from("app_membership_chat_messages")
+      .select("id, community_id, user_id, message, created_at")
+      .eq("community_id", currentCommunityId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error loading membership chat:", error);
+      setMessages([]);
+      return;
+    }
+
+    const typedRows = (rows as ChatRow[]) ?? [];
+    setMessages(typedRows);
+
+    const userIds = Array.from(new Set(typedRows.map((m) => m.user_id).filter(Boolean)));
+
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+
+      const map: Record<string, string> = {};
+      ((profiles as ProfileRow[]) ?? []).forEach((profile) => {
+        map[profile.id] = getDisplayName(profile.full_name);
+      });
+
+      setProfilesMap(map);
+    } else {
+      setProfilesMap({});
+    }
+
+    scrollToBottom();
   }
 
   useEffect(() => {
@@ -94,14 +127,6 @@ export default function MembershipChatPage() {
       }
 
       setUserId(user.id);
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      setUserName(profile?.full_name || null);
 
       const { data: community } = await supabase
         .from("app_membership_communities")
@@ -131,23 +156,10 @@ export default function MembershipChatPage() {
         }
       }
 
-      const { data: rows, error } = await supabase
-        .from("app_membership_chat_messages")
-        .select("*")
-        .eq("community_id", communityId)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("Error loading membership chat:", error);
-        setMessages([]);
-      } else {
-        setMessages((rows as ChatRow[]) ?? []);
-      }
-
       setCommunityName(typedCommunity.name || null);
       setAllowed(true);
+      await fetchMessages(communityId);
       setLoading(false);
-      scrollToBottom();
     }
 
     load();
@@ -166,15 +178,10 @@ export default function MembershipChatPage() {
           table: "app_membership_chat_messages",
           filter: `community_id=eq.${communityId}`,
         },
-        (payload) => {
-          const row = payload.new as ChatRow;
-
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === row.id)) return prev;
-            return [...prev, row];
-          });
-
-          scrollToBottom();
+        async () => {
+          if (typeof communityId === "string") {
+            await fetchMessages(communityId);
+          }
         }
       )
       .subscribe();
@@ -190,28 +197,20 @@ export default function MembershipChatPage() {
 
     setSending(true);
 
-    const { data, error } = await supabase
-      .from("app_membership_chat_messages")
-      .insert({
-        community_id: communityId,
-        user_id: userId,
-        author_name: userName,
-        message,
-      })
-      .select()
-      .single();
+    const { error } = await supabase.from("app_membership_chat_messages").insert({
+      community_id: communityId,
+      user_id: userId,
+      message,
+    });
 
     if (error) {
       console.error("Error sending membership chat message:", error);
-    } else if (data) {
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === (data as ChatRow).id)) return prev;
-        return [...prev, data as ChatRow];
-      });
-      setText("");
-      scrollToBottom();
+      setSending(false);
+      return;
     }
 
+    setText("");
+    await fetchMessages(communityId);
     setSending(false);
   }
 
@@ -225,7 +224,7 @@ export default function MembershipChatPage() {
         body {
           margin: 0 !important;
           padding: 0 !important;
-          background: #000 !important;
+          background: #e5ddd5 !important;
           width: 100%;
           min-height: 100%;
           overflow-x: hidden !important;
@@ -245,29 +244,28 @@ export default function MembershipChatPage() {
         className="page"
         style={{
           minHeight: "100vh",
-          background:
-            "linear-gradient(180deg, #eef1f5 0%, #e5e7eb 45%, #dfe3e8 100%)",
-          paddingTop: "max(16px, env(safe-area-inset-top))",
-          paddingRight: "max(16px, env(safe-area-inset-right))",
-          paddingBottom: "max(16px, env(safe-area-inset-bottom))",
-          paddingLeft: "max(16px, env(safe-area-inset-left))",
+          background: "#e5ddd5",
+          paddingTop: "max(10px, env(safe-area-inset-top))",
+          paddingRight: "max(8px, env(safe-area-inset-right))",
+          paddingBottom: "max(8px, env(safe-area-inset-bottom))",
+          paddingLeft: "max(8px, env(safe-area-inset-left))",
           overflowX: "hidden",
         }}
       >
-        <div style={{ maxWidth: 900, margin: "0 auto 16px auto" }}>
+        <div style={{ width: "100%", maxWidth: 920, margin: "0 auto 10px auto" }}>
           <BackArrow />
         </div>
 
         <div
           style={{
-            maxWidth: 900,
+            width: "100%",
+            maxWidth: 920,
             margin: "0 auto",
-            borderRadius: 28,
-            padding: "clamp(18px, 3vw, 24px)",
+            borderRadius: 22,
+            padding: "clamp(12px, 2vw, 18px)",
             border: "1px solid #d6dbe4",
-            background: "#fff",
-            boxShadow:
-              "8px 8px 24px rgba(148,163,184,0.18), -6px -6px 20px rgba(255,255,255,0.9)",
+            background: "#f0f2f5",
+            boxShadow: "8px 8px 24px rgba(148,163,184,0.18), -6px -6px 20px rgba(255,255,255,0.9)",
             overflow: "hidden",
           }}
         >
@@ -278,7 +276,7 @@ export default function MembershipChatPage() {
               justifyContent: "space-between",
               alignItems: "center",
               gap: 12,
-              marginBottom: 12,
+              marginBottom: 10,
             }}
           >
             <h1
@@ -301,8 +299,8 @@ export default function MembershipChatPage() {
                 justifyContent: "center",
                 alignItems: "center",
                 gap: 36,
-                borderBottom: "1px solid #e2e8f0",
-                marginBottom: 22,
+                borderBottom: "1px solid #dbe3ea",
+                marginBottom: 14,
                 overflowX: "auto",
                 paddingBottom: 2,
               }}
@@ -356,25 +354,23 @@ export default function MembershipChatPage() {
 
           <div
             style={{
-              borderRadius: 22,
-              padding: 16,
-              background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-              border: "1px solid #e2e8f0",
-              boxShadow:
-                "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
-              marginBottom: 14,
-              minHeight: 420,
-              maxHeight: 520,
+              borderRadius: 18,
+              padding: "10px",
+              background: "#efeae2",
+              border: "1px solid #dde3ea",
+              marginBottom: 10,
+              minHeight: "calc(100vh - 235px)",
+              maxHeight: "calc(100vh - 235px)",
               overflowY: "auto",
             }}
           >
             {messages.length === 0 ? (
               <div style={{ color: "#64748b", fontSize: 14 }}>No messages yet.</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {messages.map((msg) => {
                   const mine = msg.user_id === userId;
-                  const author = mine ? "You" : getDisplayName(msg.author_name);
+                  const author = mine ? "You" : getDisplayName(profilesMap[msg.user_id] ?? null);
 
                   return (
                     <div
@@ -384,46 +380,43 @@ export default function MembershipChatPage() {
                         justifyContent: mine ? "flex-end" : "flex-start",
                       }}
                     >
-                      <div style={{ maxWidth: "78%", display: "flex", gap: 10, alignItems: "flex-start" }}>
-                        {!mine && (
-                          <div
-                            style={{
-                              width: 34,
-                              height: 34,
-                              borderRadius: 999,
-                              background: getAvatarBackground(author),
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: "#f8fafc",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {getInitials(author)}
-                          </div>
-                        )}
+                      <div
+                        style={{
+                          maxWidth: "88%",
+                          minWidth: "120px",
+                          padding: "8px 10px 6px 10px",
+                          borderRadius: mine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                          background: mine ? "#dcf8c6" : "#ffffff",
+                          color: "#111827",
+                          fontSize: 13,
+                          lineHeight: 1.45,
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.10)",
+                          border: mine ? "1px solid #cdebb8" : "1px solid #eceff3",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            marginBottom: 4,
+                            color: mine ? "#166534" : "#334155",
+                          }}
+                        >
+                          {author}
+                        </div>
 
-                        <div>
-                          <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>
-                            {author}
-                          </div>
+                        <div>{msg.message}</div>
 
-                          <div
-                            style={{
-                              padding: "10px 12px",
-                              borderRadius: 16,
-                              background: mine ? "#0f172a" : "#f1f5f9",
-                              color: mine ? "#ffffff" : "#0f172a",
-                              fontSize: 13,
-                              lineHeight: 1.5,
-                              border: mine ? "1px solid #0f172a" : "1px solid #e2e8f0",
-                              wordBreak: "break-word",
-                            }}
-                          >
-                            {msg.message}
-                          </div>
+                        <div
+                          style={{
+                            fontSize: 10,
+                            textAlign: "right",
+                            marginTop: 4,
+                            color: "#6b7280",
+                          }}
+                        >
+                          {formatMessageDateTime(msg.created_at)}
                         </div>
                       </div>
                     </div>
@@ -437,12 +430,12 @@ export default function MembershipChatPage() {
           <div
             style={{
               display: "flex",
-              gap: 10,
+              gap: 8,
               alignItems: "center",
               borderRadius: 18,
-              padding: 12,
-              background: "#f8fafc",
-              border: "1px solid #e2e8f0",
+              padding: 10,
+              background: "#f0f2f5",
+              border: "1px solid #dbe3ea",
             }}
           >
             <input

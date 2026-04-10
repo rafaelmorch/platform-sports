@@ -473,30 +473,29 @@ export default function MembershipsPage() {
                                 marginBottom: 10,
                               }}
                             >
-                              <Link
-                                href={`/memberships/${community.id}/edit`}
-                                onClick={(e) => e.stopPropagation()}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  window.location.href = `/memberships/${community.id}/edit`;
+                                }}
                                 style={{
-                                  textDecoration: "none",
+                                  borderRadius: 999,
+                                  padding: "10px 14px",
+                                  fontSize: 12,
+                                  fontWeight: 900,
+                                  background: "rgba(15,23,42,0.92)",
+                                  color: "#f8fafc",
+                                  border: "1px solid rgba(148,163,184,0.22)",
+                                  boxShadow: "0 10px 24px rgba(0,0,0,0.35)",
+                                  whiteSpace: "nowrap",
+                                  backdropFilter: "blur(8px)",
+                                  cursor: "pointer",
                                 }}
                               >
-                                <div
-                                  style={{
-                                    borderRadius: 999,
-                                    padding: "10px 14px",
-                                    fontSize: 12,
-                                    fontWeight: 900,
-                                    background: "rgba(15,23,42,0.92)",
-                                    color: "#f8fafc",
-                                    border: "1px solid rgba(148,163,184,0.22)",
-                                    boxShadow: "0 10px 24px rgba(0,0,0,0.35)",
-                                    whiteSpace: "nowrap",
-                                    backdropFilter: "blur(8px)",
-                                  }}
-                                >
-                                  Edit
-                                </div>
-                              </Link>
+                                Edit
+                              </button>
                             </div>
                           )}
 
@@ -570,3 +569,4 @@ export default function MembershipsPage() {
     </>
   );
 }
+
