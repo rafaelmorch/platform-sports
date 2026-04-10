@@ -234,30 +234,29 @@ export default function EventDetailPage() {
   };
 
   const box: React.CSSProperties = {
-  padding: 0,
-  margin: 0,
-  border: "none",
-  background: "transparent",
-  boxShadow: "none",
-  borderRadius: 0,
-};
+    borderRadius: 8,
+    border: borderSoft,
+    background: "#ffffff",
+    boxShadow: shadowSoft,
+    padding: 10,
+  };
 
   const boxLabel: React.CSSProperties = {
-  margin: 0,
-  fontSize: 12,
-  color: "#1e3a8a",
-  fontWeight: 700,
-  fontFamily: "Montserrat, sans-serif",
-};
+    margin: 0,
+    fontSize: 12,
+    color: "#1e3a8a",
+    fontWeight: 700,
+    fontFamily: "Montserrat, sans-serif",
+  };
 
   const boxValue: React.CSSProperties = {
-  margin: "6px 0 0 0",
-  fontSize: 13,
-  color: "#374151",
-  fontFamily: "Arial, sans-serif",
-  whiteSpace: "pre-wrap",
-  wordBreak: "break-word",
-};
+    margin: "6px 0 0 0",
+    fontSize: 13,
+    color: "#374151",
+    fontFamily: "Arial, sans-serif",
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+  };
 
   if (loading) {
     return (
@@ -621,5 +620,3 @@ export default function EventDetailPage() {
     </main>
   );
 }
-
-
