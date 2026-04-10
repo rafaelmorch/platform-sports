@@ -1,5 +1,9 @@
 "use client";
 
+import "@fontsource/montserrat/400.css";
+import "@fontsource/montserrat/600.css";
+import "@fontsource/montserrat/700.css";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import BottomNavbar from "@/components/BottomNavbar";
@@ -44,7 +48,7 @@ function buildAddress(a: ActivityRow): string {
   const state = (a.state ?? "").trim();
 
   if (addr) parts.push(addr);
-  if (city && state) parts.push("${city}, ${state}");
+  if (city && state) parts.push(`${city}, ${state}`);
   else if (city) parts.push(city);
   else if (state) parts.push(state);
 
@@ -99,8 +103,8 @@ export default function ActivitiesPage() {
           minHeight: "100vh",
           width: "100%",
           maxWidth: "100vw",
-          backgroundColor: "#000000",
-          color: "#e5e7eb",
+          backgroundColor: "#ffffff",
+          color: "#000000", fontFamily: "Montserrat, sans-serif",
           padding: 16,
           paddingBottom: navSafe + 16,
           boxSizing: "border-box",
@@ -133,7 +137,7 @@ export default function ActivitiesPage() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
+                gap: 8,
                 flexWrap: "wrap",
                 marginTop: 6,
                 width: "100%",
@@ -141,30 +145,29 @@ export default function ActivitiesPage() {
                 boxSizing: "border-box",
               }}
             >
-              <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>Activities</h1>
+              <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Montserrat, sans-serif", margin: 0 }}>Activities</h1>
 
               <Link
                 href="/activities/new"
                 style={{
-                  marginLeft: "auto",
-                  fontSize: 12,
-                  padding: "8px 12px",
-                  borderRadius: 999,
-                  border: "1px solid rgba(56,189,248,0.55)",
-                  background: "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
-                  color: "#e0f2fe",
-                  textDecoration: "none",
-                  fontWeight: 900,
-                  whiteSpace: "nowrap",
-                  maxWidth: "100%",
-                  boxSizing: "border-box",
-                }}
+  marginLeft: "auto",
+  fontSize: 12,
+  padding: "10px 14px",
+  borderRadius: 6,
+  border: "1px solid #000000",
+  background: "#000000",
+  color: "#ffffff",
+  fontFamily: "Montserrat, sans-serif",
+  textDecoration: "none",
+  fontWeight: 600,
+  whiteSpace: "nowrap",
+}}
               >
                 + New activity
               </Link>
             </div>
 
-            <p style={{ fontSize: 13, color: "#9ca3af", margin: "6px 0 0 0" }}>
+            <p style={{ fontSize: 13, color: "#374151", fontFamily: "Montserrat, sans-serif", margin: "6px 0 0 0" }}>
               Training sessions and community activities.
             </p>
           </header>
@@ -178,7 +181,7 @@ export default function ActivitiesPage() {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 12,
+                gap: 8,
                 width: "100%",
                 maxWidth: "100%",
                 overflowX: "hidden",
@@ -205,16 +208,16 @@ export default function ActivitiesPage() {
                     <article
                       style={{
                         display: "flex",
-                        gap: 12,
-                        padding: 14,
-                        borderRadius: 16,
-                        border: "1px solid rgba(148,163,184,0.22)",
-                        background: "linear-gradient(145deg,#020617,#000000)",
+                        gap: 8,
+                        padding: "14px 0",
+                        
+                        
+                        
                         boxSizing: "border-box",
                         overflow: "hidden",
                         width: "100%",
                         maxWidth: "100%",
-                        alignItems: "stretch",
+                        alignItems: "stretch", borderBottom: "1px solid #e5e7eb",
                       }}
                     >
                       <div
@@ -222,10 +225,10 @@ export default function ActivitiesPage() {
                           width: thumbW,
                           minWidth: thumbW,
                           height: thumbH,
-                          borderRadius: 12,
+                          
                           overflow: "hidden",
                           background: "#000",
-                          border: "1px solid rgba(148,163,184,0.20)",
+                          
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -262,8 +265,8 @@ export default function ActivitiesPage() {
                           style={{
                             margin: 0,
                             fontSize: 15,
-                            fontWeight: 800,
-                            whiteSpace: "nowrap",
+                            fontWeight: 700, fontFamily: "Montserrat, sans-serif",
+                            whiteSpace: "nowrap", borderRadius: 6,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                           }}
@@ -275,21 +278,21 @@ export default function ActivitiesPage() {
                           style={{
                             margin: "6px 0 0 0",
                             fontSize: 12,
-                            color: "#9ca3af",
-                            whiteSpace: "nowrap",
+                            color: "#374151", fontFamily: "Montserrat, sans-serif",
+                            whiteSpace: "nowrap", borderRadius: 6,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                           }}
                         >
-                          {(a.sport ?? "—")} • {formatDateTime(a.start_date)}
+                          <span style={{ color: "#1e3a8a", fontWeight: 600 }}>{a.sport ?? "—"}</span> • {formatDateTime(a.start_date)}
                         </p>
 
                         <p
                           style={{
                             margin: "6px 0 0 0",
                             fontSize: 12,
-                            color: "#9ca3af",
-                            whiteSpace: "nowrap",
+                            color: "#374151", fontFamily: "Montserrat, sans-serif",
+                            whiteSpace: "nowrap", borderRadius: 6,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                           }}
@@ -302,7 +305,7 @@ export default function ActivitiesPage() {
                             style={{
                               margin: "8px 0 0 0",
                               fontSize: 12,
-                              color: "#cbd5e1",
+                              color: "#374151", fontFamily: "Montserrat, sans-serif",
                               display: "-webkit-box",
                               WebkitLineClamp: 2,
                               WebkitBoxOrient: "vertical",
@@ -349,7 +352,7 @@ export default function ActivitiesPage() {
           padding: 0 !important;
           width: 100% !important;
           max-width: 100% !important;
-          background: #000 !important;
+          background: #fff !important;
           overflow-x: hidden !important;
         }
 

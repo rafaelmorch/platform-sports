@@ -1,5 +1,9 @@
 "use client";
 
+import "@fontsource/montserrat/400.css";
+import "@fontsource/montserrat/600.css";
+import "@fontsource/montserrat/700.css";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import BottomNavbar from "@/components/BottomNavbar";
@@ -152,7 +156,7 @@ export default function MembershipsPage() {
         body {
           margin: 0 !important;
           padding: 0 !important;
-          background: #020617 !important;
+          background: #fff !important;
           width: 100%;
           height: 100%;
           overflow-x: hidden;
@@ -171,9 +175,8 @@ export default function MembershipsPage() {
           minHeight: "100vh",
           width: "100%",
           overflowX: "hidden",
-          background:
-            "radial-gradient(circle at top, rgba(37,99,235,0.18) 0%, rgba(2,6,23,1) 42%)",
-          color: "#e5e7eb",
+          background: "#ffffff",
+          color: "#000000",
           padding: 16,
           paddingBottom: 92,
         }}
@@ -183,31 +186,35 @@ export default function MembershipsPage() {
             style={{
               marginBottom: 18,
               display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 12,
-              textAlign: "center",
+              alignItems: "flex-start",
+              justifyContent: "flex-start",
+              gap: 0,
+              textAlign: "left",
             }}
           >
-            <img
-              src="/Platform_Logo.png"
-              alt="Platform Sports"
-              style={{
-                height: 56,
-                width: "auto",
-                display: "block",
-                opacity: 0.95,
-              }}
-            />
-
             <div>
-              <h1 style={{ fontSize: 26, fontWeight: 900, margin: 0 }}>
+              <h1
+                style={{
+                  fontSize: 26,
+                  fontWeight: 700,
+                  fontFamily: "Montserrat, sans-serif",
+                  margin: 0,
+                }}
+              >
                 Communities
               </h1>
 
-              <p style={{ fontSize: 13, color: "#94a3b8", margin: "8px 0 0 0", maxWidth: 540 }}>
-                Join premium communities, unlock exclusive access, and build your journey with the right tribe.
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "#6b7280",
+                  fontFamily: "Arial, sans-serif",
+                  margin: "8px 0 0 0",
+                  maxWidth: 540,
+                }}
+              >
+                Join premium communities, unlock exclusive access, and build your journey with the
+                right tribe.
               </p>
             </div>
           </header>
@@ -215,12 +222,11 @@ export default function MembershipsPage() {
           <section
             style={{
               marginBottom: 18,
-              borderRadius: 24,
+              borderRadius: 8,
               padding: 18,
-              border: "1px solid rgba(59,130,246,0.18)",
-              background:
-                "linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.82))",
-              boxShadow: "0 28px 80px rgba(0,0,0,0.45)",
+              border: "1px solid #e5e7eb",
+              background: "#ffffff",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
             }}
           >
             <div
@@ -228,13 +234,14 @@ export default function MembershipsPage() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                borderRadius: 999,
+                borderRadius: 6,
                 padding: "6px 10px",
-                background: "rgba(37,99,235,0.16)",
-                border: "1px solid rgba(96,165,250,0.22)",
+                background: "#eff6ff",
+                border: "1px solid #bfdbfe",
                 fontSize: 11,
-                fontWeight: 900,
-                color: "#bfdbfe",
+                fontWeight: 700,
+                fontFamily: "Montserrat, sans-serif",
+                color: "#1e3a8a",
                 marginBottom: 10,
               }}
             >
@@ -244,18 +251,28 @@ export default function MembershipsPage() {
             <div
               style={{
                 fontSize: 20,
-                fontWeight: 900,
+                fontWeight: 700,
+                fontFamily: "Montserrat, sans-serif",
                 letterSpacing: "-0.02em",
                 lineHeight: 1.1,
-                color: "#facc15",
+                color: "#1e3a8a",
                 marginBottom: 8,
               }}
             >
               Your next level starts inside the right community.
             </div>
 
-            <div style={{ fontSize: 13, lineHeight: 1.5, color: "#cbd5e1", maxWidth: 720 }}>
-              Training, accountability, rankings, internal feed, check-ins and premium interaction in one place.
+            <div
+              style={{
+                fontSize: 13,
+                lineHeight: 1.5,
+                color: "#374151",
+                fontFamily: "Arial, sans-serif",
+                maxWidth: 720,
+              }}
+            >
+              Training, accountability, rankings, internal feed, check-ins and premium interaction
+              in one place.
             </div>
           </section>
 
@@ -267,9 +284,10 @@ export default function MembershipsPage() {
                 padding: "10px 12px",
                 background: "rgba(245,158,11,0.14)",
                 border: "1px solid rgba(245,158,11,0.22)",
-                color: "#fde68a",
+                color: "#92400e",
                 fontSize: 12,
                 lineHeight: 1.35,
+                fontFamily: "Arial, sans-serif",
               }}
             >
               {warning}
@@ -288,15 +306,14 @@ export default function MembershipsPage() {
                 <div
                   key={i}
                   style={{
-                    borderRadius: 24,
+                    borderRadius: 8,
                     overflow: "hidden",
-                    border: "1px solid rgba(30,41,59,0.9)",
-                    background:
-                      "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.90))",
-                    boxShadow: "0 24px 70px rgba(0,0,0,0.70)",
+                    border: "1px solid #e5e7eb",
+                    background: "#ffffff",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
                   }}
                 >
-                  <div style={{ height: 180, background: "rgba(148,163,184,0.10)" }} />
+                  <div style={{ height: 180, background: "#f8fafc" }} />
                   <div style={{ padding: 14 }} />
                 </div>
               ))
@@ -322,12 +339,11 @@ export default function MembershipsPage() {
                     >
                       <div
                         style={{
-                          borderRadius: 24,
+                          borderRadius: 8,
                           overflow: "hidden",
-                          border: "1px solid rgba(30,41,59,0.92)",
-                          background:
-                            "linear-gradient(145deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92))",
-                          boxShadow: "0 26px 80px rgba(0,0,0,0.72)",
+                          border: "1px solid #e5e7eb",
+                          background: "#ffffff",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
                           transform: "translateY(0px)",
                           transition: "transform 0.18s ease, box-shadow 0.18s ease",
                         }}
@@ -337,8 +353,7 @@ export default function MembershipsPage() {
                             position: "relative",
                             width: "100%",
                             aspectRatio: "16 / 10",
-                            background:
-                              "linear-gradient(135deg, rgba(30,41,59,0.96), rgba(37,99,235,0.30))",
+                            background: "#f8fafc",
                           }}
                         >
                           {image ? (
@@ -349,6 +364,7 @@ export default function MembershipsPage() {
                                 width: "100%",
                                 height: "100%",
                                 objectFit: "cover",
+                                display: "block",
                               }}
                             />
                           ) : (
@@ -360,8 +376,9 @@ export default function MembershipsPage() {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 fontSize: 42,
-                                fontWeight: 900,
-                                color: "rgba(255,255,255,0.92)",
+                                fontWeight: 700,
+                                fontFamily: "Montserrat, sans-serif",
+                                color: "#94a3b8",
                                 letterSpacing: "0.06em",
                               }}
                             >
@@ -372,24 +389,16 @@ export default function MembershipsPage() {
                           <div
                             style={{
                               position: "absolute",
-                              inset: 0,
-                              background:
-                                "linear-gradient(to top, rgba(2,6,23,0.88) 0%, rgba(2,6,23,0.20) 45%, rgba(2,6,23,0.08) 100%)",
-                            }}
-                          />
-
-                          <div
-                            style={{
-                              position: "absolute",
                               left: 12,
                               top: 12,
                               padding: "6px 10px",
-                              borderRadius: 999,
+                              borderRadius: 6,
                               fontSize: 11,
-                              fontWeight: 900,
-                              background: "rgba(2,6,23,0.68)",
-                              border: "1px solid rgba(148,163,184,0.18)",
-                              backdropFilter: "blur(8px)",
+                              fontWeight: 700,
+                              fontFamily: "Montserrat, sans-serif",
+                              background: "#1e3a8a",
+                              border: "1px solid #1e3a8a",
+                              color: "#ffffff",
                             }}
                           >
                             {isApproved ? "MEMBER AREA" : "MEMBERSHIP"}
@@ -401,12 +410,13 @@ export default function MembershipsPage() {
                               right: 12,
                               top: 12,
                               padding: "6px 10px",
-                              borderRadius: 999,
+                              borderRadius: 6,
                               fontSize: 11,
-                              fontWeight: 900,
-                              background: "linear-gradient(135deg,#3b82f6,#2563eb)",
-                              color: "#eff6ff",
-                              boxShadow: "0 8px 24px rgba(37,99,235,0.38)",
+                              fontWeight: 700,
+                              fontFamily: "Montserrat, sans-serif",
+                              background: "#ffffff",
+                              color: "#000000",
+                              border: "1px solid #e5e7eb",
                             }}
                           >
                             {priceLabel}
@@ -419,13 +429,13 @@ export default function MembershipsPage() {
                                 left: 12,
                                 bottom: 12,
                                 padding: "7px 11px",
-                                borderRadius: 999,
+                                borderRadius: 6,
                                 fontSize: 11,
-                                fontWeight: 900,
-                                background: "rgba(255,255,255,0.10)",
-                                color: "#f8fafc",
-                                border: "1px solid rgba(255,255,255,0.14)",
-                                backdropFilter: "blur(8px)",
+                                fontWeight: 700,
+                                fontFamily: "Montserrat, sans-serif",
+                                background: "#f8fafc",
+                                color: "#111827",
+                                border: "1px solid #e5e7eb",
                                 maxWidth: "calc(100% - 24px)",
                                 whiteSpace: "nowrap",
                                 overflow: "hidden",
@@ -441,9 +451,11 @@ export default function MembershipsPage() {
                           <div
                             style={{
                               fontSize: 18,
-                              fontWeight: 900,
+                              fontWeight: 700,
+                              fontFamily: "Montserrat, sans-serif",
                               lineHeight: 1.1,
                               marginBottom: 8,
+                              color: "#000000",
                             }}
                           >
                             {community.name ?? "Membership"}
@@ -452,7 +464,8 @@ export default function MembershipsPage() {
                           <div
                             style={{
                               fontSize: 13,
-                              color: "#cbd5e1",
+                              color: "#374151",
+                              fontFamily: "Arial, sans-serif",
                               lineHeight: 1.45,
                               display: "-webkit-box",
                               WebkitLineClamp: 3,
@@ -462,7 +475,8 @@ export default function MembershipsPage() {
                               marginBottom: 14,
                             }}
                           >
-                            {community.short_description || "Exclusive community access with premium experience inside the app."}
+                            {community.short_description ||
+                              "Exclusive community access with premium experience inside the app."}
                           </div>
 
                           {isAdmin && (
@@ -481,16 +495,16 @@ export default function MembershipsPage() {
                                   window.location.href = `/memberships/${community.id}/edit`;
                                 }}
                                 style={{
-                                  borderRadius: 999,
+                                  borderRadius: 6,
                                   padding: "10px 14px",
                                   fontSize: 12,
-                                  fontWeight: 900,
-                                  background: "rgba(15,23,42,0.92)",
-                                  color: "#f8fafc",
-                                  border: "1px solid rgba(148,163,184,0.22)",
-                                  boxShadow: "0 10px 24px rgba(0,0,0,0.35)",
+                                  fontWeight: 700,
+                                  fontFamily: "Montserrat, sans-serif",
+                                  background: "#ffffff",
+                                  color: "#000000",
+                                  border: "1px solid #e5e7eb",
+                                  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
                                   whiteSpace: "nowrap",
-                                  backdropFilter: "blur(8px)",
                                   cursor: "pointer",
                                 }}
                               >
@@ -507,19 +521,28 @@ export default function MembershipsPage() {
                               gap: 12,
                             }}
                           >
-                            <div style={{ fontSize: 12, color: "#93c5fd", fontWeight: 700 }}>
-                              {isApproved ? "Tap to enter community →" : "Tap to explore membership →"}
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color: "#374151",
+                                fontWeight: 600,
+                                fontFamily: "Montserrat, sans-serif",
+                              }}
+                            >
+                              {isApproved
+                                ? "Tap to enter community →"
+                                : "Tap to explore membership →"}
                             </div>
 
                             <div
                               style={{
-                                borderRadius: 999,
+                                borderRadius: 6,
                                 padding: "10px 14px",
                                 fontSize: 12,
-                                fontWeight: 900,
-                                background: "linear-gradient(135deg,#2563eb,#1d4ed8)",
-                                color: "#eff6ff",
-                                boxShadow: "0 10px 28px rgba(37,99,235,0.32)",
+                                fontWeight: 700,
+                                fontFamily: "Montserrat, sans-serif",
+                                background: "#000000",
+                                color: "#ffffff",
                                 whiteSpace: "nowrap",
                               }}
                             >
@@ -545,16 +568,17 @@ export default function MembershipsPage() {
               bottom: 108,
               width: 58,
               height: 58,
-              borderRadius: 999,
+              borderRadius: 6,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               textDecoration: "none",
-              background: "linear-gradient(135deg,#2563eb,#1d4ed8)",
-              color: "#eff6ff",
+              background: "#000000",
+              color: "#ffffff",
               fontSize: 34,
               fontWeight: 700,
-              boxShadow: "0 16px 40px rgba(37,99,235,0.40)",
+              fontFamily: "Montserrat, sans-serif",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.10)",
               zIndex: 20,
             }}
             aria-label="Create community"
@@ -569,4 +593,3 @@ export default function MembershipsPage() {
     </>
   );
 }
-

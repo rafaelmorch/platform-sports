@@ -1,5 +1,9 @@
 "use client";
 
+import "@fontsource/montserrat/400.css";
+import "@fontsource/montserrat/600.css";
+import "@fontsource/montserrat/700.css";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import BottomNavbar from "@/components/BottomNavbar";
@@ -137,7 +141,7 @@ export default function EventsPage() {
         body {
           margin: 0 !important;
           padding: 0 !important;
-          background: #020617 !important;
+          background: #fff !important;
           width: 100%;
           height: 100%;
           overflow-x: hidden;
@@ -149,15 +153,13 @@ export default function EventsPage() {
         * {
           box-sizing: border-box;
         }
-      `}</style>
-
-      <main
+      `}</style><main
         style={{
           minHeight: "100vh",
           width: "100%",
           overflowX: "hidden",
-          backgroundColor: "#020617",
-          color: "#e5e7eb",
+          backgroundColor: "#ffffff",
+          color: "#000000",
           padding: 16,
           paddingBottom: 80,
         }}
@@ -186,22 +188,13 @@ export default function EventsPage() {
                 Events
               </p>
 
-              <h1 style={{ fontSize: 24, fontWeight: 900, margin: "8px 0 0 0" }}>Events</h1>
+              <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Montserrat, sans-serif", margin: "8px 0 0 0" }}>Events</h1>
 
-              <p style={{ fontSize: 13, color: "#9ca3af", margin: "8px 0 0 0" }}>Official platform events.</p>
+              <p style={{ fontSize: 13, color: "#374151", fontFamily: "Montserrat, sans-serif", margin: "8px 0 0 0" }}>Official platform events.</p>
             </div>
 
             {/* Platform Sports Logo (2x) */}
-            <img
-              src="/Platform_Logo.png"
-              alt="Platform Sports"
-              style={{
-                height: 56, // 👈 2x the default
-                width: "auto",
-                display: "block",
-                opacity: 0.95,
-              }}
-            />
+           
           </header>
 
           {warning && (
@@ -234,11 +227,11 @@ export default function EventsPage() {
                 <div
                   key={i}
                   style={{
-                    borderRadius: 22,
+                    borderRadius: 8,
                     overflow: "hidden",
-                    border: "1px solid rgba(17,24,39,0.9)",
-                    background: "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.90))",
-                    boxShadow: "0 24px 70px rgba(0,0,0,0.70)",
+                    border: "1px solid #e5e7eb",
+                    background: "#000000",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
                   }}
                 >
                   <div style={{ height: 160, background: "rgba(148,163,184,0.10)" }} />
@@ -257,11 +250,11 @@ export default function EventsPage() {
                   <Link key={e.id} href={`/events/${e.id}`} style={{ textDecoration: "none", color: "inherit" }}>
                     <div
                       style={{
-                        borderRadius: 22,
+                        borderRadius: 8,
                         overflow: "hidden",
-                        border: "1px solid rgba(17,24,39,0.9)",
-                        background: "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.90))",
-                        boxShadow: "0 24px 70px rgba(0,0,0,0.75)",
+                        border: "1px solid #e5e7eb",
+                        background: "#ffffff",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
                       }}
                     >
                       {/* Banner */}
@@ -292,11 +285,12 @@ export default function EventsPage() {
                             left: 12,
                             top: 12,
                             padding: "6px 10px",
-                            borderRadius: 999,
+                            borderRadius: 6,
                             fontSize: 11,
-                            fontWeight: 900,
-                            background: "rgba(2,6,23,0.72)",
-                            border: "1px solid rgba(148,163,184,0.18)",
+                            fontWeight: 700, fontFamily: "Montserrat, sans-serif",
+                            background: "#1e3a8a",
+                            border: "1px solid #1e3a8a",
+                            color: "#ffffff",
                           }}
                         >
                           {e.sport?.toUpperCase() ?? "EVENT"}
@@ -308,11 +302,11 @@ export default function EventsPage() {
                             right: 12,
                             top: 12,
                             padding: "6px 10px",
-                            borderRadius: 999,
+                            borderRadius: 6,
                             fontSize: 11,
-                            fontWeight: 900,
-                            background: "rgba(34,197,94,0.95)",
-                            color: "#020617",
+                            fontWeight: 700, fontFamily: "Montserrat, sans-serif",
+                            background: "#ffffff",
+                            color: "#000000",
                           }}
                         >
                           {priceLabel}
@@ -321,16 +315,16 @@ export default function EventsPage() {
 
                       {/* Content */}
                       <div style={{ padding: 14 }}>
-                        <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 8 }}>
-                          🕒 {when} &nbsp;&nbsp;•&nbsp;&nbsp; 📍 {where}
+                        <div style={{ fontSize: 12, color: "#374151", fontFamily: "Montserrat, sans-serif", marginBottom: 10 }}>
+                          {when} &nbsp;&nbsp;•&nbsp;&nbsp; {where}
                         </div>
 
                         <div
                           style={{
-                            fontSize: 16,
-                            fontWeight: 900,
+                            fontSize: 18,
+                            fontWeight: 700, fontFamily: "Montserrat, sans-serif",
                             lineHeight: 1.15,
-                            marginBottom: 6,
+                            marginBottom: 10,
                           }}
                         >
                           {e.title}
@@ -340,7 +334,7 @@ export default function EventsPage() {
                           <div
                             style={{
                               fontSize: 12,
-                              color: "#cbd5e1",
+                              color: "#111827", fontFamily: "Montserrat, sans-serif",
                               lineHeight: 1.35,
                               display: "-webkit-box",
                               WebkitLineClamp: 3,
@@ -360,16 +354,16 @@ export default function EventsPage() {
                             alignItems: "center",
                           }}
                         >
-                          <div style={{ fontSize: 12, color: "#9ca3af" }}>Tap to view details →</div>
+                          <div style={{ fontSize: 12, color: "#374151", fontFamily: "Montserrat, sans-serif" }}>View details</div>
 
                           <div
                             style={{
-                              borderRadius: 999,
-                              padding: "9px 12px",
+                              borderRadius: 6,
+                              padding: "10px 14px",
                               fontSize: 12,
-                              fontWeight: 900,
-                              background: "linear-gradient(135deg,#22c55e,#16a34a)",
-                              color: "#020617",
+                              fontWeight: 700, fontFamily: "Montserrat, sans-serif",
+                              background: "#000000",
+                              color: "#ffffff",
                             }}
                           >
                             View
@@ -389,3 +383,5 @@ export default function EventsPage() {
     </>
   );
 }
+
+
