@@ -155,7 +155,7 @@ export default function EventDetailPage() {
         setError(e.message || "Failed to load the event.");
         setEvent(null);
       } else {
-        setEvent((data as EventRow) ?? null);
+        setEvent(((data as unknown) as EventRow) ?? null);
       }
 
       setLoading(false);
@@ -621,5 +621,6 @@ export default function EventDetailPage() {
     </main>
   );
 }
+
 
 
