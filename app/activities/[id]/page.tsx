@@ -1,5 +1,9 @@
 "use client";
 
+import "@fontsource/montserrat/400.css";
+import "@fontsource/montserrat/600.css";
+import "@fontsource/montserrat/700.css";
+
 import BackArrow from "@/components/BackArrow";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -217,11 +221,11 @@ export default function ActivityDetailPage() {
   const [chatText, setChatText] = useState("");
 
   const boxStyle: React.CSSProperties = {
-    borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.22)",
-    background: "linear-gradient(180deg, rgba(30,41,59,0.55), rgba(2,6,23,0.55))",
-    boxShadow: "0 18px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)",
-  };
+  borderRadius: 12,
+  border: "1px solid #e5e7eb",
+  background: "#ffffff",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+};
 
   useEffect(() => {
     if (!activityId) return;
@@ -573,8 +577,8 @@ export default function ActivityDetailPage() {
         style={{
           minHeight: "100vh",
           width: "100%",
-          backgroundColor: "#020617",
-          color: "#e5e7eb",
+          backgroundColor: "#ffffff",
+          color: "#374151",
           padding: "16px",
           paddingBottom: "80px",
           boxSizing: "border-box",
@@ -593,11 +597,11 @@ export default function ActivityDetailPage() {
                   Activities
                 </p>
 
-                <h1 style={{ fontSize: 24, fontWeight: 800, margin: "6px 0 0 0" }}>
+                <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Montserrat, sans-serif", margin: "6px 0 0 0" }}>
                   {loading ? "Loading..." : fieldValue(activity?.title ?? null)}
                 </h1>
 
-                <p style={{ fontSize: 13, color: "#9ca3af", margin: "6px 0 0 0" }}>
+                <p style={{ fontSize: 13, color: "#6b7280", fontFamily: "Arial, sans-serif", margin: "6px 0 0 0" }}>
                   {typeText} • {dateText}
                 </p>
               </div>
@@ -610,10 +614,10 @@ export default function ActivityDetailPage() {
                   style={{
                     fontSize: 12,
                     padding: "8px 12px",
-                    borderRadius: 999,
-                    border: "1px solid rgba(56,189,248,0.55)",
-                    background: "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
-                    color: "#e0f2fe",
+                    borderRadius: 6,
+                    border: "1px solid #1e3a8a",
+                    background: "#1e3a8a",
+                    color: "#ffffff",
                     textDecoration: "none",
                     fontWeight: 800,
                   }}
@@ -627,10 +631,10 @@ export default function ActivityDetailPage() {
                   style={{
                     fontSize: 12,
                     padding: "8px 12px",
-                    borderRadius: 999,
-                    border: "1px solid rgba(248,113,113,0.55)",
-                    background: "rgba(127,29,29,0.35)",
-                    color: "#fecaca",
+                    borderRadius: 6,
+                    border: "1px solid #fecaca",
+                    background: "#ffffff",
+                    color: "#b91c1c",
                     cursor: deleteBusy ? "not-allowed" : "pointer",
                     fontWeight: 800,
                     opacity: deleteBusy ? 0.7 : 1,
@@ -650,12 +654,12 @@ export default function ActivityDetailPage() {
               style={{
                 borderRadius: 18,
                 border: "1px solid rgba(148,163,184,0.28)",
-                background: "radial-gradient(circle at top left, #020617, #020617 45%, #000000 100%)",
+                background: "#ffffff",
                 padding: "14px 14px",
                 display: "flex",
                 flexDirection: "column",
                 gap: 12,
-                boxShadow: "0 22px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.04)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
               }}
             >
               <div
@@ -666,7 +670,7 @@ export default function ActivityDetailPage() {
                   border: "1px solid rgba(148,163,184,0.22)",
                   overflow: "hidden",
                   position: "relative",
-                  background: "rgba(0,0,0,0.28)",
+                  background: "#f8fafc",
                   ...boxStyle,
                 }}
               >
@@ -690,7 +694,7 @@ export default function ActivityDetailPage() {
                       style={{
                         position: "absolute",
                         inset: 0,
-                        background: "linear-gradient(180deg, rgba(2,6,23,0.25), rgba(2,6,23,0.55))",
+                        background: "transparent",
                       }}
                     />
                     <img
@@ -708,7 +712,7 @@ export default function ActivityDetailPage() {
                   </>
                 ) : (
                   <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: 12, color: "#9ca3af" }}>No image</span>
+                    <span style={{ fontSize: 12, color: "#6b7280" }}>No image</span>
                   </div>
                 )}
               </div>
@@ -718,10 +722,10 @@ export default function ActivityDetailPage() {
                   style={{
                     fontSize: 11,
                     padding: "4px 10px",
-                    borderRadius: 999,
+                    borderRadius: 6,
                     border: "1px solid rgba(56,189,248,0.5)",
-                    background: "linear-gradient(135deg, rgba(8,47,73,0.9), rgba(12,74,110,0.9))",
-                    color: "#e0f2fe",
+                    background: "#1e3a8a",
+                    color: "#ffffff",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -732,10 +736,10 @@ export default function ActivityDetailPage() {
                   style={{
                     fontSize: 11,
                     padding: "4px 10px",
-                    borderRadius: 999,
+                    borderRadius: 6,
                     border: "1px solid rgba(148,163,184,0.35)",
-                    background: "rgba(2,6,23,0.65)",
-                    color: "#e5e7eb",
+                    background: "#ffffff",
+                    color: "#374151",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -749,8 +753,8 @@ export default function ActivityDetailPage() {
                   borderRadius: 14,
                   padding: 14,
                   border: "1px solid rgba(250,204,21,0.30)",
-                  background: "rgba(120,53,15,0.18)",
-                  color: "#fde68a",
+                  background: "#fffbeb",
+                  color: "#92400e",
                   fontSize: 13,
                   lineHeight: 1.6,
                 }}
@@ -765,7 +769,7 @@ export default function ActivityDetailPage() {
                     style={{
                       fontSize: 12,
                       padding: "10px 12px",
-                      borderRadius: 999,
+                      borderRadius: 6,
                       border: "1px solid rgba(250,204,21,0.45)",
                       background: "linear-gradient(135deg, rgba(120,53,15,0.95), rgba(146,64,14,0.95))",
                       color: "#fef3c7",
@@ -783,12 +787,12 @@ export default function ActivityDetailPage() {
               style={{
                 borderRadius: 18,
                 border: "1px solid rgba(148,163,184,0.28)",
-                background: "radial-gradient(circle at top left, #020617, #020617 45%, #000000 100%)",
+                background: "#ffffff",
                 padding: "14px 14px",
                 display: "flex",
                 flexDirection: "column",
                 gap: 12,
-                boxShadow: "0 22px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.04)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
               }}
             >
               <div
@@ -799,7 +803,7 @@ export default function ActivityDetailPage() {
                   border: "1px solid rgba(148,163,184,0.22)",
                   overflow: "hidden",
                   position: "relative",
-                  background: "rgba(0,0,0,0.28)",
+                  background: "#f8fafc",
                   ...boxStyle,
                 }}
               >
@@ -823,7 +827,7 @@ export default function ActivityDetailPage() {
                       style={{
                         position: "absolute",
                         inset: 0,
-                        background: "linear-gradient(180deg, rgba(2,6,23,0.25), rgba(2,6,23,0.55))",
+                        background: "transparent",
                       }}
                     />
                     <img
@@ -841,7 +845,7 @@ export default function ActivityDetailPage() {
                   </>
                 ) : (
                   <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: 12, color: "#9ca3af" }}>No image</span>
+                    <span style={{ fontSize: 12, color: "#6b7280" }}>No image</span>
                   </div>
                 )}
               </div>
@@ -851,10 +855,10 @@ export default function ActivityDetailPage() {
                   style={{
                     fontSize: 11,
                     padding: "4px 10px",
-                    borderRadius: 999,
+                    borderRadius: 6,
                     border: "1px solid rgba(56,189,248,0.5)",
-                    background: "linear-gradient(135deg, rgba(8,47,73,0.9), rgba(12,74,110,0.9))",
-                    color: "#e0f2fe",
+                    background: "#1e3a8a",
+                    color: "#ffffff",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -865,10 +869,10 @@ export default function ActivityDetailPage() {
                   style={{
                     fontSize: 11,
                     padding: "4px 10px",
-                    borderRadius: 999,
+                    borderRadius: 6,
                     border: "1px solid rgba(148,163,184,0.35)",
-                    background: "rgba(2,6,23,0.65)",
-                    color: "#e5e7eb",
+                    background: "#ffffff",
+                    color: "#374151",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -879,10 +883,10 @@ export default function ActivityDetailPage() {
                   style={{
                     fontSize: 11,
                     padding: "4px 10px",
-                    borderRadius: 999,
+                    borderRadius: 6,
                     border: "1px solid rgba(148,163,184,0.35)",
-                    background: "rgba(2,6,23,0.65)",
-                    color: "#e5e7eb",
+                    background: "#ffffff",
+                    color: "#374151",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -891,7 +895,7 @@ export default function ActivityDetailPage() {
               </div>
 
               <div>
-                <h2 style={{ fontSize: 16, fontWeight: 600, margin: "10px 0 6px 0" }}>Details</h2>
+                <h2 style={{ fontSize: 16, fontWeight: 700, fontFamily: "Montserrat, sans-serif", margin: "10px 0 6px 0" }}>Details</h2>
 
                 <div style={{ padding: 12, ...boxStyle }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -902,8 +906,8 @@ export default function ActivityDetailPage() {
                         { label: "Start date", value: formatDateTime(activity?.start_date ?? null) },
                       ].map((row) => (
                         <div key={row.label}>
-                          <p style={{ margin: 0, fontSize: 12, color: "#60a5fa" }}>{row.label}</p>
-                          <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#9ca3af", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                          <p style={{ margin: 0, fontSize: 12, color: "#1e3a8a" }}>{row.label}</p>
+                          <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#6b7280", fontFamily: "Arial, sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                             {String(row.value || "—")}
                           </p>
                         </div>
@@ -917,8 +921,8 @@ export default function ActivityDetailPage() {
                         { label: "State", value: activity?.state ?? "—" },
                       ].map((row) => (
                         <div key={row.label}>
-                          <p style={{ margin: 0, fontSize: 12, color: "#60a5fa" }}>{row.label}</p>
-                          <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#9ca3af", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                          <p style={{ margin: 0, fontSize: 12, color: "#1e3a8a" }}>{row.label}</p>
+                          <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#6b7280", fontFamily: "Arial, sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                             {String(row.value || "—")}
                           </p>
                         </div>
@@ -930,17 +934,17 @@ export default function ActivityDetailPage() {
 
               {activity?.description ? (
                 <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 600, margin: "10px 0 6px 0" }}>Description</h2>
-                  <p style={{ fontSize: 13, color: "#9ca3af", margin: 0, whiteSpace: "pre-wrap" }}>{activity.description}</p>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, fontFamily: "Montserrat, sans-serif", margin: "10px 0 6px 0" }}>Description</h2>
+                  <p style={{ fontSize: 13, color: "#6b7280", fontFamily: "Arial, sans-serif", margin: 0, whiteSpace: "pre-wrap" }}>{activity.description}</p>
                 </div>
               ) : null}
 
               <div>
-                <h2 style={{ fontSize: 16, fontWeight: 600, margin: "10px 0 6px 0" }}>Attendance</h2>
+                <h2 style={{ fontSize: 16, fontWeight: 700, fontFamily: "Montserrat, sans-serif", margin: "10px 0 6px 0" }}>Attendance</h2>
 
                 <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, ...boxStyle }}>
-                  <p style={{ margin: 0, fontSize: 13, color: "#9ca3af" }}>
-                    Confirmed: <span style={{ color: "#e5e7eb", fontWeight: 900 }}>{confirmedCount}</span>
+                  <p style={{ margin: 0, fontSize: 13, color: "#6b7280", fontFamily: "Arial, sans-serif" }}>
+                    Confirmed: <span style={{ color: "#374151", fontWeight: 900 }}>{confirmedCount}</span>
                   </p>
 
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -951,7 +955,7 @@ export default function ActivityDetailPage() {
                         style={{
                           width: 34,
                           height: 34,
-                          borderRadius: "999px",
+                          borderRadius: "8px",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -969,16 +973,16 @@ export default function ActivityDetailPage() {
                       <div
                         style={{
                           height: 34,
-                          borderRadius: "999px",
+                          borderRadius: "8px",
                           border: "1px dashed rgba(148,163,184,0.35)",
-                          background: "rgba(2,6,23,0.35)",
+                          background: "#f8fafc",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           padding: "0 10px",
                           fontSize: 12,
                           fontWeight: 900,
-                          color: "#94a3b8",
+                          color: "#64748b",
                         }}
                       >
                         +{avatarExtra}
@@ -992,10 +996,10 @@ export default function ActivityDetailPage() {
                     style={{
                       fontSize: 12,
                       padding: "10px 12px",
-                      borderRadius: "999px",
-                      border: isConfirmed ? "1px solid rgba(248,113,113,0.55)" : "1px solid rgba(34,197,94,0.55)",
-                      background: isConfirmed ? "rgba(127,29,29,0.35)" : "rgba(20,83,45,0.35)",
-                      color: isConfirmed ? "#fecaca" : "#bbf7d0",
+                      borderRadius: "8px",
+                      border: isConfirmed ? "1px solid #fecaca" : "1px solid #15803d",
+                      background: isConfirmed ? "#ffffff" : "#16a34a",
+                      color: isConfirmed ? "#b91c1c" : "#ffffff",
                       cursor: confirmBusy ? "not-allowed" : "pointer",
                       fontWeight: 900,
                       opacity: confirmBusy ? 0.75 : 1,
@@ -1007,12 +1011,12 @@ export default function ActivityDetailPage() {
 
                   {isOwner ? (
                     <div style={{ marginTop: 6 }}>
-                      <h3 style={{ fontSize: 13, fontWeight: 900, margin: "6px 0 8px 0", color: "#e5e7eb" }}>
+                      <h3 style={{ fontSize: 13, fontWeight: 700, fontFamily: "Montserrat, sans-serif", margin: "6px 0 8px 0", color: "#374151" }}>
                         Confirmed attendees (creator)
                       </h3>
 
                       {creatorLoading ? (
-                        <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>Loading list...</p>
+                        <p style={{ margin: 0, fontSize: 12, color: "#64748b", fontFamily: "Arial, sans-serif" }}>Loading list...</p>
                       ) : creatorAttendees.length ? (
                         <div style={{ borderRadius: 12, overflow: "hidden", ...boxStyle }}>
                           <div
@@ -1022,7 +1026,7 @@ export default function ActivityDetailPage() {
                               gap: 10,
                               padding: 10,
                               borderBottom: "1px solid rgba(148,163,184,0.18)",
-                              color: "#94a3b8",
+                              color: "#64748b",
                               fontSize: 11,
                               fontWeight: 900,
                               textTransform: "uppercase",
@@ -1044,13 +1048,13 @@ export default function ActivityDetailPage() {
                                 borderBottom: "1px solid rgba(148,163,184,0.12)",
                               }}
                             >
-                              <div style={{ fontSize: 12, color: "#e5e7eb", fontWeight: 800 }}>{fieldValue(r.full_name)}</div>
-                              <div style={{ fontSize: 12, color: "#9ca3af" }}>{fieldValue(r.email)}</div>
+                              <div style={{ fontSize: 12, color: "#374151", fontWeight: 800 }}>{fieldValue(r.full_name)}</div>
+                              <div style={{ fontSize: 12, color: "#6b7280" }}>{fieldValue(r.email)}</div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>No confirmations yet.</p>
+                        <p style={{ margin: 0, fontSize: 12, color: "#64748b", fontFamily: "Arial, sans-serif" }}>No confirmations yet.</p>
                       )}
                     </div>
                   ) : null}
@@ -1058,18 +1062,18 @@ export default function ActivityDetailPage() {
               </div>
 
               <div>
-                <h2 style={{ fontSize: 16, fontWeight: 600, margin: "10px 0 6px 0" }}>Map</h2>
+                <h2 style={{ fontSize: 16, fontWeight: 700, fontFamily: "Montserrat, sans-serif", margin: "10px 0 6px 0" }}>Map</h2>
 
                 {mapUrl ? (
                   <>
-                    <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
-                      Address used on map: <span style={{ color: "#e5e7eb" }}>{fieldValue(addressForMap || null)}</span>
+                    <p style={{ fontSize: 13, color: "#6b7280", fontFamily: "Arial, sans-serif", margin: 0 }}>
+                      Address used on map: <span style={{ color: "#374151" }}>{fieldValue(addressForMap || null)}</span>
                     </p>
 
                     {activity?.lat != null && activity?.lng != null ? (
-                      <p style={{ fontSize: 12, color: "#94a3b8", margin: "6px 0 0 0" }}>
+                      <p style={{ fontSize: 12, color: "#64748b", fontFamily: "Arial, sans-serif", margin: "6px 0 0 0" }}>
                         Lat/Lng:{" "}
-                        <span style={{ color: "#e5e7eb" }}>
+                        <span style={{ color: "#374151" }}>
                           {activity?.lat}, {activity?.lng}
                         </span>
                       </p>
@@ -1080,14 +1084,14 @@ export default function ActivityDetailPage() {
                     </div>
                   </>
                 ) : (
-                  <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
+                  <p style={{ fontSize: 13, color: "#6b7280", fontFamily: "Arial, sans-serif", margin: 0 }}>
                     Not enough address data to show the map. Fill in <b>address_text</b> (or city/state) for this activity.
                   </p>
                 )}
               </div>
 
               <div>
-                <h2 style={{ fontSize: 16, fontWeight: 600, margin: "10px 0 6px 0" }}>Chat</h2>
+                <h2 style={{ fontSize: 16, fontWeight: 700, fontFamily: "Montserrat, sans-serif", margin: "10px 0 6px 0" }}>Chat</h2>
 
                 <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, ...boxStyle }}>
                   {chatError ? <p style={{ margin: 0, fontSize: 12, color: "#fca5a5" }}>{chatError}</p> : null}
@@ -1097,16 +1101,16 @@ export default function ActivityDetailPage() {
                     style={{
                       borderRadius: 12,
                       border: "1px solid rgba(148,163,184,0.18)",
-                      background: "rgba(2,6,23,0.35)",
+                      background: "#f8fafc",
                       padding: 10,
                       maxHeight: 260,
                       overflow: "auto",
                     }}
                   >
                     {chatLoading ? (
-                      <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>Loading messages...</p>
+                      <p style={{ margin: 0, fontSize: 12, color: "#64748b", fontFamily: "Arial, sans-serif" }}>Loading messages...</p>
                     ) : chatMessages.length === 0 ? (
-                      <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>No messages yet. Be the first to say something.</p>
+                      <p style={{ margin: 0, fontSize: 12, color: "#64748b", fontFamily: "Arial, sans-serif" }}>No messages yet. Be the first to say something.</p>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         {chatMessages.map((m) => {
@@ -1121,7 +1125,7 @@ export default function ActivityDetailPage() {
                                 style={{
                                   width: 34,
                                   height: 34,
-                                  borderRadius: "999px",
+                                  borderRadius: "8px",
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -1137,17 +1141,17 @@ export default function ActivityDetailPage() {
 
                               <div style={{ minWidth: 0, flex: "1 1 auto" }}>
                                 <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-                                  <p style={{ margin: 0, fontSize: 12, color: "#e5e7eb", fontWeight: 900 }}>
+                                  <p style={{ margin: 0, fontSize: 12, color: "#374151", fontWeight: 900 }}>
                                     {mine ? "You" : fieldValue(name)}
                                   </p>
-                                  <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{formatTimeOnly(m.created_at)}</p>
+                                  <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>{formatTimeOnly(m.created_at)}</p>
                                 </div>
 
                                 <p
                                   style={{
                                     margin: "4px 0 0 0",
                                     fontSize: 13,
-                                    color: "#cbd5e1",
+                                    color: "#374151",
                                     whiteSpace: "pre-wrap",
                                     wordBreak: "break-word",
                                     lineHeight: 1.35,
@@ -1165,7 +1169,7 @@ export default function ActivityDetailPage() {
 
                   <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
                     <label style={{ flex: "1 1 360px" }}>
-                      <p style={{ margin: 0, fontSize: 12, color: "#60a5fa" }}>Message</p>
+                      <p style={{ margin: 0, fontSize: 12, color: "#1e3a8a" }}>Message</p>
                       <textarea
                         value={chatText}
                         onChange={(e) => setChatText(e.target.value)}
@@ -1176,8 +1180,8 @@ export default function ActivityDetailPage() {
                           padding: "10px 12px",
                           borderRadius: 12,
                           border: "1px solid rgba(148,163,184,0.25)",
-                          background: "#374151",
-                          color: "#ffffff",
+                          background: "#ffffff",
+                          color: "#374151",
                           outline: "none",
                           minHeight: 70,
                           resize: "vertical",
@@ -1193,10 +1197,10 @@ export default function ActivityDetailPage() {
                       style={{
                         fontSize: 12,
                         padding: "10px 12px",
-                        borderRadius: 999,
-                        border: "1px solid rgba(56,189,248,0.55)",
-                        background: "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
-                        color: "#e0f2fe",
+                        borderRadius: 6,
+                        border: "1px solid #1e3a8a",
+                        background: "#1e3a8a",
+                        color: "#ffffff",
                         cursor: chatBusy ? "not-allowed" : "pointer",
                         fontWeight: 900,
                         opacity: chatBusy ? 0.75 : 1,
@@ -1212,10 +1216,10 @@ export default function ActivityDetailPage() {
                       style={{
                         fontSize: 12,
                         padding: "10px 12px",
-                        borderRadius: 999,
+                        borderRadius: 6,
                         border: "1px solid rgba(148,163,184,0.35)",
-                        background: "rgba(2,6,23,0.65)",
-                        color: "#e5e7eb",
+                        background: "#ffffff",
+                        color: "#374151",
                         fontWeight: 800,
                         cursor: chatLoading ? "not-allowed" : "pointer",
                         opacity: chatLoading ? 0.75 : 1,
@@ -1225,7 +1229,7 @@ export default function ActivityDetailPage() {
                     </button>
                   </div>
 
-                  <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>
+                  <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>
                     Tip: Use this chat for quick coordination (parking, what to bring, updates).
                   </p>
                 </div>
@@ -1240,11 +1244,20 @@ export default function ActivityDetailPage() {
         body {
           margin: 0 !important;
           padding: 0 !important;
-          background: #020617 !important;
+          background: #fff !important;
           overflow-x: hidden !important;
         }
       `}</style>
     </>
   );
 }
+
+
+
+
+
+
+
+
+
 

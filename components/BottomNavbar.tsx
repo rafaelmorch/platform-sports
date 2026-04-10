@@ -5,9 +5,8 @@ import { usePathname } from 'next/navigation';
 
 const tabs = [
   { href: '/events', label: 'Events' },
-  { href: '/memberships', label: 'Communities' },
+  { href: '/memberships', label: 'Groups' },
   { href: '/activities', label: 'Group\nActivities' },
-  { href: '/feed', label: 'Feed' },
   { href: '/profile', label: 'Profile' },
 ];
 
@@ -27,8 +26,8 @@ export default function BottomNavbar() {
         right: 0,
         bottom: 0,
         height: 64,
-        background: '#000',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
+        background: '#ffffff',
+        borderTop: '1px solid #e5e7eb', boxShadow: '0 -6px 20px rgba(0,0,0,0.08)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
@@ -44,13 +43,13 @@ export default function BottomNavbar() {
             href={t.href}
             style={{
               textDecoration: 'none',
-              color: active ? '#fff' : 'rgba(255,255,255,0.6)',
+              color: active ? '#1e3a8a' : '#6b7280',
               fontFamily: 'Arial',
               fontSize: 12,
               fontWeight: active ? 700 : 500,
               padding: '6px 8px',
               borderRadius: 12,
-              background: active ? 'rgba(255,255,255,0.10)' : 'transparent',
+              background: active ? 'rgba(30,58,138,0.10)' : 'transparent',
               textAlign: 'center',
               whiteSpace: 'pre-line',
               lineHeight: '14px',
@@ -63,3 +62,5 @@ export default function BottomNavbar() {
     </nav>
   );
 }
+
+
