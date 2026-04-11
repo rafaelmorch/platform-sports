@@ -1560,99 +1560,135 @@ export default function MembershipInsidePage() {
                       key={challenge.id}
                       className="membership-challenge-card"
                       style={{
-  width: isOpen ? undefined : 96,
-  height: isOpen ? undefined : 96,
-  flex: isOpen ? undefined : "0 0 96px",
-  borderRadius: isOpen ? 24 : 999,
-  border: expired ? "1px solid #e5e7eb" : "2px solid #fcd34d",
-  background: expired
-    ? "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)"
-    : "linear-gradient(135deg, #fff7ed 0%, #ffffff 55%, #f8fafc 100%)",
-  padding: isOpen ? 16 : 4,
-  boxShadow: expired
-    ? "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.82)"
-    : "10px 10px 24px rgba(245,158,11,0.10), -6px -6px 20px rgba(255,255,255,0.92)",
-  overflow: "hidden",
-
-  // 👇 ESSA É A CORREÇÃO
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: isOpen ? "flex-start" : "center",
-  alignItems: isOpen ? "stretch" : "center",
-}}
+                        width: isOpen ? 340 : 160,
+                        height: isOpen ? "auto" : 160,
+                        borderRadius: isOpen ? 24 : 999,
+                        border: expired ? "1px solid #e5e7eb" : "1px solid #fcd34d",
+                        background: expired
+                          ? "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)"
+                          : "linear-gradient(135deg, #fff7ed 0%, #ffffff 55%, #f8fafc 100%)",
+                        padding: isOpen ? 16 : 12,
+                        boxShadow: expired
+                          ? "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.82)"
+                          : "10px 10px 24px rgba(245,158,11,0.10), -6px -6px 20px rgba(255,255,255,0.92)",
+                        display: "flex",
+                        alignItems: isOpen ? "stretch" : "center",
+                        justifyContent: isOpen ? "flex-start" : "center",
+                        textAlign: isOpen ? "left" : "center",
+                      }}
                     >
                       <button
                         type="button"
                         onClick={() => toggleChallenge(challenge.id)}
                         style={{
                           width: "100%",
-                          textAlign: "left",
+                          textAlign: isOpen ? "left" : "center",
                           border: "none",
                           background: "transparent",
                           padding: 0,
                           cursor: "pointer",
                         }}
                       >
-                        <div
-  style={{
-    display: isOpen ? "flex" : "block",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 10,
-    marginBottom: isOpen ? 10 : 6,
-    textAlign: isOpen ? "left" : "center",
-  }}
->
-  {isOpen && (
-    <div
-      style={{
-        borderRadius: 999,
-        padding: "6px 10px",
-        background: expired ? "#e2e8f0" : "#fef3c7",
-        color: expired ? "#475569" : "#b45309",
-        border: expired ? "1px solid #cbd5e1" : "1px solid #fcd34d",
-        fontSize: 11,
-        fontWeight: 800,
-        whiteSpace: "nowrap",
-        flexShrink: 0,
-      }}
-    >
-      {expired ? "Expired" : "Active"}
-    </div>
-  )}
-  <div
-    style={{
-      fontSize: isOpen ? 11 : 10,
-      color: "#64748b",
-      fontWeight: 400,
-      whiteSpace: isOpen ? "nowrap" : "normal",
-      flexShrink: 0,
-      lineHeight: 1.2,
-    }}
-  >
-    {formatEndsLabel(challenge.deadline)}
-  </div>
-</div>
-                        <div
-  style={{
-    fontSize: isOpen ? 16 : 11,
-    fontWeight: 800,
-    color: "#0f172a",
-    lineHeight: isOpen ? 1.25 : 1.1,
-    marginBottom: isOpen ? 6 : 0,
-    marginTop: isOpen ? 0 : 1,
-    padding: isOpen ? 0 : "0 6px",
-    display: "-webkit-box",
-    WebkitLineClamp: isOpen ? "unset" : 2,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
-    textAlign: isOpen ? "left" : "center",
-  }}
->
-  {challenge.title}
-</div>
-                        {!isOpen && null}
+                        {isOpen ? (
+                          <>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                justifyContent: "space-between",
+                                gap: 10,
+                                marginBottom: 10,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  borderRadius: 999,
+                                  padding: "6px 10px",
+                                  background: expired ? "#e2e8f0" : "#fef3c7",
+                                  color: expired ? "#475569" : "#b45309",
+                                  border: expired ? "1px solid #cbd5e1" : "1px solid #fcd34d",
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  whiteSpace: "nowrap",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {expired ? "Expired" : "Active"}
+                              </div>
+
+                              <div
+                                style={{
+                                  fontSize: 11,
+                                  color: "#64748b",
+                                  fontWeight: 700,
+                                  whiteSpace: "nowrap",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {formatEndsLabel(challenge.deadline)}
+                              </div>
+                            </div>
+
+                            <div
+                              style={{
+                                fontSize: 16,
+                                fontWeight: 800,
+                                color: "#0f172a",
+                                lineHeight: 1.25,
+                                marginBottom: 10,
+                                display: "-webkit-box",
+                                WebkitLineClamp: "unset",
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                              }}
+                            >
+                              {challenge.title}
+                            </div>
+                          </>
+                        ) : (
+                          <div
+                            style={{
+                              minHeight: 136,
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 8,
+                              padding: "0 8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 800,
+                                color: "#0f172a",
+                                lineHeight: 1.2,
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textAlign: "center",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {challenge.title}
+                            </div>
+
+                            <div
+                              style={{
+                                fontSize: 10,
+                                color: "#64748b",
+                                fontWeight: 700,
+                                lineHeight: 1.2,
+                                textAlign: "center",
+                              }}
+                            >
+                              {formatEndsLabel(challenge.deadline)}
+                            </div>
+                          </div>
+                        )}
                       </button>
+
                       {isOpen && (
                         <div
                           style={{
@@ -1788,8 +1824,7 @@ export default function MembershipInsidePage() {
                       )}
                     </article>
                   );
-                })}
-              </div>
+                })}</div>
             )}
           </div>
 

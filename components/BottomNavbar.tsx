@@ -26,8 +26,8 @@ export default function BottomNavbar() {
         right: 0,
         bottom: 0,
         height: 64,
-        background: '#ffffff',
-        borderTop: '1px solid #e5e7eb', boxShadow: '0 -6px 20px rgba(0,0,0,0.08)',
+        background: pathname === "/login" ? "#000" : "#ffffff",
+        borderTop: pathname === "/login" ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e5e7eb', boxShadow: '0 -6px 20px rgba(0,0,0,0.08)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
@@ -43,7 +43,9 @@ export default function BottomNavbar() {
             href={t.href}
             style={{
               textDecoration: 'none',
-              color: active ? '#1e3a8a' : '#6b7280',
+              color: pathname === "/login"
+  ? active ? '#fff' : 'rgba(255,255,255,0.6)'
+  : active ? '#1e3a8a' : '#6b7280',
               fontFamily: 'Arial',
               fontSize: 12,
               fontWeight: active ? 700 : 500,

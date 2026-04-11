@@ -217,8 +217,9 @@ export default function LoginPage() {
       </main>
 
       <div style={{ position: "fixed", left: 0, right: 0, bottom: 0 }}>
-        <BottomNavbar />
+        <div style={{ background: "#000" }}><BottomNavbar /></div>
       </div>
     </>
   );
 }
+

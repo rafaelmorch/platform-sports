@@ -292,65 +292,7 @@ export default function MembershipChatPage() {
             </h1>
           </div>
 
-          {communityId && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 36,
-                borderBottom: "1px solid #dbe3ea",
-                marginBottom: 14,
-                overflowX: "auto",
-                paddingBottom: 2,
-              }}
-            >
-              <Link
-                href={`/memberships/${communityId}/inside`}
-                style={{
-                  textDecoration: "none",
-                  color: "#64748b",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  padding: "10px 0 12px 0",
-                  borderBottom: "3px solid transparent",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Home
-              </Link>
-
-              <Link
-                href={`/memberships/${communityId}/inside/chat`}
-                style={{
-                  textDecoration: "none",
-                  color: "#0f172a",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  padding: "10px 0 12px 0",
-                  borderBottom: "3px solid #facc15",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Chat
-              </Link>
-
-              <Link
-                href={`/memberships/${communityId}/inside/events`}
-                style={{
-                  textDecoration: "none",
-                  color: "#64748b",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  padding: "10px 0 12px 0",
-                  borderBottom: "3px solid transparent",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Events
-              </Link>
-            </div>
-          )}
+          
 
           <div
             style={{
@@ -483,3 +425,4 @@ export default function MembershipChatPage() {
     </>
   );
 }
+

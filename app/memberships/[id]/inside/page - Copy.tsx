@@ -1,4 +1,3 @@
-// app/memberships/[id]/inside/page.tsx
 "use client";
 
 import "@fontsource/montserrat/400.css";
@@ -68,6 +67,9 @@ type CheckinRow = {
   points: number;
   created_at: string;
   challenge_id?: string | null;
+  is_disregarded: boolean;
+  disregarded_at: string | null;
+  disregarded_by: string | null;
 };
 
 type RankingRow = {
@@ -98,6 +100,12 @@ type ChallengeRow = {
   points_late: number;
   is_active: boolean;
   created_at: string;
+};
+
+type ProfileMini = {
+  id: string;
+  full_name: string | null;
+  is_admin?: boolean | null;
 };
 
 function getTypeLabel(type: string | null): string {
@@ -155,38 +163,6 @@ function getTypeBadgeStyle(type: string | null): React.CSSProperties {
         color: "#334155",
         border: "1px solid #cbd5e1",
       };
-  }
-}
-
-function getVideoEmbedUrl(url: string | null): string | null {
-  if (!url) return null;
-
-  try {
-    if (url.includes("youtube.com/embed/")) return url;
-
-    const parsed = new URL(url);
-
-    if (parsed.hostname.includes("youtu.be")) {
-      const id = parsed.pathname.replace("/", "").trim();
-      if (!id) return null;
-      return `https://www.youtube.com/embed/${id}`;
-    }
-
-    if (parsed.hostname.includes("youtube.com")) {
-      const v = parsed.searchParams.get("v");
-      if (!v) return null;
-      return `https://www.youtube.com/embed/${v}`;
-    }
-
-    if (parsed.hostname.includes("vimeo.com")) {
-      const id = parsed.pathname.split("/").filter(Boolean).pop();
-      if (!id) return null;
-      return `https://player.vimeo.com/video/${id}`;
-    }
-
-    return null;
-  } catch {
-    return null;
   }
 }
 
@@ -325,6 +301,19 @@ function sortChallenges(rows: ChallengeRow[]): ChallengeRow[] {
   });
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function getHighlightPreview(item: HighlightRow): string {
+  const rich = item.content_rich?.html ? stripHtml(item.content_rich.html) : "";
+  const plain = item.content?.trim() || "";
+  const base = rich || plain;
+
+  if (!base) return "Open to view details.";
+  return base.length > 120 ? `${base.slice(0, 120).trim()}...` : base;
+}
+
 export default function MembershipInsidePage() {
   const supabase = useMemo(() => supabaseBrowser, []);
   const params = useParams();
@@ -336,6 +325,8 @@ export default function MembershipInsidePage() {
   const [communityId, setCommunityId] = useState<string | null>(null);
   const [communityName, setCommunityName] = useState<string | null>(null);
   const [canManageHighlights, setCanManageHighlights] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [hasVideos, setHasVideos] = useState(false);
 
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
@@ -361,6 +352,7 @@ export default function MembershipInsidePage() {
   const [recentCheckins, setRecentCheckins] = useState<CheckinRow[]>([]);
   const [checkinTotalCount, setCheckinTotalCount] = useState(0);
   const [openCheckinImages, setOpenCheckinImages] = useState<Set<string>>(new Set());
+  const [checkinActionId, setCheckinActionId] = useState<string | null>(null);
 
   const [rankingLoading, setRankingLoading] = useState(true);
   const [rankingRows, setRankingRows] = useState<RankingRow[]>([]);
@@ -378,6 +370,23 @@ export default function MembershipInsidePage() {
     borderTop: "1px solid rgba(226,232,240,0.9)",
     paddingTop: 24,
   };
+
+  async function loadVideosFlag(targetCommunityId: string) {
+    const { data, error } = await supabase
+      .from("app_membership_videos")
+      .select("id")
+      .eq("community_id", targetCommunityId)
+      .eq("is_published", true)
+      .limit(1);
+
+    if (error) {
+      console.error("Error loading membership videos flag:", error);
+      setHasVideos(false);
+      return;
+    }
+
+    setHasVideos(Boolean(data && data.length > 0));
+  }
 
   async function loadFeed(targetCommunityId: string, currentUserId: string | null) {
     setFeedLoading(true);
@@ -454,7 +463,7 @@ export default function MembershipInsidePage() {
     setFeedLoading(false);
   }
 
-  async function loadCheckins(targetCommunityId: string) {
+  async function loadCheckins(targetCommunityId: string, currentUserId: string | null, canManageCommunity: boolean) {
     setCheckinsLoading(true);
 
     const { data, error } = await supabase
@@ -472,46 +481,99 @@ export default function MembershipInsidePage() {
     }
 
     const rows = (data as CheckinRow[]) ?? [];
-    setRecentCheckins(rows.slice(0, 5));
-    setCheckinTotalCount(rows.length);
+
+    const visibleRows = rows.filter((row) => {
+      if (!row.is_disregarded) return true;
+      if (canManageCommunity) return true;
+      if (currentUserId && row.user_id === currentUserId) return true;
+      return false;
+    });
+
+    const publicRows = rows.filter((row) => !row.is_disregarded);
+
+    setRecentCheckins(visibleRows.slice(0, 5));
+    setCheckinTotalCount(canManageCommunity ? visibleRows.length : publicRows.length);
     setCheckinsLoading(false);
   }
 
-  async function loadRanking(targetCommunityId: string, currentUserId: string | null) {
+  async function loadRanking(targetCommunityId: string, creatorId: string | null, currentUserId: string | null) {
     setRankingLoading(true);
 
-    const { data, error } = await supabase
-      .from("app_membership_checkins")
-      .select("user_id, author_name, points, created_at")
-      .eq("community_id", targetCommunityId);
+    const [{ data: memberRequests, error: membersError }, { data: checkinData, error: checkinError }] =
+      await Promise.all([
+        supabase
+          .from("app_membership_requests")
+          .select("user_id")
+          .eq("community_id", targetCommunityId)
+          .eq("status", "approved"),
+        supabase
+          .from("app_membership_checkins")
+          .select("user_id, author_name, points, created_at, is_disregarded")
+          .eq("community_id", targetCommunityId),
+      ]);
 
-    if (error || !data) {
-      console.error("Error loading membership ranking:", error);
+    if (membersError || checkinError) {
+      console.error("Error loading membership ranking:", membersError || checkinError);
       setRankingRows([]);
       setMyStreak(0);
       setRankingLoading(false);
       return;
     }
 
-    const rows = data as Array<{
+    const approvedUserIds = Array.from(
+      new Set(
+        ((memberRequests as Array<{ user_id: string }> | null) ?? []).map((row) => row.user_id).filter(Boolean)
+      )
+    );
+
+    if (creatorId && !approvedUserIds.includes(creatorId)) {
+      approvedUserIds.unshift(creatorId);
+    }
+
+    const { data: memberProfiles } =
+      approvedUserIds.length > 0
+        ? await supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", approvedUserIds)
+        : { data: [] as ProfileMini[] };
+
+    const profileNameMap = new Map<string, string>();
+    ((memberProfiles as ProfileMini[]) ?? []).forEach((profile) => {
+      profileNameMap.set(profile.id, getDisplayName(profile.full_name));
+    });
+
+    const activeCheckins = ((checkinData as Array<{
       user_id: string;
       author_name: string | null;
       points: number;
       created_at: string;
-    }>;
+      is_disregarded: boolean;
+    }>) ?? []).filter((row) => !row.is_disregarded);
 
     const grouped = new Map<
       string,
       RankingRow & { rawRows: Array<{ created_at: string }> }
     >();
 
-    rows.forEach((row) => {
+    approvedUserIds.forEach((memberId) => {
+      grouped.set(memberId, {
+        user_id: memberId,
+        author_name: profileNameMap.get(memberId) ?? "Athlete",
+        total_points: 0,
+        total_checkins: 0,
+        streak: 0,
+        rawRows: [],
+      });
+    });
+
+    activeCheckins.forEach((row) => {
       const existing = grouped.get(row.user_id);
 
       if (!existing) {
         grouped.set(row.user_id, {
           user_id: row.user_id,
-          author_name: getDisplayName(row.author_name),
+          author_name: getDisplayName(row.author_name) || profileNameMap.get(row.user_id) || "Athlete",
           total_points: row.points ?? 0,
           total_checkins: 1,
           streak: 0,
@@ -524,8 +586,9 @@ export default function MembershipInsidePage() {
       existing.total_checkins += 1;
       existing.rawRows.push({ created_at: row.created_at });
 
-      if (existing.author_name === "Athlete" && getDisplayName(row.author_name) !== "Athlete") {
-        existing.author_name = getDisplayName(row.author_name);
+      const bestName = profileNameMap.get(row.user_id) ?? getDisplayName(row.author_name);
+      if (bestName && bestName !== "Athlete") {
+        existing.author_name = bestName;
       }
     });
 
@@ -556,7 +619,7 @@ export default function MembershipInsidePage() {
 
     const { data, error } = await supabase
       .from("app_membership_checkins")
-      .select("user_id, author_name, points, created_at")
+      .select("user_id, author_name, points, created_at, is_disregarded")
       .eq("community_id", targetCommunityId);
 
     if (error || !data) {
@@ -571,7 +634,10 @@ export default function MembershipInsidePage() {
       author_name: string | null;
       points: number;
       created_at: string;
-    }>).filter((row) => isCurrentMonth(row.created_at));
+      is_disregarded: boolean;
+    }>)
+      .filter((row) => !row.is_disregarded)
+      .filter((row) => isCurrentMonth(row.created_at));
 
     if (monthRows.length === 0) {
       setLeaderRow(null);
@@ -633,6 +699,50 @@ export default function MembershipInsidePage() {
     setChallengesLoading(false);
   }
 
+  async function handleDisregardToggle(checkinId: string, shouldRestore: boolean) {
+    if (!communityId || !userId || !canManageHighlights) return;
+
+    setCheckinActionId(checkinId);
+
+    const payload = shouldRestore
+      ? {
+          is_disregarded: false,
+          disregarded_at: null,
+          disregarded_by: null,
+        }
+      : {
+          is_disregarded: true,
+          disregarded_at: new Date().toISOString(),
+          disregarded_by: userId,
+        };
+
+    const { error } = await supabase
+      .from("app_membership_checkins")
+      .update(payload)
+      .eq("id", checkinId)
+      .eq("community_id", communityId);
+
+    if (error) {
+      console.error("Error updating check-in disregard:", error);
+      setCheckinActionId(null);
+      return;
+    }
+
+    const { data: community } = await supabase
+      .from("app_membership_communities")
+      .select("created_by")
+      .eq("id", communityId)
+      .maybeSingle();
+
+    await Promise.all([
+      loadCheckins(communityId, userId, canManageHighlights),
+      loadRanking(communityId, community?.created_by ?? null, userId),
+      loadLeaderOfMonth(communityId),
+    ]);
+
+    setCheckinActionId(null);
+  }
+
   useEffect(() => {
     async function checkAccessAndLoad() {
       const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
@@ -655,11 +765,12 @@ export default function MembershipInsidePage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, is_admin")
         .eq("id", user.id)
         .maybeSingle();
 
       setUserName(profile?.full_name || null);
+      setIsAdmin(profile?.is_admin === true);
 
       const { data: community } = await supabase
         .from("app_membership_communities")
@@ -674,8 +785,9 @@ export default function MembershipInsidePage() {
 
       const typedCommunity = community as CommunityRow;
       const isCreator = typedCommunity.created_by === user.id;
+      const canManageCommunity = profile?.is_admin === true || isCreator;
 
-      if (!isCreator) {
+      if (!isCreator && profile?.is_admin !== true) {
         const { data: request } = await supabase
           .from("app_membership_requests")
           .select("status")
@@ -714,15 +826,16 @@ export default function MembershipInsidePage() {
 
       setCommunityId(id);
       setCommunityName(typedCommunity.name || null);
-      setCanManageHighlights(isCreator);
+      setCanManageHighlights(canManageCommunity);
       setHighlights(visibleHighlights);
 
       await Promise.all([
         loadFeed(id, user.id),
-        loadCheckins(id),
-        loadRanking(id, user.id),
+        loadCheckins(id, user.id, canManageCommunity),
+        loadRanking(id, typedCommunity.created_by ?? null, user.id),
         loadLeaderOfMonth(id),
         loadChallenges(id),
+        loadVideosFlag(id),
       ]);
 
       setAllowed(true);
@@ -1035,8 +1148,7 @@ export default function MembershipInsidePage() {
   if (loading) return null;
   if (!allowed) return null;
 
-  const topThree = rankingRows.slice(0, 3);
-  const restRanking = rankingRows.slice(3);
+  const orderedRanking = rankingRows;
 
   return (
     <>
@@ -1261,7 +1373,7 @@ export default function MembershipInsidePage() {
               justifyContent: "space-between",
               alignItems: "center",
               gap: 12,
-              marginBottom: 20,
+              marginBottom: 12,
             }}
           >
             <h1
@@ -1276,24 +1388,122 @@ export default function MembershipInsidePage() {
               {communityName}
             </h1>
 
-            {canManageHighlights && communityId && (
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {canManageHighlights && communityId && (
+                <Link
+                  href={`/memberships/${communityId}/inside/challenges/new`}
+                  style={{
+                    textDecoration: "none",
+                    borderRadius: 999,
+                    padding: "10px 16px",
+                    background: "#f8fafc",
+                    color: "#0f172a",
+                    border: "1px solid #cbd5e1",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  New Challenge
+                </Link>
+              )}
+
+              {canManageHighlights && communityId && (
+                <Link
+                  href={`/memberships/${communityId}/inside/highlights/new`}
+                  style={{
+                    textDecoration: "none",
+                    borderRadius: 999,
+                    padding: "10px 16px",
+                    background: "#0f172a",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  New Highlight
+                </Link>
+              )}
+            </div>
+          </div>
+
+          {communityId && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 36,
+                borderBottom: "1px solid #e2e8f0",
+                marginBottom: 22,
+                overflowX: "auto",
+                paddingBottom: 2,
+              }}
+            >
               <Link
-                href={`/memberships/${communityId}/inside/highlights/new`}
+                href={`/memberships/${communityId}/inside`}
                 style={{
                   textDecoration: "none",
-                  borderRadius: 999,
-                  padding: "10px 16px",
-                  background: "#0f172a",
-                  color: "#fff",
+                  color: "#0f172a",
+                  fontSize: 14,
                   fontWeight: 700,
-                  fontSize: 13,
+                  padding: "10px 0 12px 0",
+                  borderBottom: "3px solid #facc15",
                   whiteSpace: "nowrap",
                 }}
               >
-                New Highlight
+                Home
               </Link>
-            )}
-          </div>
+
+              <Link
+                href={`/memberships/${communityId}/inside/chat`}
+                style={{
+                  textDecoration: "none",
+                  color: "#64748b",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  padding: "10px 0 12px 0",
+                  borderBottom: "3px solid transparent",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Chat
+              </Link>
+
+              <Link
+                href={`/memberships/${communityId}/inside/events`}
+                style={{
+                  textDecoration: "none",
+                  color: "#64748b",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  padding: "10px 0 12px 0",
+                  borderBottom: "3px solid transparent",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Events
+              </Link>
+
+              {hasVideos && (
+                <Link
+                  href={`/memberships/${communityId}/inside/videos`}
+                  style={{
+                    textDecoration: "none",
+                    color: "#64748b",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    padding: "10px 0 12px 0",
+                    borderBottom: "3px solid transparent",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Videos
+                </Link>
+              )}
+            </div>
+          )}
 
           <div style={{ marginBottom: 28 }}>
             <div
@@ -1645,185 +1855,99 @@ export default function MembershipInsidePage() {
                 No active highlights right now.
               </div>
             ) : (
-              <div style={{ display: "grid", gap: 16 }}>
-                {highlights.map((item) => {
-                  const embedUrl = getVideoEmbedUrl(item.video_url);
-
-                  return (
-                    <article
-                      key={item.id}
+              <div style={{ borderTop: "1px solid #e2e8f0" }}>
+                {highlights.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/memberships/${communityId}/inside/highlights/${item.id}`}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "92px minmax(0, 1fr)",
+                      gap: 14,
+                      alignItems: "center",
+                      padding: "14px 0",
+                      textDecoration: "none",
+                      color: "inherit",
+                      borderBottom: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <div
                       style={{
-                        borderRadius: 22,
-                        padding: "clamp(16px, 3vw, 20px)",
-                        background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                        border: "1px solid #e2e8f0",
-                        boxShadow:
-                          "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+                        width: 92,
+                        height: 68,
+                        borderRadius: 0,
+                        overflow: "hidden",
+                        background: "#eef2f7",
+                        border: "1px solid #dbe2ea",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
                       }}
                     >
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.title}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "#64748b",
+                            fontWeight: 700,
+                            textAlign: "center",
+                            padding: 6,
+                          }}
+                        >
+                          Highlight
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ minWidth: 0 }}>
                       <div
                         style={{
                           display: "flex",
-                          flexWrap: "wrap",
                           alignItems: "center",
-                          gap: 10,
-                          marginBottom: 12,
+                          gap: 8,
+                          flexWrap: "wrap",
+                          marginBottom: 6,
                         }}
-                      >
-                        <div
-                          style={{
-                            ...getTypeBadgeStyle(item.type),
-                            borderRadius: 999,
-                            padding: "6px 10px",
-                            fontSize: 11,
-                            fontWeight: 700,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {getTypeLabel(item.type)}
-                        </div>
+                      ></div>
 
-                        {item.expires_at && (
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: "#64748b",
-                            }}
-                          >
-                            Visible until {new Date(item.expires_at).toLocaleString()}
-                          </div>
-                        )}
-                      </div>
-
-                      <h3
+                      <div
                         style={{
-                          fontSize: "clamp(18px, 3vw, 22px)",
-                          fontWeight: 800,
-                          color: "#0f172a",
-                          margin: "0 0 14px 0",
-                          lineHeight: 1.2,
+                          fontSize: 15, fontWeight: 700, color: "#94a3b8", lineHeight: 1.25, marginBottom: 4, textTransform: "uppercase",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
                       >
                         {item.title}
-                      </h3>
-
-                      {item.image_url && (
-                        <div
-                          style={{
-                            width: "100%",
-                            borderRadius: 18,
-                            overflow: "hidden",
-                            marginBottom: 16,
-                            border: "1px solid #dbe2ea",
-                            background: "#f1f5f9",
-                          }}
-                        >
-                          <img
-                            src={item.image_url}
-                            alt={item.title}
-                            style={{
-                              width: "100%",
-                              maxHeight: 420,
-                              objectFit: "cover",
-                              display: "block",
-                            }}
-                          />
-                        </div>
-                      )}
+                      </div>
 
                       <div
-                        className="highlight-rich-content"
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            item.content_rich?.html ||
-                            (item.content ? `<p>${item.content}</p>` : "<p></p>"),
+                        style={{
+                          fontSize: 15, color: "#000000", lineHeight: 1.45,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          wordBreak: "break-word",
                         }}
-                      />
-
-                      {embedUrl && (
-                        <div
-                          style={{
-                            marginTop: 16,
-                            borderRadius: 18,
-                            overflow: "hidden",
-                            background: "#e2e8f0",
-                            border: "1px solid #cbd5e1",
-                          }}
-                        >
-                          <div
-                            style={{
-                              position: "relative",
-                              width: "100%",
-                              paddingTop: "56.25%",
-                            }}
-                          >
-                            <iframe
-                              src={embedUrl}
-                              title={item.title}
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                              style={{
-                                position: "absolute",
-                                inset: 0,
-                                width: "100%",
-                                height: "100%",
-                                border: 0,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {!embedUrl && item.video_url && (
-                        <div style={{ marginTop: 16 }}>
-                          <a
-                            href={item.video_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              textDecoration: "none",
-                              borderRadius: 999,
-                              padding: "10px 14px",
-                              background: "#1d4ed8",
-                              color: "#fff",
-                              fontSize: 13,
-                              fontWeight: 700,
-                            }}
-                          >
-                            Open video
-                          </a>
-                        </div>
-                      )}
-
-                      {item.link_url && (
-                        <div style={{ marginTop: 16 }}>
-                          <a
-                            href={item.link_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              textDecoration: "none",
-                              borderRadius: 999,
-                              padding: "10px 14px",
-                              background: "#0f172a",
-                              color: "#fff",
-                              fontSize: 13,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {item.link_label || "Open link"}
-                          </a>
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
+                      >
+                        {getHighlightPreview(item)}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
             )}
           </div>
@@ -2065,7 +2189,7 @@ export default function MembershipInsidePage() {
                                 maxHeight: 360,
                                 objectFit: "contain",
                                 display: "block",
-                                borderRadius: 12,
+                                borderRadius: 0,
                               }}
                             />
                           </div>
@@ -2530,7 +2654,7 @@ export default function MembershipInsidePage() {
                 {checkinTotalCount}
               </div>
               <div style={{ fontSize: 13, color: "#64748b" }}>
-                Total check-ins registered by this membership.
+                Total visible check-ins registered by this membership.
               </div>
             </div>
           </div>
@@ -2558,7 +2682,7 @@ export default function MembershipInsidePage() {
                   Check-in
                 </h2>
                 <div style={{ color: "#64748b", fontSize: 13 }}>
-                  Register your activity and earn 10 points for the ranking.
+                  Register your activity and earn points for the ranking.
                 </div>
               </div>
 
@@ -2646,7 +2770,7 @@ export default function MembershipInsidePage() {
                       fontWeight: 700,
                     }}
                   >
-                    {checkinTotalCount} total check-in{checkinTotalCount === 1 ? "" : "s"}
+                    {checkinTotalCount} visible check-in{checkinTotalCount === 1 ? "" : "s"}
                   </div>
 
                   <div
@@ -2660,7 +2784,7 @@ export default function MembershipInsidePage() {
                       fontWeight: 700,
                     }}
                   >
-                    +10 points each
+                    Ranking ignores disregarded entries
                   </div>
                 </div>
 
@@ -2670,6 +2794,7 @@ export default function MembershipInsidePage() {
                       const authorLabel = getDisplayName(item.author_name);
                       const isImageOpen = openCheckinImages.has(item.id);
                       const isChallengeCheckin = Boolean(item.challenge_id);
+                      const isMine = item.user_id === userId;
 
                       return (
                         <article
@@ -2677,8 +2802,10 @@ export default function MembershipInsidePage() {
                           style={{
                             borderRadius: 20,
                             padding: 14,
-                            background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                            border: "1px solid #e2e8f0",
+                            background: item.is_disregarded
+                              ? "linear-gradient(180deg, #fff7ed 0%, #ffffff 100%)"
+                              : "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                            border: item.is_disregarded ? "1px solid #fdba74" : "1px solid #e2e8f0",
                             boxShadow:
                               "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
                           }}
@@ -2788,26 +2915,23 @@ export default function MembershipInsidePage() {
                                 style={{
                                   borderRadius: 999,
                                   padding: "6px 10px",
-                                  background: "#fef3c7",
-                                  color: "#b45309",
-                                  border: "1px solid #fcd34d",
+                                  background: item.is_disregarded ? "#fee2e2" : "#fef3c7",
+                                  color: item.is_disregarded ? "#b91c1c" : "#b45309",
+                                  border: item.is_disregarded ? "1px solid #fca5a5" : "1px solid #fcd34d",
                                   fontSize: 11,
                                   fontWeight: 700,
                                   whiteSpace: "nowrap",
                                 }}
                               >
-                                +{item.points} pts
+                                {item.is_disregarded ? "Disregarded" : `+${item.points} pts`}
                               </div>
                             </div>
                           </div>
 
                           <div
                             style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: 10,
-                              flexWrap: "wrap",
+                              display: "grid",
+                              gap: 8,
                             }}
                           >
                             <div
@@ -2817,28 +2941,86 @@ export default function MembershipInsidePage() {
                                 lineHeight: 1.5,
                               }}
                             >
-                              {isChallengeCheckin
+                              {item.comment?.trim()
+                                ? item.comment
+                                : isChallengeCheckin
                                 ? "Challenge proof submitted."
                                 : "Workout proof submitted."}
                             </div>
 
-                            {item.image_url && (
-                              <button
-                                type="button"
-                                onClick={() => toggleCheckinImage(item.id)}
+                            {item.is_disregarded && (
+                              <div
                                 style={{
-                                  border: "none",
-                                  background: "transparent",
-                                  color: "#2563eb",
+                                  borderRadius: 14,
+                                  padding: "10px 12px",
+                                  background: "#fff7ed",
+                                  border: "1px solid #fdba74",
+                                  color: "#9a3412",
                                   fontSize: 12,
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  padding: 0,
+                                  lineHeight: 1.55,
                                 }}
                               >
-                                {isImageOpen ? "Hide photo" : "View photo"}
-                              </button>
+                                {isMine
+                                  ? "This check-in was disregarded by an admin and is hidden from other members."
+                                  : "This check-in is currently disregarded and hidden from regular members."}
+                              </div>
                             )}
+
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 10,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              {item.image_url ? (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleCheckinImage(item.id)}
+                                  style={{
+                                    border: "none",
+                                    background: "transparent",
+                                    color: "#2563eb",
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                    padding: 0,
+                                  }}
+                                >
+                                  {isImageOpen ? "Hide photo" : "View photo"}
+                                </button>
+                              ) : (
+                                <span style={{ fontSize: 12, color: "#64748b" }}>No photo attached</span>
+                              )}
+
+                              {canManageHighlights && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDisregardToggle(item.id, item.is_disregarded)}
+                                  disabled={checkinActionId === item.id}
+                                  style={{
+                                    border: item.is_disregarded ? "1px solid #86efac" : "1px solid #fdba74",
+                                    background: item.is_disregarded ? "#f0fdf4" : "#fff7ed",
+                                    color: item.is_disregarded ? "#166534" : "#9a3412",
+                                    borderRadius: 999,
+                                    padding: "8px 12px",
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                    whiteSpace: "nowrap",
+                                    opacity: checkinActionId === item.id ? 0.7 : 1,
+                                  }}
+                                >
+                                  {checkinActionId === item.id
+                                    ? "Saving..."
+                                    : item.is_disregarded
+                                    ? "Add again"
+                                    : "Disregard"}
+                                </button>
+                              )}
+                            </div>
                           </div>
 
                           {isImageOpen && item.image_url && (
@@ -2863,7 +3045,7 @@ export default function MembershipInsidePage() {
                                   maxHeight: 300,
                                   objectFit: "contain",
                                   display: "block",
-                                  borderRadius: 12,
+                                  borderRadius: 0,
                                 }}
                               />
                             </div>
@@ -2900,7 +3082,7 @@ export default function MembershipInsidePage() {
                   Ranking
                 </h2>
                 <div style={{ color: "#64748b", fontSize: 13 }}>
-                  Community points based on completed check-ins.
+                  Community points based on completed visible check-ins.
                 </div>
               </div>
             </div>
@@ -2922,250 +3104,113 @@ export default function MembershipInsidePage() {
                 No ranking yet. Check-ins will appear here as soon as members start posting.
               </div>
             ) : (
-              <>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: 12,
-                    marginBottom: 14,
-                  }}
-                >
-                  {topThree.map((row, index) => {
-                    const authorLabel = getDisplayName(row.author_name);
-                    const isFirst = index === 0;
+              <div
+                style={{
+                  borderRadius: 22,
+                  overflow: "hidden",
+                  border: "1px solid #e2e8f0",
+                  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                  boxShadow:
+                    "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+                }}
+              >
+                {orderedRanking.map((row, index) => {
+                  const authorLabel = getDisplayName(row.author_name);
+                  const isTopThree = index < 3;
+                  const rankLabel = index === 0 ? "🥇 #1" : index === 1 ? "🥈 #2" : index === 2 ? "🥉 #3" : `#${index + 1}`;
 
-                    return (
-                      <article
-                        key={row.user_id}
+                  return (
+                    <div
+                      key={row.user_id}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "64px minmax(0, 1fr) auto",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "12px 14px",
+                        borderBottom:
+                          index === orderedRanking.length - 1 ? "none" : "1px solid #eef2f7",
+                        background: isTopThree
+                          ? "linear-gradient(90deg, rgba(254,243,199,0.55) 0%, rgba(255,255,255,0) 100%)"
+                          : "transparent",
+                      }}
+                    >
+                      <div
                         style={{
-                          borderRadius: 24,
-                          padding: isFirst ? "18px 18px 20px 18px" : "16px",
-                          background: isFirst
-                            ? "linear-gradient(135deg, #fef3c7 0%, #fff7ed 50%, #ffffff 100%)"
-                            : "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                          border: isFirst ? "1px solid #fcd34d" : "1px solid #e2e8f0",
-                          boxShadow: isFirst
-                            ? "10px 10px 24px rgba(245,158,11,0.12), -6px -6px 20px rgba(255,255,255,0.92)"
-                            : "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+                          fontSize: 13,
+                          fontWeight: 800,
+                          color: isTopThree ? "#b45309" : "#64748b",
+                          textAlign: "center",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {rankLabel}
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          minWidth: 0,
                         }}
                       >
                         <div
                           style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 999,
+                            background: getAvatarBackground(authorLabel),
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 10,
-                            marginBottom: 14,
-                          }}
-                        >
-                          <div
-                            style={{
-                              borderRadius: 999,
-                              padding: "6px 10px",
-                              background: isFirst ? "#ffffff" : "#e2e8f0",
-                              border: isFirst ? "1px solid #fcd34d" : "1px solid #cbd5e1",
-                              color: isFirst ? "#b45309" : "#334155",
-                              fontSize: 12,
-                              fontWeight: 800,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {index === 0 ? "🥇 #1" : index === 1 ? "🥈 #2" : "🥉 #3"}
-                          </div>
-
-                          <div
-                            style={{
-                              borderRadius: 999,
-                              padding: "6px 10px",
-                              background: "#dcfce7",
-                              border: "1px solid #86efac",
-                              color: "#166534",
-                              fontSize: 12,
-                              fontWeight: 800,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {row.total_points} pts
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                            marginBottom: 12,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: isFirst ? 56 : 48,
-                              height: isFirst ? 56 : 48,
-                              borderRadius: 999,
-                              background: getAvatarBackground(authorLabel),
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: isFirst ? 18 : 15,
-                              fontWeight: 800,
-                              color: "#f8fafc",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {getInitials(authorLabel)}
-                          </div>
-
-                          <div style={{ minWidth: 0 }}>
-                            <div
-                              style={{
-                                fontSize: isFirst ? 18 : 15,
-                                fontWeight: 800,
-                                color: "#0f172a",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                              }}
-                            >
-                              {authorLabel}
-                            </div>
-
-                            <div style={{ fontSize: 12, color: "#64748b" }}>
-                              {row.total_checkins} check-in{row.total_checkins === 1 ? "" : "s"}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            borderRadius: 16,
-                            padding: "10px 12px",
-                            background: "#ffffff",
-                            border: "1px solid #e2e8f0",
-                            color: "#0f172a",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            gap: 10,
-                            fontSize: 13,
+                            justifyContent: "center",
+                            fontSize: 12,
                             fontWeight: 700,
+                            color: "#f8fafc",
+                            flexShrink: 0,
                           }}
                         >
-                          <span>🔥 Streak</span>
-                          <span>{row.streak} day{row.streak === 1 ? "" : "s"}</span>
+                          {getInitials(authorLabel)}
                         </div>
-                      </article>
-                    );
-                  })}
-                </div>
 
-                {restRanking.length > 0 && (
-                  <div style={{ display: "grid", gap: 10 }}>
-                    {restRanking.map((row, index) => {
-                      const authorLabel = getDisplayName(row.author_name);
-
-                      return (
-                        <article
-                          key={row.user_id}
-                          style={{
-                            borderRadius: 20,
-                            padding: 14,
-                            background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                            border: "1px solid #e2e8f0",
-                            boxShadow:
-                              "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 12,
-                            flexWrap: "wrap",
-                          }}
-                        >
+                        <div style={{ minWidth: 0 }}>
                           <div
                             style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 12,
-                              minWidth: 0,
-                              flex: 1,
-                            }}
-                          >
-                            <div
-                              style={{
-                                minWidth: 38,
-                                height: 38,
-                                borderRadius: 999,
-                                background: "#e2e8f0",
-                                color: "#334155",
-                                border: "1px solid #cbd5e1",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: 13,
-                                fontWeight: 800,
-                                flexShrink: 0,
-                              }}
-                            >
-                              #{index + 4}
-                            </div>
-
-                            <div
-                              style={{
-                                width: 42,
-                                height: 42,
-                                borderRadius: 999,
-                                background: getAvatarBackground(authorLabel),
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: 14,
-                                fontWeight: 700,
-                                color: "#f8fafc",
-                                flexShrink: 0,
-                              }}
-                            >
-                              {getInitials(authorLabel)}
-                            </div>
-
-                            <div style={{ minWidth: 0 }}>
-                              <div
-                                style={{
-                                  fontSize: 14,
-                                  fontWeight: 700,
-                                  color: "#0f172a",
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                }}
-                              >
-                                {authorLabel}
-                              </div>
-
-                              <div style={{ fontSize: 12, color: "#64748b" }}>
-                                {row.total_checkins} check-in{row.total_checkins === 1 ? "" : "s"} • 🔥 {row.streak}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div
-                            style={{
-                              borderRadius: 999,
-                              padding: "8px 12px",
-                              background: "#dcfce7",
-                              color: "#166534",
-                              border: "1px solid #86efac",
-                              fontSize: 12,
-                              fontWeight: 800,
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: "#0f172a",
                               whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
                             }}
                           >
-                            {row.total_points} pts
+                            {authorLabel}
                           </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
+
+                          <div style={{ fontSize: 12, color: "#64748b" }}>
+                            {row.total_checkins} check-in{row.total_checkins === 1 ? "" : "s"} • 🔥 {row.streak}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          borderRadius: 999,
+                          padding: "8px 12px",
+                          background: "#dcfce7",
+                          color: "#166534",
+                          border: "1px solid #86efac",
+                          fontSize: 12,
+                          fontWeight: 800,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {row.total_points} pts
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
@@ -3173,3 +3218,7 @@ export default function MembershipInsidePage() {
     </>
   );
 }
+
+
+
+

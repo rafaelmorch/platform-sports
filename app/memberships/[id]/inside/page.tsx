@@ -1361,9 +1361,7 @@ export default function MembershipInsidePage() {
             padding: "clamp(18px, 3vw, 24px)",
             border: "1px solid #d6dbe4",
             background: "#fff",
-            boxShadow:
-              "8px 8px 24px rgba(148,163,184,0.18), -6px -6px 20px rgba(255,255,255,0.9)",
-            overflow: "hidden",
+overflow: "hidden",
           }}
         >
           <div
@@ -1400,7 +1398,7 @@ export default function MembershipInsidePage() {
                     color: "#0f172a",
                     border: "1px solid #cbd5e1",
                     fontWeight: 700,
-                    fontSize: 13,
+                    fontSize: 12,
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -1418,7 +1416,7 @@ export default function MembershipInsidePage() {
                     background: "#0f172a",
                     color: "#fff",
                     fontWeight: 700,
-                    fontSize: 13,
+                    fontSize: 12,
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -1538,10 +1536,10 @@ export default function MembershipInsidePage() {
             ) : challenges.length === 0 ? (
               <div
                 style={{
-                  borderRadius: 20,
+                  borderRadius: 0,
                   padding: 18,
                   background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
+                  borderBottom: "1px solid #e2e8f0",
                   color: "#475569",
                   fontSize: 14,
                   lineHeight: 1.7,
@@ -1560,16 +1558,23 @@ export default function MembershipInsidePage() {
                       key={challenge.id}
                       className="membership-challenge-card"
                       style={{
-                        borderRadius: 24,
-                        border: expired ? "1px solid #e5e7eb" : "1px solid #fcd34d",
-                        background: expired
-                          ? "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)"
-                          : "linear-gradient(135deg, #fff7ed 0%, #ffffff 55%, #f8fafc 100%)",
-                        padding: 16,
-                        boxShadow: expired
-                          ? "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.82)"
-                          : "10px 10px 24px rgba(245,158,11,0.10), -6px -6px 20px rgba(255,255,255,0.92)",
-                      }}
+  width: isOpen ? undefined : 96,
+  height: isOpen ? undefined : 96,
+  flex: isOpen ? undefined : "0 0 96px",
+  borderRadius: isOpen ? 24 : 999,
+  border: expired ? "1px solid #e5e7eb" : "2px solid #fcd34d",
+  background: expired
+    ? "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)"
+    : "linear-gradient(135deg, #fff7ed 0%, #ffffff 55%, #f8fafc 100%)",
+  padding: isOpen ? 16 : 4,
+      overflow: "hidden",
+
+  // 👇 ESSA É A CORREÇÃO
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: isOpen ? "flex-start" : "center",
+  alignItems: isOpen ? "stretch" : "center",
+}}
                     >
                       <button
                         type="button"
@@ -1584,97 +1589,65 @@ export default function MembershipInsidePage() {
                         }}
                       >
                         <div
-                          style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            justifyContent: "space-between",
-                            gap: 10,
-                            marginBottom: 10,
-                          }}
-                        >
-                          <div
-                            style={{
-                              borderRadius: 999,
-                              padding: "6px 10px",
-                              background: expired ? "#e2e8f0" : "#fef3c7",
-                              color: expired ? "#475569" : "#b45309",
-                              border: expired ? "1px solid #cbd5e1" : "1px solid #fcd34d",
-                              fontSize: 11,
-                              fontWeight: 800,
-                              whiteSpace: "nowrap",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {expired ? "Expired" : "Active"}
-                          </div>
-
-                          <div
-                            style={{
-                              fontSize: 11,
-                              color: "#64748b",
-                              fontWeight: 700,
-                              whiteSpace: "nowrap",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {formatEndsLabel(challenge.deadline)}
-                          </div>
-                        </div>
-
+  style={{
+    display: isOpen ? "flex" : "block",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: isOpen ? 10 : 6,
+    textAlign: isOpen ? "left" : "center",
+  }}
+>
+  {isOpen && (
+    <div
+      style={{
+        borderRadius: 999,
+        padding: "3px 8px",
+        background: expired ? "#e2e8f0" : "#fef3c7",
+        color: expired ? "#475569" : "#b45309",
+        border: expired ? "1px solid #cbd5e1" : "1px solid #fcd34d",
+        fontSize: 10,
+        fontWeight: 800,
+        whiteSpace: "nowrap",
+        flexShrink: 0,
+      }}
+    >
+      {expired ? "Expired" : "Active"}
+    </div>
+  )}
+  <div
+    style={{
+      fontSize: isOpen ? 11 : 10,
+      color: "#64748b",
+      fontWeight: 400,
+      whiteSpace: isOpen ? "nowrap" : "normal",
+      flexShrink: 0,
+      lineHeight: 1.2,
+    }}
+  >
+    {formatEndsLabel(challenge.deadline)}
+  </div>
+</div>
                         <div
-                          style={{
-                            fontSize: 16,
-                            fontWeight: 800,
-                            color: "#0f172a",
-                            lineHeight: 1.25,
-                            marginBottom: 10,
-                            display: "-webkit-box",
-                            WebkitLineClamp: isOpen ? "unset" : 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {challenge.title}
-                        </div>
-
-                        {!isOpen && (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: 10,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "#64748b",
-                                fontWeight: 700,
-                              }}
-                            >
-                              {formatActivityType(challenge.activity_type)}
-                            </div>
-
-                            <div
-                              style={{
-                                borderRadius: 999,
-                                padding: "6px 10px",
-                                background: "#dcfce7",
-                                color: "#166534",
-                                border: "1px solid #86efac",
-                                fontSize: 11,
-                                fontWeight: 800,
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              +{challenge.points_active} pts
-                            </div>
-                          </div>
-                        )}
+  style={{
+    fontSize: isOpen ? 16 : 11,
+    fontWeight: 800,
+    color: "#0f172a",
+    lineHeight: isOpen ? 1.25 : 1.1,
+    marginBottom: isOpen ? 6 : 0,
+    marginTop: isOpen ? 0 : 1,
+    padding: isOpen ? 0 : "0 6px",
+    display: "-webkit-box",
+    WebkitLineClamp: isOpen ? "unset" : 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    textAlign: isOpen ? "left" : "center",
+  }}
+>
+  {challenge.title}
+</div>
+                        {!isOpen && null}
                       </button>
-
                       {isOpen && (
                         <div
                           style={{
@@ -1689,17 +1662,17 @@ export default function MembershipInsidePage() {
                             style={{
                               display: "flex",
                               flexWrap: "wrap",
-                              gap: 8,
+                              gap: 4,
                             }}
                           >
                             <div
                               style={{
                                 borderRadius: 999,
-                                padding: "6px 10px",
+                                padding: "3px 8px",
                                 background: "#ede9fe",
                                 color: "#6d28d9",
                                 border: "1px solid #c4b5fd",
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: 800,
                               }}
                             >
@@ -1709,11 +1682,11 @@ export default function MembershipInsidePage() {
                             <div
                               style={{
                                 borderRadius: 999,
-                                padding: "6px 10px",
+                                padding: "3px 8px",
                                 background: "#dcfce7",
                                 color: "#166534",
                                 border: "1px solid #86efac",
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: 800,
                               }}
                             >
@@ -1723,11 +1696,11 @@ export default function MembershipInsidePage() {
                             <div
                               style={{
                                 borderRadius: 999,
-                                padding: "6px 10px",
+                                padding: "3px 8px",
                                 background: "#dbeafe",
                                 color: "#1d4ed8",
                                 border: "1px solid #93c5fd",
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: 800,
                               }}
                             >
@@ -1751,7 +1724,7 @@ export default function MembershipInsidePage() {
                               </div>
                               <div
                                 style={{
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   color: "#475569",
                                   lineHeight: 1.55,
                                 }}
@@ -1777,7 +1750,7 @@ export default function MembershipInsidePage() {
                               </div>
                               <div
                                 style={{
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   color: "#475569",
                                   lineHeight: 1.55,
                                 }}
@@ -1800,7 +1773,7 @@ export default function MembershipInsidePage() {
                               background: "#0f172a",
                               color: "#fff",
                               fontWeight: 800,
-                              fontSize: 13,
+                              fontSize: 12,
                               width: "fit-content",
                             }}
                           >
@@ -1815,7 +1788,16 @@ export default function MembershipInsidePage() {
             )}
           </div>
 
-          <div style={{ ...dividerSectionStyle, marginBottom: 28 }}>
+          <div
+  style={{
+    ...dividerSectionStyle,
+    marginBottom: 28,
+    borderRadius: 0,
+    padding: 16,
+    background: "#f8fafc",
+    borderBottom: "1px solid #e2e8f0",
+  }}
+>
             <div
               style={{
                 display: "flex",
@@ -1843,10 +1825,10 @@ export default function MembershipInsidePage() {
             {highlights.length === 0 ? (
               <div
                 style={{
-                  borderRadius: 20,
+                  borderRadius: 0,
                   padding: 18,
                   background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
+                  borderBottom: "1px solid #e2e8f0",
                   color: "#475569",
                   fontSize: 14,
                   lineHeight: 1.7,
@@ -1875,7 +1857,7 @@ export default function MembershipInsidePage() {
                       style={{
                         width: 92,
                         height: 68,
-                        borderRadius: 12,
+                        borderRadius: 0,
                         overflow: "hidden",
                         background: "#eef2f7",
                         border: "1px solid #dbe2ea",
@@ -1899,7 +1881,7 @@ export default function MembershipInsidePage() {
                       ) : (
                         <div
                           style={{
-                            fontSize: 11,
+                            fontSize: 10,
                             color: "#64748b",
                             fontWeight: 700,
                             textAlign: "center",
@@ -1916,47 +1898,15 @@ export default function MembershipInsidePage() {
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 8,
+                          gap: 4,
                           flexWrap: "wrap",
                           marginBottom: 6,
                         }}
-                      >
-                        <div
-                          style={{
-                            ...getTypeBadgeStyle(item.type),
-                            borderRadius: 999,
-                            padding: "5px 9px",
-                            fontSize: 11,
-                            fontWeight: 700,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {getTypeLabel(item.type)}
-                        </div>
-
-                        {item.expires_at && (
-                          <div
-                            style={{
-                              fontSize: 11,
-                              color: "#64748b",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            Until {new Date(item.expires_at).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </div>
-                        )}
-                      </div>
+                      ></div>
 
                       <div
                         style={{
-                          fontSize: 15,
-                          fontWeight: 800,
-                          color: "#0f172a",
-                          lineHeight: 1.25,
-                          marginBottom: 4,
+                          fontSize: 15, fontWeight: 700, color: "#94a3b8", lineHeight: 1.25, marginBottom: 4, textTransform: "uppercase",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -1967,9 +1917,7 @@ export default function MembershipInsidePage() {
 
                       <div
                         style={{
-                          fontSize: 13,
-                          color: "#64748b",
-                          lineHeight: 1.45,
+                          fontSize: 15, color: "#000000", lineHeight: 1.45,
                           display: "-webkit-box",
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: "vertical",
@@ -1986,7 +1934,16 @@ export default function MembershipInsidePage() {
             )}
           </div>
 
-          <div style={{ ...dividerSectionStyle, marginBottom: 28 }}>
+          <div
+  style={{
+    ...dividerSectionStyle,
+    marginBottom: 28,
+    borderRadius: 0,
+    padding: 16,
+    background: "#f8fafc",
+    borderBottom: "1px solid #e2e8f0",
+  }}
+>
             <div
               style={{
                 display: "flex",
@@ -2023,7 +1980,7 @@ export default function MembershipInsidePage() {
                     background: "#22c55e",
                     color: "#052e16",
                     fontWeight: 700,
-                    fontSize: 13,
+                    fontSize: 12,
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -2037,10 +1994,10 @@ export default function MembershipInsidePage() {
             ) : posts.length === 0 ? (
               <div
                 style={{
-                  borderRadius: 20,
+                  borderRadius: 0,
                   padding: 18,
                   background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
+                  borderBottom: "1px solid #e2e8f0",
                   color: "#475569",
                   fontSize: 14,
                   lineHeight: 1.7,
@@ -2073,10 +2030,7 @@ export default function MembershipInsidePage() {
                             ? "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)"
                             : "linear-gradient(180deg, #fbfdff 0%, #f1f5f9 100%)",
                           padding: 16,
-                          boxShadow: isActive
-                            ? "0 22px 48px rgba(15,23,42,0.14), 0 8px 20px rgba(148,163,184,0.18)"
-                            : "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.82)",
-                          minWidth: 0,
+                                                    minWidth: 0,
                         }}
                       >
                         <div
@@ -2118,7 +2072,7 @@ export default function MembershipInsidePage() {
                             <div style={{ minWidth: 0 }}>
                               <div
                                 style={{
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   fontWeight: 700,
                                   color: "#0f172a",
                                   whiteSpace: "nowrap",
@@ -2131,7 +2085,7 @@ export default function MembershipInsidePage() {
 
                               <div
                                 style={{
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   color: "#64748b",
                                 }}
                               >
@@ -2150,8 +2104,8 @@ export default function MembershipInsidePage() {
                                 background: "#fff1f2",
                                 color: "#be123c",
                                 borderRadius: 999,
-                                padding: "6px 10px",
-                                fontSize: 11,
+                                padding: "3px 8px",
+                                fontSize: 10,
                                 fontWeight: 700,
                                 cursor: "pointer",
                                 whiteSpace: "nowrap",
@@ -2207,7 +2161,7 @@ export default function MembershipInsidePage() {
                               borderRadius: 18,
                               overflow: "hidden",
                               border: "1px solid #dbe2ea",
-                              marginBottom: 10,
+                              marginBottom: 6,
                               background: "#eef2f7",
                               display: "flex",
                               alignItems: "center",
@@ -2223,7 +2177,7 @@ export default function MembershipInsidePage() {
                                 maxHeight: 360,
                                 objectFit: "contain",
                                 display: "block",
-                                borderRadius: 12,
+                                borderRadius: 0,
                               }}
                             />
                           </div>
@@ -2260,7 +2214,7 @@ export default function MembershipInsidePage() {
                                 alignItems: "center",
                                 gap: 6,
                                 cursor: "pointer",
-                                padding: "6px 10px",
+                                padding: "3px 8px",
                                 borderRadius: 999,
                                 fontWeight: 600,
                                 opacity: likeLoadingPostId === post.id ? 0.7 : 1,
@@ -2308,7 +2262,7 @@ export default function MembershipInsidePage() {
                             }}
                             style={{
                               display: "flex",
-                              gap: 8,
+                              gap: 4,
                               alignItems: "center",
                             }}
                           >
@@ -2370,7 +2324,7 @@ export default function MembershipInsidePage() {
                                   fontSize: 12,
                                   color: "#64748b",
                                   margin: 0,
-                                  lineHeight: 1.5,
+                                  lineHeight: 1.35,
                                 }}
                               >
                                 No comments yet on this post.
@@ -2383,7 +2337,7 @@ export default function MembershipInsidePage() {
                                   margin: 0,
                                   display: "flex",
                                   flexDirection: "column",
-                                  gap: 8,
+                                  gap: 4,
                                 }}
                               >
                                 {comments.map((c) => {
@@ -2427,7 +2381,7 @@ export default function MembershipInsidePage() {
                                             display: "flex",
                                             justifyContent: "space-between",
                                             alignItems: "baseline",
-                                            gap: 8,
+                                            gap: 4,
                                           }}
                                         >
                                           <span
@@ -2470,7 +2424,7 @@ export default function MembershipInsidePage() {
                                               border: "none",
                                               background: "transparent",
                                               color: "#be123c",
-                                              fontSize: 11,
+                                              fontSize: 10,
                                               fontWeight: 700,
                                               cursor: "pointer",
                                               padding: 0,
@@ -2506,9 +2460,7 @@ export default function MembershipInsidePage() {
                   padding: "18px 20px",
                   background: "linear-gradient(135deg, #fef3c7 0%, #fff7ed 50%, #ffffff 100%)",
                   border: "1px solid #fcd34d",
-                  boxShadow:
-                    "10px 10px 24px rgba(245,158,11,0.12), -6px -6px 20px rgba(255,255,255,0.92)",
-                  display: "flex",
+                                    display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
                   gap: 16,
@@ -2570,7 +2522,7 @@ export default function MembershipInsidePage() {
                       {leaderRow.author_name}
                     </div>
 
-                    <div style={{ fontSize: 13, color: "#475569" }}>
+                    <div style={{ fontSize: 12, color: "#475569" }}>
                       {leaderRow.total_checkins} check-in{leaderRow.total_checkins === 1 ? "" : "s"} this month
                     </div>
                   </div>
@@ -2580,10 +2532,10 @@ export default function MembershipInsidePage() {
                   style={{
                     borderRadius: 999,
                     padding: "10px 14px",
-                    background: "#ffffff",
+                    background: "transparent",
                     border: "1px solid #fcd34d",
                     color: "#b45309",
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: 800,
                     whiteSpace: "nowrap",
                   }}
@@ -2621,9 +2573,7 @@ export default function MembershipInsidePage() {
                 borderRadius: 22,
                 padding: 16,
                 background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                border: "1px solid #e2e8f0",
-                boxShadow:
-                  "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+                borderBottom: "1px solid #e2e8f0",
               }}
             >
               <div
@@ -2649,7 +2599,7 @@ export default function MembershipInsidePage() {
               >
                 {myStreak} 🔥
               </div>
-              <div style={{ fontSize: 13, color: "#64748b" }}>
+              <div style={{ fontSize: 12, color: "#64748b" }}>
                 Consecutive active day{myStreak === 1 ? "" : "s"} based on your check-ins.
               </div>
             </div>
@@ -2659,10 +2609,8 @@ export default function MembershipInsidePage() {
                 borderRadius: 22,
                 padding: 16,
                 background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                border: "1px solid #e2e8f0",
-                boxShadow:
-                  "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
-              }}
+                borderBottom: "1px solid #e2e8f0",
+                             }}
             >
               <div
                 style={{
@@ -2687,13 +2635,22 @@ export default function MembershipInsidePage() {
               >
                 {checkinTotalCount}
               </div>
-              <div style={{ fontSize: 13, color: "#64748b" }}>
+              <div style={{ fontSize: 12, color: "#64748b" }}>
                 Total visible check-ins registered by this membership.
               </div>
             </div>
           </div>
 
-          <div style={{ ...dividerSectionStyle, marginBottom: 28 }}>
+          <div
+  style={{
+    ...dividerSectionStyle,
+    marginBottom: 28,
+    borderRadius: 0,
+    padding: 16,
+    background: "#f8fafc",
+    borderBottom: "1px solid #e2e8f0",
+  }}
+>
             <div
               style={{
                 display: "flex",
@@ -2738,7 +2695,7 @@ export default function MembershipInsidePage() {
                       background: "#e2e8f0",
                       color: "#0f172a",
                       fontWeight: 700,
-                      fontSize: 13,
+                      fontSize: 12,
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -2756,7 +2713,7 @@ export default function MembershipInsidePage() {
                       background: "#0f172a",
                       color: "#fff",
                       fontWeight: 700,
-                      fontSize: 13,
+                      fontSize: 12,
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -2771,10 +2728,10 @@ export default function MembershipInsidePage() {
             ) : recentCheckins.length === 0 ? (
               <div
                 style={{
-                  borderRadius: 20,
+                  borderRadius: 0,
                   padding: 18,
                   background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
+                  borderBottom: "1px solid #e2e8f0",
                   color: "#475569",
                   fontSize: 14,
                   lineHeight: 1.7,
@@ -2783,7 +2740,7 @@ export default function MembershipInsidePage() {
                 No check-ins yet. Start registering activities to build the ranking.
               </div>
             ) : (
-              <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ display: "grid", gap: 6 }}>
                 <div
                   style={{
                     display: "flex",
@@ -2796,7 +2753,7 @@ export default function MembershipInsidePage() {
                   <div
                     style={{
                       borderRadius: 999,
-                      padding: "6px 10px",
+                      padding: "3px 8px",
                       background: "#dcfce7",
                       color: "#166534",
                       border: "1px solid #86efac",
@@ -2810,7 +2767,7 @@ export default function MembershipInsidePage() {
                   <div
                     style={{
                       borderRadius: 999,
-                      padding: "6px 10px",
+                      padding: "3px 8px",
                       background: "#dbeafe",
                       color: "#1d4ed8",
                       border: "1px solid #93c5fd",
@@ -2823,7 +2780,7 @@ export default function MembershipInsidePage() {
                 </div>
 
                 <div className="membership-checkin-scroll">
-                  <div style={{ display: "grid", gap: 12 }}>
+                  <div style={{ display: "grid", gap: 6 }}>
                     {recentCheckins.map((item) => {
                       const authorLabel = getDisplayName(item.author_name);
                       const isImageOpen = openCheckinImages.has(item.id);
@@ -2834,14 +2791,12 @@ export default function MembershipInsidePage() {
                         <article
                           key={item.id}
                           style={{
-                            borderRadius: 20,
-                            padding: 14,
+                            borderRadius: 0,
+                            padding: "8px 0",
                             background: item.is_disregarded
                               ? "linear-gradient(180deg, #fff7ed 0%, #ffffff 100%)"
                               : "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                            border: item.is_disregarded ? "1px solid #fdba74" : "1px solid #e2e8f0",
-                            boxShadow:
-                              "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
+                            borderBottom: "1px solid #e2e8f0",
                           }}
                         >
                           <div
@@ -2851,7 +2806,7 @@ export default function MembershipInsidePage() {
                               justifyContent: "space-between",
                               gap: 12,
                               flexWrap: "wrap",
-                              marginBottom: 10,
+                              marginBottom: 6,
                             }}
                           >
                             <div
@@ -2864,14 +2819,14 @@ export default function MembershipInsidePage() {
                             >
                               <div
                                 style={{
-                                  width: 38,
-                                  height: 38,
+                                  width: 30,
+                                  height: 30,
                                   borderRadius: 999,
                                   background: getAvatarBackground(authorLabel),
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   fontWeight: 700,
                                   color: "#f8fafc",
                                   flexShrink: 0,
@@ -2883,7 +2838,7 @@ export default function MembershipInsidePage() {
                               <div style={{ minWidth: 0 }}>
                                 <div
                                   style={{
-                                    fontSize: 13,
+                                    fontSize: 12,
                                     fontWeight: 700,
                                     color: "#0f172a",
                                     whiteSpace: "nowrap",
@@ -2896,7 +2851,7 @@ export default function MembershipInsidePage() {
 
                                 <div
                                   style={{
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     color: "#64748b",
                                   }}
                                 >
@@ -2909,18 +2864,18 @@ export default function MembershipInsidePage() {
                               style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 8,
+                                gap: 4,
                                 flexWrap: "wrap",
                               }}
                             >
                               <div
                                 style={{
                                   borderRadius: 999,
-                                  padding: "6px 10px",
+                                  padding: "3px 8px",
                                   background: "#ede9fe",
                                   color: "#6d28d9",
                                   border: "1px solid #c4b5fd",
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   fontWeight: 700,
                                   whiteSpace: "nowrap",
                                 }}
@@ -2932,11 +2887,11 @@ export default function MembershipInsidePage() {
                                 <div
                                   style={{
                                     borderRadius: 999,
-                                    padding: "6px 10px",
+                                    padding: "3px 8px",
                                     background: "#dbeafe",
                                     color: "#1d4ed8",
                                     border: "1px solid #93c5fd",
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     fontWeight: 700,
                                     whiteSpace: "nowrap",
                                   }}
@@ -2948,11 +2903,11 @@ export default function MembershipInsidePage() {
                               <div
                                 style={{
                                   borderRadius: 999,
-                                  padding: "6px 10px",
+                                  padding: "3px 8px",
                                   background: item.is_disregarded ? "#fee2e2" : "#fef3c7",
                                   color: item.is_disregarded ? "#b91c1c" : "#b45309",
                                   border: item.is_disregarded ? "1px solid #fca5a5" : "1px solid #fcd34d",
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   fontWeight: 700,
                                   whiteSpace: "nowrap",
                                 }}
@@ -2965,14 +2920,14 @@ export default function MembershipInsidePage() {
                           <div
                             style={{
                               display: "grid",
-                              gap: 8,
+                              gap: 4,
                             }}
                           >
                             <div
                               style={{
                                 color: "#475569",
-                                fontSize: 13,
-                                lineHeight: 1.5,
+                                fontSize: 12,
+                                lineHeight: 1.35,
                               }}
                             >
                               {item.comment?.trim()
@@ -3079,7 +3034,7 @@ export default function MembershipInsidePage() {
                                   maxHeight: 300,
                                   objectFit: "contain",
                                   display: "block",
-                                  borderRadius: 12,
+                                  borderRadius: 0,
                                 }}
                               />
                             </div>
@@ -3126,10 +3081,10 @@ export default function MembershipInsidePage() {
             ) : rankingRows.length === 0 ? (
               <div
                 style={{
-                  borderRadius: 20,
+                  borderRadius: 0,
                   padding: 18,
                   background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
+                  borderBottom: "1px solid #e2e8f0",
                   color: "#475569",
                   fontSize: 14,
                   lineHeight: 1.7,
@@ -3142,11 +3097,9 @@ export default function MembershipInsidePage() {
                 style={{
                   borderRadius: 22,
                   overflow: "hidden",
-                  border: "1px solid #e2e8f0",
+                  borderBottom: "1px solid #e2e8f0",
                   background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-                  boxShadow:
-                    "6px 6px 18px rgba(148,163,184,0.10), -4px -4px 14px rgba(255,255,255,0.85)",
-                }}
+                                  }}
               >
                 {orderedRanking.map((row, index) => {
                   const authorLabel = getDisplayName(row.author_name);
@@ -3171,7 +3124,7 @@ export default function MembershipInsidePage() {
                     >
                       <div
                         style={{
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: 800,
                           color: isTopThree ? "#b45309" : "#64748b",
                           textAlign: "center",
@@ -3252,5 +3205,11 @@ export default function MembershipInsidePage() {
     </>
   );
 }
+
+
+
+
+
+
 
 
