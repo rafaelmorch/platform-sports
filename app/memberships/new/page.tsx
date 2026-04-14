@@ -9,7 +9,7 @@ import "@fontsource/montserrat/800.css";
 import dynamicImport from "next/dynamic";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import BottomNavbar from "@/components/BottomNavbar";
+import BackArrow from "@/components/BackArrow";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 const ReactQuill = dynamicImport(() => import("react-quill-new"), { ssr: false });
@@ -291,6 +291,9 @@ export default function NewMembershipPage() {
         }}
       >
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ marginBottom: 12 }}>
+            <BackArrow />
+          </div>
           <header
             style={{
               marginBottom: 20,
@@ -666,7 +669,7 @@ export default function NewMembershipPage() {
           </form>
         </div>
 
-        <BottomNavbar />
+        
       </main>
     </>
   );
@@ -743,4 +746,5 @@ const emptyPreviewTextStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
 };
+
 

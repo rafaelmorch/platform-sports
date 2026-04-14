@@ -9,7 +9,7 @@ import "@fontsource/montserrat/800.css";
 import dynamicImport from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import BottomNavbar from "@/components/BottomNavbar";
+import BackArrow from "@/components/BackArrow";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 const ReactQuill = dynamicImport(() => import("react-quill-new"), { ssr: false });
@@ -423,12 +423,16 @@ export default function EditMembershipPage() {
         }}
       >
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ marginBottom: 12 }}>
+            <BackArrow />
+          </div>
+
           <header
             style={{
               marginBottom: 20,
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "flex-start",
               gap: 16,
             }}
           >
@@ -470,16 +474,7 @@ export default function EditMembershipPage() {
               </p>
             </div>
 
-            <img
-              src="/Platform_Logo.png"
-              alt="Platform Sports"
-              style={{
-                height: 60,
-                width: "auto",
-                display: "block",
-                opacity: 1,
-              }}
-            />
+
           </header>
 
           {warning && (
@@ -822,7 +817,7 @@ export default function EditMembershipPage() {
           )}
         </div>
 
-        <BottomNavbar />
+        
       </main>
     </>
   );
@@ -899,3 +894,4 @@ const emptyPreviewTextStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
 };
+
