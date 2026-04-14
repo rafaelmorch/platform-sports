@@ -24,6 +24,7 @@ type MembershipCommunity = {
   card_highlight: string | null;
   is_active: boolean;
   created_at: string | null;
+  created_by?: string | null;
 };
 
 function formatPrice(priceCents: number | null, billingInterval: string | null): string {
@@ -57,6 +58,7 @@ export default function MembershipsPage() {
   const [loading, setLoading] = useState(true);
   const [warning, setWarning] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,7 +71,7 @@ export default function MembershipsPage() {
         const { data: communityData, error: communityError } = await supabase
           .from("app_membership_communities")
           .select(
-            "id,name,slug,short_description,full_description,price_cents,billing_interval,cover_image_url,banner_image_url,card_highlight,is_active,created_at"
+            "id,name,slug,short_description,full_description,price_cents,billing_interval,cover_image_url,banner_image_url,card_highlight,is_active,created_at,created_by"
           )
           .eq("is_active", true)
           .order("created_at", { ascending: false });
@@ -96,6 +98,8 @@ export default function MembershipsPage() {
         if (cancelled) return;
 
         if (user) {
+          setUserId(user.id);
+
           const [{ data: requestData, error: requestError }, { data: profileData, error: profileError }] =
             await Promise.all([
               supabase
@@ -124,6 +128,7 @@ export default function MembershipsPage() {
         } else {
           setApprovedIds([]);
           setIsAdmin(false);
+          setUserId(null);
         }
 
         if (rows.length === 0) {
@@ -136,6 +141,7 @@ export default function MembershipsPage() {
           setCommunities([]);
           setApprovedIds([]);
           setIsAdmin(false);
+          setUserId(null);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -297,8 +303,8 @@ export default function MembershipsPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 14,
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              gap: 10,
             }}
           >
             {loading ? (
@@ -313,8 +319,8 @@ export default function MembershipsPage() {
                     boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
                   }}
                 >
-                  <div style={{ height: 180, background: "#f8fafc" }} />
-                  <div style={{ padding: 14 }} />
+                  <div style={{ aspectRatio: "16 / 10", background: "#f8fafc" }} />
+                  <div style={{ height: 56, background: "#1e3a8a" }} />
                 </div>
               ))
             ) : (
@@ -325,6 +331,7 @@ export default function MembershipsPage() {
                 const href = isApproved
                   ? `/memberships/${community.id}/inside`
                   : `/memberships/${community.id}`;
+                const canEdit = isAdmin || (!!userId && community.created_by === userId);
 
                 return (
                   <div
@@ -344,8 +351,6 @@ export default function MembershipsPage() {
                           border: "1px solid #e5e7eb",
                           background: "#ffffff",
                           boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-                          transform: "translateY(0px)",
-                          transition: "transform 0.18s ease, box-shadow 0.18s ease",
                         }}
                       >
                         <div
@@ -389,16 +394,17 @@ export default function MembershipsPage() {
                           <div
                             style={{
                               position: "absolute",
-                              left: 12,
-                              top: 12,
-                              padding: "6px 10px",
+                              left: 8,
+                              top: 8,
+                              padding: "clamp(4px, 1.4vw, 6px) clamp(7px, 2vw, 10px)",
                               borderRadius: 6,
-                              fontSize: 11,
+                              fontSize: "clamp(9px, 2vw, 11px)",
                               fontWeight: 700,
                               fontFamily: "Montserrat, sans-serif",
                               background: "#1e3a8a",
                               border: "1px solid #1e3a8a",
                               color: "#ffffff",
+                              lineHeight: 1.1,
                             }}
                           >
                             {isApproved ? "MEMBER AREA" : "MEMBERSHIP"}
@@ -407,16 +413,17 @@ export default function MembershipsPage() {
                           <div
                             style={{
                               position: "absolute",
-                              right: 12,
-                              top: 12,
-                              padding: "6px 10px",
+                              right: 8,
+                              top: 8,
+                              padding: "clamp(4px, 1.4vw, 6px) clamp(7px, 2vw, 10px)",
                               borderRadius: 6,
-                              fontSize: 11,
+                              fontSize: "clamp(9px, 2vw, 11px)",
                               fontWeight: 700,
                               fontFamily: "Montserrat, sans-serif",
                               background: "#ffffff",
                               color: "#000000",
                               border: "1px solid #e5e7eb",
+                              lineHeight: 1.1,
                             }}
                           >
                             {priceLabel}
@@ -426,128 +433,81 @@ export default function MembershipsPage() {
                             <div
                               style={{
                                 position: "absolute",
-                                left: 12,
-                                bottom: 12,
-                                padding: "7px 11px",
+                                left: 8,
+                                bottom: 8,
+                                padding: "clamp(5px, 1.6vw, 7px) clamp(8px, 2.2vw, 11px)",
                                 borderRadius: 6,
-                                fontSize: 11,
+                                fontSize: "clamp(9px, 2vw, 11px)",
                                 fontWeight: 700,
                                 fontFamily: "Montserrat, sans-serif",
                                 background: "#f8fafc",
                                 color: "#111827",
                                 border: "1px solid #e5e7eb",
-                                maxWidth: "calc(100% - 24px)",
+                                maxWidth: "calc(100% - 16px)",
                                 whiteSpace: "nowrap",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
+                                lineHeight: 1.1,
                               }}
                             >
                               {community.card_highlight}
                             </div>
                           )}
+
+                          {canEdit && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.location.href = `/memberships/${community.id}/edit`;
+                              }}
+                              style={{
+                                position: "absolute",
+                                right: 8,
+                                bottom: 8,
+                                borderRadius: 6,
+                                padding: "clamp(5px, 1.6vw, 7px) clamp(8px, 2.2vw, 11px)",
+                                fontSize: "clamp(9px, 2vw, 11px)",
+                                fontWeight: 700,
+                                fontFamily: "Montserrat, sans-serif",
+                                background: "#ffffff",
+                                color: "#000000",
+                                border: "1px solid #e5e7eb",
+                                cursor: "pointer",
+                                lineHeight: 1.1,
+                              }}
+                            >
+                              Edit
+                            </button>
+                          )}
                         </div>
 
-                        <div style={{ padding: 16 }}>
+                        <div
+                          style={{
+                            background: "#1e3a8a",
+                            padding: "8px 8px",
+                            minHeight: 40,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            textAlign: "center",
+                          }}
+                        >
                           <div
                             style={{
-                              fontSize: 18,
+                              fontSize: "clamp(15px, 2.8vw, 20px)",
                               fontWeight: 700,
                               fontFamily: "Montserrat, sans-serif",
-                              lineHeight: 1.1,
-                              marginBottom: 8,
-                              color: "#000000",
+                              lineHeight: 1.15,
+                              color: "#ffffff",
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
                             }}
                           >
                             {community.name ?? "Membership"}
-                          </div>
-
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: "#374151",
-                              fontFamily: "Arial, sans-serif",
-                              lineHeight: 1.45,
-                              display: "-webkit-box",
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                              minHeight: 56,
-                              marginBottom: 14,
-                            }}
-                          >
-                            {community.short_description ||
-                              "Exclusive community access with premium experience inside the app."}
-                          </div>
-
-                          {isAdmin && (
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                marginBottom: 10,
-                              }}
-                            >
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  window.location.href = `/memberships/${community.id}/edit`;
-                                }}
-                                style={{
-                                  borderRadius: 6,
-                                  padding: "10px 14px",
-                                  fontSize: 12,
-                                  fontWeight: 700,
-                                  fontFamily: "Montserrat, sans-serif",
-                                  background: "#ffffff",
-                                  color: "#000000",
-                                  border: "1px solid #e5e7eb",
-                                  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-                                  whiteSpace: "nowrap",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                Edit
-                              </button>
-                            </div>
-                          )}
-
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              gap: 12,
-                            }}
-                          >
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "#374151",
-                                fontWeight: 600,
-                                fontFamily: "Montserrat, sans-serif",
-                              }}
-                            >
-                              {isApproved
-                                ? "Tap to enter community →"
-                                : "Tap to explore membership →"}
-                            </div>
-
-                            <div
-                              style={{
-                                borderRadius: 6,
-                                padding: "10px 14px",
-                                fontSize: 12,
-                                fontWeight: 700,
-                                fontFamily: "Montserrat, sans-serif",
-                                background: "#000000",
-                                color: "#ffffff",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {isApproved ? "Enter" : "View"}
-                            </div>
                           </div>
                         </div>
                       </div>
