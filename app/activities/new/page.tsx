@@ -37,14 +37,14 @@ function BackButton({ onClick }: { onClick: () => void }) {
         gap: 10,
         padding: "8px 12px",
         borderRadius: 999,
-        border: "1px solid rgba(148,163,184,0.35)",
-        background: "rgba(2,6,23,0.55)",
-        color: "#e5e7eb",
+        border: "1px solid #d1d5db",
+        background: "#ffffff",
+        color: "#0f172a",
         cursor: "pointer",
         fontSize: 12,
         fontWeight: 900,
         lineHeight: 1,
-        boxShadow: "0 10px 26px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
+        
         whiteSpace: "nowrap",
       }}
       aria-label="Back"
@@ -144,7 +144,7 @@ export default function NewActivityPage() {
 
   const labelStyle: React.CSSProperties = {
     fontSize: 12,
-    color: "#60a5fa",
+    color: "#2563eb",
     margin: 0,
     display: "block",
   };
@@ -156,9 +156,9 @@ export default function NewActivityPage() {
     marginTop: 6,
     padding: "10px 12px",
     borderRadius: 12,
-    border: "1px solid rgba(148,163,184,0.25)",
-    background: "#374151",
-    color: "#ffffff",
+    border: "1px solid #d1d5db",
+    background: "#ffffff",
+    color: "#0f172a",
     outline: "none",
   };
 
@@ -333,15 +333,15 @@ export default function NewActivityPage() {
       <main
         style={{
           minHeight: "100vh",
-          backgroundColor: "#020617",
-          color: "#e5e7eb",
+          backgroundColor: "#ffffff",
+          color: "#0f172a",
           padding: "16px",
           paddingBottom: "24px",
           boxSizing: "border-box",
         }}
       >
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Loading...</p>
+          <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Loading...</p>
         </div>
 
         <style jsx global>{`
@@ -373,8 +373,8 @@ export default function NewActivityPage() {
     <main
       style={{
         minHeight: "100vh",
-        backgroundColor: "#020617",
-        color: "#e5e7eb",
+        backgroundColor: "#ffffff",
+        color: "#0f172a",
         padding: "16px",
         paddingBottom: "24px",
         boxSizing: "border-box",
@@ -394,7 +394,7 @@ export default function NewActivityPage() {
                 {communityId ? "Create community event" : "Create activity"}
               </h1>
 
-              <p style={{ fontSize: 13, color: "#9ca3af", margin: "6px 0 0 0" }}>
+              <p style={{ fontSize: 13, color: "#64748b", margin: "6px 0 0 0" }}>
                 Fields marked with <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span> are required.
               </p>
             </div>
@@ -406,9 +406,9 @@ export default function NewActivityPage() {
 
         <section
           style={{
-            borderRadius: 18,
-            border: "1px solid rgba(148,163,184,0.35)",
-            background: "radial-gradient(circle at top left, #020617, #020617 50%, #000000 100%)",
+            borderRadius: 0,
+            border: "1px solid #d1d5db",
+            background: "#f8fafc",
             padding: "14px 14px",
             display: "flex",
             flexDirection: "column",
@@ -433,7 +433,7 @@ export default function NewActivityPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <p style={{ ...labelStyle, marginBottom: 0 }}>
               Date &amp; Time <span style={{ color: "#93c5fd", fontWeight: 700 }}>*</span>{" "}
-              <span style={{ color: "#9ca3af", fontWeight: 400 }}>(add multiple dates if recurring)</span>
+              <span style={{ color: "#64748b", fontWeight: 400 }}>(add multiple dates if recurring)</span>
             </p>
 
             {dates.map((d, idx) => (
@@ -476,13 +476,13 @@ export default function NewActivityPage() {
                       fontSize: 12,
                       padding: "8px 12px",
                       borderRadius: 999,
-                      border: "1px solid rgba(148,163,184,0.35)",
-                      background: "rgba(2,6,23,0.65)",
-                      color: "#e5e7eb",
+                      border: "1px solid #d1d5db",
+                      background: "#ffffff",
+                      color: "#0f172a",
                       fontWeight: 800,
                       cursor: "pointer",
                       lineHeight: 1,
-                      boxShadow: "0 10px 26px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)",
+                      
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -498,9 +498,9 @@ export default function NewActivityPage() {
                     fontSize: 12,
                     padding: "10px 12px",
                     borderRadius: 999,
-                    border: "1px solid rgba(148,163,184,0.35)",
-                    background: "rgba(2,6,23,0.65)",
-                    color: "#e5e7eb",
+                    border: "1px solid #d1d5db",
+                    background: "#ffffff",
+                    color: "#0f172a",
                     fontWeight: 800,
                     cursor: dates.length <= 1 ? "not-allowed" : "pointer",
                     opacity: dates.length <= 1 ? 0.6 : 1,
@@ -519,9 +519,9 @@ export default function NewActivityPage() {
                   fontSize: 12,
                   padding: "10px 12px",
                   borderRadius: 999,
-                  border: "1px solid rgba(56,189,248,0.55)",
-                  background: "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
-                  color: "#e0f2fe",
+                  border: "1px solid #0f172a",
+                  background: "#0f172a",
+                  color: "#ffffff",
                   fontWeight: 900,
                   cursor: "pointer",
                 }}
@@ -614,7 +614,7 @@ export default function NewActivityPage() {
           </label>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 10, flexWrap: "wrap", marginTop: 6 }}>
-            <p style={{ fontSize: 12, color: "#60a5fa", margin: 0 }}>
+            <p style={{ fontSize: 12, color: "#2563eb", margin: 0 }}>
               When publishing, it will create 1 activity per date.
             </p>
 
@@ -625,9 +625,9 @@ export default function NewActivityPage() {
                 fontSize: 12,
                 padding: "10px 12px",
                 borderRadius: 999,
-                border: "1px solid rgba(56,189,248,0.55)",
-                background: "linear-gradient(135deg, rgba(8,47,73,0.95), rgba(12,74,110,0.95))",
-                color: "#e0f2fe",
+                border: "1px solid #0f172a",
+                background: "#0f172a",
+                color: "#ffffff",
                 cursor: busy ? "not-allowed" : "pointer",
                 fontWeight: 800,
                 opacity: busy ? 0.8 : 1,
@@ -654,4 +654,5 @@ export default function NewActivityPage() {
     </main>
   );
 }
+
 
