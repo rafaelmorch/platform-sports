@@ -4,30 +4,6 @@ import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
-const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
-const supabaseUrl = process.env.SUPABASE_URL?.trim();
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-
-if (!stripeSecretKey) {
-  throw new Error("Missing STRIPE_SECRET_KEY in environment variables.");
-}
-
-if (!stripeWebhookSecret) {
-  throw new Error("Missing STRIPE_WEBHOOK_SECRET in environment variables.");
-}
-
-if (!supabaseUrl) {
-  throw new Error("Missing SUPABASE_URL in environment variables.");
-}
-
-if (!supabaseServiceRoleKey) {
-  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY in environment variables.");
-}
-
-const stripe = new Stripe(stripeSecretKey);
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
-
 function mapSubscriptionStatusToMembershipStatus(subscriptionStatus?: string | null) {
   if (subscriptionStatus === "active" || subscriptionStatus === "trialing") {
     return "active";
@@ -42,6 +18,42 @@ function toIsoDate(unixSeconds?: number | null) {
 }
 
 export async function POST(req: Request) {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
+  const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+  const supabaseUrl = process.env.SUPABASE_URL?.trim();
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+  if (!stripeSecretKey) {
+    return NextResponse.json(
+      { error: "Missing STRIPE_SECRET_KEY in environment variables." },
+      { status: 500 }
+    );
+  }
+
+  if (!stripeWebhookSecret) {
+    return NextResponse.json(
+      { error: "Missing STRIPE_WEBHOOK_SECRET in environment variables." },
+      { status: 500 }
+    );
+  }
+
+  if (!supabaseUrl) {
+    return NextResponse.json(
+      { error: "Missing SUPABASE_URL in environment variables." },
+      { status: 500 }
+    );
+  }
+
+  if (!supabaseServiceRoleKey) {
+    return NextResponse.json(
+      { error: "Missing SUPABASE_SERVICE_ROLE_KEY in environment variables." },
+      { status: 500 }
+    );
+  }
+
+  const stripe = new Stripe(stripeSecretKey);
+  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
   const body = await req.text();
   const signature = req.headers.get("stripe-signature");
 
