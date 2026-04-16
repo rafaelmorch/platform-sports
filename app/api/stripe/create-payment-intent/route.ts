@@ -7,9 +7,7 @@ if (!stripeSecretKey) {
   throw new Error("Missing STRIPE_SECRET_KEY in environment variables.");
 }
 
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: "2025-03-31.basil",
-});
+const stripe = new Stripe(stripeSecretKey);
 
 export async function POST() {
   try {
