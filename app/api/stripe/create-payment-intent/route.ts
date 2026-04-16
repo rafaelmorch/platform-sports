@@ -1,21 +1,38 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+export async function POST(req: Request) {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
 
-if (!stripeSecretKey) {
-  throw new Error("Missing STRIPE_SECRET_KEY in environment variables.");
-}
+  if (!stripeSecretKey) {
+    return NextResponse.json(
+      { error: "Missing STRIPE_SECRET_KEY in environment variables." },
+      { status: 500 }
+    );
+  }
 
-const stripe = new Stripe(stripeSecretKey);
+  const stripe = new Stripe(stripeSecretKey);
 
-export async function POST() {
   try {
+    const body = await req.json();
+    const { community_id, user_id } = body;
+
+    if (!community_id || !user_id) {
+      return NextResponse.json(
+        { error: "Missing community_id or user_id" },
+        { status: 400 }
+      );
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: 5000,
       currency: "usd",
       automatic_payment_methods: {
         enabled: true,
+      },
+      metadata: {
+        community_id,
+        user_id,
       },
     });
 
