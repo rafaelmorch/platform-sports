@@ -5,8 +5,8 @@ import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/600.css";
 import "@fontsource/montserrat/700.css";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import BackArrow from "@/components/BackArrow";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
@@ -14,7 +14,6 @@ export const dynamic = "force-dynamic";
 
 function PendingMembershipContent() {
   const supabase = useMemo(() => supabaseBrowser, []);
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const communityId = searchParams.get("community_id");
@@ -24,45 +23,6 @@ function PendingMembershipContent() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const [creatingCheckout, setCreatingCheckout] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-    let intervalId: ReturnType<typeof setInterval> | null = null;
-
-    async function checkMembershipStatus() {
-      if (!communityId) return;
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError || !user) return;
-
-      const { data, error } = await supabase
-        .from("app_membership_requests")
-        .select("status")
-        .eq("community_id", communityId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!isMounted || error || !data) return;
-
-      if (data.status === "active") {
-        router.replace(`/memberships/${communityId}/inside`);
-      }
-    }
-
-    checkMembershipStatus();
-    intervalId = setInterval(checkMembershipStatus, 3000);
-
-    return () => {
-      isMounted = false;
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [communityId, router, supabase]);
-
   function handleProofChange(file: File | null) {
     setProofFile(file);
     setMessage(null);
@@ -71,70 +31,6 @@ function PendingMembershipContent() {
       setProofPreview(URL.createObjectURL(file));
     } else {
       setProofPreview("");
-    }
-  }
-
-  async function handleCreateStripeCheckout() {
-    try {
-      setCreatingCheckout(true);
-      setMessage(null);
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        setMessage("You must be logged in.");
-        return;
-      }
-
-      if (!communityId) {
-        setMessage("Missing community id.");
-        return;
-      }
-
-      const { error: requestError } = await supabase
-        .from("app_membership_requests")
-        .upsert(
-          [
-            {
-              community_id: communityId,
-              user_id: user.id,
-              status: "pending",
-            },
-          ],
-          { onConflict: "community_id,user_id" }
-        );
-
-      if (requestError) {
-        setMessage(requestError.message || "Failed to create membership request.");
-        return;
-      }
-
-      const response = await fetch("/api/stripe/create-subscription-checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          community_id: communityId,
-          user_id: user.id,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data?.url) {
-        setMessage(data?.error || "Failed to create Stripe checkout.");
-        return;
-      }
-
-      window.location.href = data.url;
-    } catch (err: any) {
-      setMessage(err?.message || "Unexpected Stripe error.");
-    } finally {
-      setCreatingCheckout(false);
     }
   }
 
@@ -160,6 +56,7 @@ function PendingMembershipContent() {
 
       if (userError || !user) {
         setMessage("You must be logged in.");
+        setUploading(false);
         return;
       }
 
@@ -175,6 +72,7 @@ function PendingMembershipContent() {
 
       if (uploadError) {
         setMessage(uploadError.message || "Failed to upload proof.");
+        setUploading(false);
         return;
       }
 
@@ -193,6 +91,7 @@ function PendingMembershipContent() {
 
       if (updateError) {
         setMessage(updateError.message || "Failed to attach proof to request.");
+        setUploading(false);
         return;
       }
 
@@ -276,70 +175,9 @@ function PendingMembershipContent() {
               fontWeight: 500,
             }}
           >
-            Please complete your monthly subscription to unlock full access to the community.
+            Please wait for payment confirmation to be approved and gain full
+            access to the community.
           </p>
-        </div>
-
-        <div
-          style={{
-            width: "100%",
-            maxWidth: 560,
-            margin: "0 auto 16px auto",
-            borderRadius: 24,
-            padding: "clamp(16px, 4vw, 22px)",
-            boxSizing: "border-box",
-            border: "1px solid #d6dbe4",
-            background: "linear-gradient(180deg, #f8fafc 0%, #edf1f5 100%)",
-            boxShadow:
-              "8px 8px 24px rgba(148,163,184,0.14), -6px -6px 20px rgba(255,255,255,0.9)",
-            textAlign: "left",
-            overflow: "hidden",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 18,
-              fontWeight: 700,
-              margin: "0 0 10px 0",
-              color: "#0f172a",
-            }}
-          >
-            Monthly subscription
-          </h2>
-
-          <p
-            style={{
-              fontSize: 14,
-              lineHeight: 1.7,
-              color: "#475569",
-              marginTop: 0,
-              marginBottom: 14,
-            }}
-          >
-            Start your monthly plan here.
-          </p>
-
-          <button
-            type="button"
-            onClick={handleCreateStripeCheckout}
-            disabled={creatingCheckout}
-            style={{
-              width: "100%",
-              border: "1px solid #cbd5e1",
-              borderRadius: 999,
-              padding: "14px 18px",
-              fontSize: 13,
-              fontWeight: 700,
-              background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)",
-              color: "#f8fafc",
-              boxShadow:
-                "0 14px 28px rgba(15,23,42,0.18), inset 1px 1px 0 rgba(255,255,255,0.1)",
-              cursor: creatingCheckout ? "not-allowed" : "pointer",
-              opacity: creatingCheckout ? 0.7 : 1,
-            }}
-          >
-            {creatingCheckout ? "Opening checkout..." : "Subscribe Monthly"}
-          </button>
         </div>
 
         <div
@@ -378,7 +216,8 @@ function PendingMembershipContent() {
               marginBottom: 14,
             }}
           >
-            You may upload a screenshot of your payment to help with verification if needed.
+            You may upload a screenshot of your payment to help speed up manual verification.
+            This is optional.
           </p>
 
           <input
@@ -497,7 +336,9 @@ function PendingMembershipContent() {
                 lineHeight: 1.6,
                 color: message.toLowerCase().includes("success") ? "#166534" : "#9a3412",
                 background: message.toLowerCase().includes("success") ? "#f0fdf4" : "#fff7ed",
-                border: "1px solid " + (message.toLowerCase().includes("success") ? "#86efac" : "#fdba74"),
+                border: `1px solid ${
+                  message.toLowerCase().includes("success") ? "#86efac" : "#fdba74"
+                }`,
                 borderRadius: 14,
                 padding: "10px 12px",
               }}
@@ -514,7 +355,7 @@ function PendingMembershipContent() {
             lineHeight: 1.6,
           }}
         >
-          Access will be released automatically after confirmed subscription payment.
+          You will be notified once your access is approved.
         </div>
       </div>
     </main>
@@ -546,4 +387,3 @@ export default function PendingMembershipPage() {
     </>
   );
 }
-

@@ -51,6 +51,7 @@ export default function EditMembershipPage() {
   const [galleryText, setGalleryText] = useState("");
   const [checkoutUrl, setCheckoutUrl] = useState("");
   const [checkoutButtonText, setCheckoutButtonText] = useState("");
+  const [stripePriceId, setStripePriceId] = useState("");
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -153,7 +154,7 @@ export default function EditMembershipPage() {
         const { data, error } = await supabase
           .from("app_membership_communities")
           .select(
-            "id,name,slug,full_description,full_description_rich,price_cents,billing_interval,cover_image_path,cover_image_url,banner_image_path,banner_image_url,card_highlight,gallery_urls,checkout_url,checkout_button_text,is_active"
+            "id,name,slug,full_description,full_description_rich,price_cents,billing_interval,cover_image_path,cover_image_url,banner_image_path,banner_image_url,card_highlight,gallery_urls,checkout_url,checkout_button_text,is_active,stripe_price_id"
           )
           .eq("id", membershipId)
           .single();
@@ -179,6 +180,7 @@ export default function EditMembershipPage() {
         setGalleryText((row.gallery_urls ?? []).join("\n"));
         setCheckoutUrl(row.checkout_url ?? "");
         setCheckoutButtonText(row.checkout_button_text ?? "");
+        setStripePriceId(row.stripe_price_id ?? "");
         setCoverPreview(row.cover_image_url ?? "");
         setBannerPreview(row.banner_image_url ?? "");
         setExistingCoverPath(row.cover_image_path ?? null);
@@ -330,6 +332,7 @@ export default function EditMembershipPage() {
           gallery_urls: galleryUrls.length > 0 ? galleryUrls : null,
           checkout_url: cleanCheckoutUrl,
           checkout_button_text: cleanCheckoutButtonText,
+          stripe_price_id: stripePriceId || null,
         })
         .eq("id", membershipId);
 
@@ -639,6 +642,16 @@ export default function EditMembershipPage() {
                     />
                   </label>
 
+                  <label style={{ display: "block", marginBottom: 14 }}>
+                    <div style={labelStyle}>Stripe Price ID</div>
+                    <input
+                      value={stripePriceId}
+                      onChange={(e) => setStripePriceId(e.target.value)}
+                      placeholder="price_..."
+                      style={inputStyle}
+                    />
+                  </label>
+
                   <label style={{ display: "block", marginBottom: 0 }}>
                     <div style={labelStyle}>External membership link</div>
                     <input
@@ -894,4 +907,10 @@ const emptyPreviewTextStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
 };
+
+
+
+
+
+
 

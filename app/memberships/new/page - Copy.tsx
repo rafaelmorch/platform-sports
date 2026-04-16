@@ -29,7 +29,6 @@ export default function NewMembershipPage() {
   const [galleryText, setGalleryText] = useState("");
   const [checkoutUrl, setCheckoutUrl] = useState("");
   const [checkoutButtonText, setCheckoutButtonText] = useState("");
-  const [stripePriceId, setStripePriceId] = useState("");
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -493,16 +492,6 @@ export default function NewMembershipPage() {
                   />
                 </label>
 
-                <label style={{ display: "block", marginBottom: 14 }}>
-                  <div style={labelStyle}>Stripe Price ID</div>
-                  <input
-                    value={stripePriceId}
-                    onChange={(e) => setStripePriceId(e.target.value)}
-                    placeholder="price_..."
-                    style={inputStyle}
-                  />
-                </label>
-
                 <label style={{ display: "block", marginBottom: 0 }}>
                   <div style={labelStyle}>External membership link</div>
                   <input
@@ -757,7 +746,5 @@ const emptyPreviewTextStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
 };
-
-
 
 
