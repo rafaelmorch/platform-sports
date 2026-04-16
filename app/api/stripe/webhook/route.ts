@@ -101,7 +101,7 @@ export async function POST(req: Request) {
           );
         }
 
-        const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+        const subscription = (await stripe.subscriptions.retrieve(stripeSubscriptionId)) as Stripe.Subscription;
 
         const { error: updateError } = await supabase
           .from("app_membership_requests")
@@ -255,7 +255,7 @@ export async function POST(req: Request) {
           : invoice.subscription?.id || null;
 
       if (stripeSubscriptionId) {
-        const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+        const subscription = (await stripe.subscriptions.retrieve(stripeSubscriptionId)) as Stripe.Subscription;
 
         const { error: updateError } = await supabase
           .from("app_membership_requests")
@@ -293,4 +293,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
 
