@@ -109,7 +109,7 @@ export async function POST(req: Request) {
             stripe_customer_id: stripeCustomerId,
             stripe_subscription_id: stripeSubscriptionId,
             subscription_status: subscription.status,
-            current_period_end: toIsoDate(subscription.current_period_end),
+            current_period_end: toIsoDate((subscription as any).current_period_end),
             status: mapSubscriptionStatusToMembershipStatus(subscription.status),
           })
           .eq("community_id", communityId)
@@ -165,7 +165,7 @@ export async function POST(req: Request) {
           stripe_customer_id: stripeCustomerId,
           stripe_subscription_id: subscription.id,
           subscription_status: subscription.status,
-          current_period_end: toIsoDate(subscription.current_period_end),
+          current_period_end: toIsoDate((subscription as any).current_period_end),
           status: mapSubscriptionStatusToMembershipStatus(subscription.status),
         })
         .eq("community_id", communityId)
@@ -196,7 +196,7 @@ export async function POST(req: Request) {
         .from("app_membership_requests")
         .update({
           subscription_status: "canceled",
-          current_period_end: toIsoDate(subscription.current_period_end),
+          current_period_end: toIsoDate((subscription as any).current_period_end),
           status: "pending",
         })
         .eq("stripe_subscription_id", subscription.id);
@@ -261,7 +261,7 @@ export async function POST(req: Request) {
           .from("app_membership_requests")
           .update({
             subscription_status: subscription.status,
-            current_period_end: toIsoDate(subscription.current_period_end),
+            current_period_end: toIsoDate((subscription as any).current_period_end),
             status: mapSubscriptionStatusToMembershipStatus(subscription.status),
           })
           .eq("stripe_subscription_id", stripeSubscriptionId);
@@ -293,5 +293,6 @@ export async function POST(req: Request) {
     );
   }
 }
+
 
 
