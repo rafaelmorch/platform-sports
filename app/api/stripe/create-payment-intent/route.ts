@@ -7,30 +7,17 @@ if (!stripeSecretKey) {
   throw new Error("Missing STRIPE_SECRET_KEY in environment variables.");
 }
 
-const stripe = new Stripe(stripeSecretKey);
+const stripe = new Stripe(stripeSecretKey, {
+  apiVersion: "2025-03-31.basil",
+});
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    const body = await req.json();
-
-    const { community_id, user_id } = body;
-
-    if (!community_id || !user_id) {
-      return NextResponse.json(
-        { error: "Missing community_id or user_id" },
-        { status: 400 }
-      );
-    }
-
     const paymentIntent = await stripe.paymentIntents.create({
       amount: 5000,
       currency: "usd",
       automatic_payment_methods: {
         enabled: true,
-      },
-      metadata: {
-        community_id,
-        user_id,
       },
     });
 

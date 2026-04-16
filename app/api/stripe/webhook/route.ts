@@ -63,7 +63,7 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret);
+    event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret as string);
   } catch (error: any) {
     console.error("Stripe webhook signature verification failed:", error?.message);
 
@@ -293,3 +293,4 @@ export async function POST(req: Request) {
     );
   }
 }
+
