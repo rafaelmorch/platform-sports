@@ -31,7 +31,8 @@ type MembershipCommunityRow = {
   card_highlight: string | null;
   gallery_urls: string[] | null;
   checkout_url: string | null;
-  checkout_button_text: string | null;`r`n  stripe_price_id: string | null;
+  checkout_button_text: string | null;
+  stripe_price_id: string | null;
   is_active: boolean | null;
 };
 
@@ -907,6 +908,7 @@ const emptyPreviewTextStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
 };
+
 
 
 
