@@ -33,14 +33,6 @@ function mapSubscriptionStatusToMembershipStatus(subscriptionStatus?: string | n
     return "active";
   }
 
-  if (subscriptionStatus === "canceled" || subscriptionStatus === "unpaid" || subscriptionStatus === "incomplete_expired") {
-    return "pending";
-  }
-
-  if (subscriptionStatus === "past_due" || subscriptionStatus === "incomplete") {
-    return "pending";
-  }
-
   return "pending";
 }
 
@@ -81,11 +73,11 @@ export async function POST(req: Request) {
         const communityId = session.metadata?.community_id;
         const userId = session.metadata?.user_id;
         const stripeCustomerId =
-          typeof session.customer === "string" ? session.customer : session.customer?.id || null;
+          typeof session.customer === "string" ? session.customer : (session.customer as any)?.id || null;
         const stripeSubscriptionId =
           typeof session.subscription === "string"
             ? session.subscription
-            : session.subscription?.id || null;
+            : (session.subscription as any)?.id || null;
 
         if (!communityId || !userId || !stripeSubscriptionId) {
           console.error("Missing subscription metadata on checkout.session.completed", {
@@ -101,7 +93,9 @@ export async function POST(req: Request) {
           );
         }
 
-        const subscription = (await stripe.subscriptions.retrieve(stripeSubscriptionId)) as Stripe.Subscription;
+        const subscription = (await stripe.subscriptions.retrieve(
+          stripeSubscriptionId
+        )) as any;
 
         const { error: updateError } = await supabase
           .from("app_membership_requests")
@@ -109,7 +103,7 @@ export async function POST(req: Request) {
             stripe_customer_id: stripeCustomerId,
             stripe_subscription_id: stripeSubscriptionId,
             subscription_status: subscription.status,
-            current_period_end: toIsoDate((subscription as any).current_period_end),
+            current_period_end: toIsoDate(subscription.current_period_end),
             status: mapSubscriptionStatusToMembershipStatus(subscription.status),
           })
           .eq("community_id", communityId)
@@ -136,7 +130,7 @@ export async function POST(req: Request) {
     }
 
     if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
-      const subscription = event.data.object as Stripe.Subscription;
+      const subscription = event.data.object as any;
 
       const communityId = subscription.metadata?.community_id;
       const userId = subscription.metadata?.user_id;
@@ -165,7 +159,7 @@ export async function POST(req: Request) {
           stripe_customer_id: stripeCustomerId,
           stripe_subscription_id: subscription.id,
           subscription_status: subscription.status,
-          current_period_end: toIsoDate((subscription as any).current_period_end),
+          current_period_end: toIsoDate(subscription.current_period_end),
           status: mapSubscriptionStatusToMembershipStatus(subscription.status),
         })
         .eq("community_id", communityId)
@@ -190,13 +184,13 @@ export async function POST(req: Request) {
     }
 
     if (event.type === "customer.subscription.deleted") {
-      const subscription = event.data.object as Stripe.Subscription;
+      const subscription = event.data.object as any;
 
       const { error: updateError } = await supabase
         .from("app_membership_requests")
         .update({
           subscription_status: "canceled",
-          current_period_end: toIsoDate((subscription as any).current_period_end),
+          current_period_end: toIsoDate(subscription.current_period_end),
           status: "pending",
         })
         .eq("stripe_subscription_id", subscription.id);
@@ -216,7 +210,7 @@ export async function POST(req: Request) {
     }
 
     if (event.type === "invoice.payment_failed") {
-      const invoice = event.data.object as Stripe.Invoice;
+      const invoice = event.data.object as any;
       const stripeSubscriptionId =
         typeof invoice.subscription === "string"
           ? invoice.subscription
@@ -248,20 +242,22 @@ export async function POST(req: Request) {
     }
 
     if (event.type === "invoice.paid") {
-      const invoice = event.data.object as Stripe.Invoice;
+      const invoice = event.data.object as any;
       const stripeSubscriptionId =
         typeof invoice.subscription === "string"
           ? invoice.subscription
           : invoice.subscription?.id || null;
 
       if (stripeSubscriptionId) {
-        const subscription = (await stripe.subscriptions.retrieve(stripeSubscriptionId)) as Stripe.Subscription;
+        const subscription = (await stripe.subscriptions.retrieve(
+          stripeSubscriptionId
+        )) as any;
 
         const { error: updateError } = await supabase
           .from("app_membership_requests")
           .update({
             subscription_status: subscription.status,
-            current_period_end: toIsoDate((subscription as any).current_period_end),
+            current_period_end: toIsoDate(subscription.current_period_end),
             status: mapSubscriptionStatusToMembershipStatus(subscription.status),
           })
           .eq("stripe_subscription_id", stripeSubscriptionId);
@@ -293,6 +289,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
-
-
