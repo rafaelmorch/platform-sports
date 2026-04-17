@@ -9,7 +9,7 @@ function mapSubscriptionStatusToMembershipStatus(subscriptionStatus?: string | n
     return "active";
   }
 
-  return "pending";
+  return "active";
 }
 
 function toIsoDate(unixSeconds?: number | null) {
@@ -301,3 +301,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

@@ -98,16 +98,32 @@ export default function MembershipCommunityPage() {
         return;
       }
 
-      const payload = {
-        community_id: community!.id,
-        user_id: user.id,
-        status: "pending",
-      };
-
-      const { data, error } = await supabase
+      const { data: existingRequest } = await supabase
         .from("app_membership_requests")
-        .upsert(payload, { onConflict: "community_id,user_id" })
-        .select();
+        .select("id,status")
+        .eq("community_id", community!.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      let data: any = existingRequest;
+      let error: any = null;
+
+      if (!existingRequest) {
+        const payload = {
+          community_id: community!.id,
+          user_id: user.id,
+          status: "pending",
+        };
+
+        const result = await supabase
+          .from("app_membership_requests")
+          .insert(payload)
+          .select()
+          .single();
+
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         const msg =
@@ -116,7 +132,7 @@ export default function MembershipCommunityPage() {
           error.hint ||
           JSON.stringify(error) ||
           "Unknown Supabase error";
-        console.error("membership request upsert error:", error);
+        console.error("membership request insert error:", error);
         setJoinError(msg);
         return;
       }
@@ -279,6 +295,7 @@ export default function MembershipCommunityPage() {
     </>
   );
 }
+
 
 
 
