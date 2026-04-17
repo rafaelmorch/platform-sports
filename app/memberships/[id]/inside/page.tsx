@@ -320,20 +320,20 @@ export default function MembershipInsidePage() {
   const router = useRouter();
   const carouselRef = useRef<HTMLDivElement | null>(null);
 
-  const [loading, setLoading] = useState(true);
-  const [allowed, setAllowed] = useState(false);
+  const [loading, setLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
+  const [allowed, setAllowed] = useState(false); const [accessChecked, setAccessChecked] = useState(false);false);
   const [communityId, setCommunityId] = useState<string | null>(null);
   const [communityName, setCommunityName] = useState<string | null>(null);
-  const [canManageHighlights, setCanManageHighlights] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [hasVideos, setHasVideos] = useState(false);
+  const [canManageHighlights, setCanManageHighlights] = useState(false); const [accessChecked, setAccessChecked] = useState(false);false);
+  const [isAdmin, setIsAdmin] = useState(false); const [accessChecked, setAccessChecked] = useState(false);false);
+  const [hasVideos, setHasVideos] = useState(false); const [accessChecked, setAccessChecked] = useState(false);false);
 
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
 
   const [highlights, setHighlights] = useState<HighlightRow[]>([]);
   const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [feedLoading, setFeedLoading] = useState(true);
+  const [feedLoading, setFeedLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
 
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [commentText, setCommentText] = useState<Record<string, string>>({});
@@ -348,21 +348,21 @@ export default function MembershipInsidePage() {
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
-  const [checkinsLoading, setCheckinsLoading] = useState(true);
+  const [checkinsLoading, setCheckinsLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
   const [recentCheckins, setRecentCheckins] = useState<CheckinRow[]>([]);
-  const [checkinTotalCount, setCheckinTotalCount] = useState(0);
+  const [checkinTotalCount, setCheckinTotalCount] = useState(false); const [accessChecked, setAccessChecked] = useState(false);0);
   const [openCheckinImages, setOpenCheckinImages] = useState<Set<string>>(new Set());
   const [checkinActionId, setCheckinActionId] = useState<string | null>(null);
 
-  const [rankingLoading, setRankingLoading] = useState(true);
+  const [rankingLoading, setRankingLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
   const [rankingRows, setRankingRows] = useState<RankingRow[]>([]);
 
-  const [leaderLoading, setLeaderLoading] = useState(true);
+  const [leaderLoading, setLeaderLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
   const [leaderRow, setLeaderRow] = useState<LeaderRow | null>(null);
 
-  const [myStreak, setMyStreak] = useState(0);
+  const [myStreak, setMyStreak] = useState(false); const [accessChecked, setAccessChecked] = useState(false);0);
 
-  const [challengesLoading, setChallengesLoading] = useState(true);
+  const [challengesLoading, setChallengesLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
   const [challenges, setChallenges] = useState<ChallengeRow[]>([]);
   const [openChallenges, setOpenChallenges] = useState<Set<string>>(new Set());
 
@@ -783,24 +783,28 @@ export default function MembershipInsidePage() {
         return;
       }
 
-      const typedCommunity = community as CommunityRow;
+const typedCommunity = community as CommunityRow;
       const isCreator = typedCommunity.created_by === user.id;
       const canManageCommunity = profile?.is_admin === true || isCreator;
 
       if (!isCreator && profile?.is_admin !== true) {
         const { data: request } = await supabase
           .from("app_membership_requests")
-          .select("status")
+          .select("status, subscription_status")
           .eq("community_id", id)
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (!request || request.status !== "approved") {
-          router.push(`/memberships/${id}`);
+        const hasValidAccess =
+          request &&
+          request.status === "active" &&
+          request.subscription_status === "active";
+
+        if (!hasValidAccess) {
+          router.replace(`/memberships/${id}`);
           return;
         }
       }
-
       const { data: highlightRows } = await supabase
         .from("app_membership_highlights")
         .select(`
@@ -878,7 +882,7 @@ export default function MembershipInsidePage() {
     container.addEventListener("scroll", updateActiveCard, { passive: true });
     window.addEventListener("resize", updateActiveCard);
 
-    return () => {
+    if (!accessChecked) return null; return () => {
       container.removeEventListener("scroll", updateActiveCard);
       window.removeEventListener("resize", updateActiveCard);
     };
@@ -1150,7 +1154,7 @@ export default function MembershipInsidePage() {
 
   const orderedRanking = rankingRows;
 
-  return (
+  if (!accessChecked) return null; return (
     <>
       <style jsx global>{`
         html,
@@ -1553,7 +1557,7 @@ overflow: "hidden",
                   const isOpen = openChallenges.has(challenge.id);
                   const expired = isChallengeExpired(challenge.deadline);
 
-                  return (
+                  if (!accessChecked) return null; return (
                     <article
                       key={challenge.id}
                       className="membership-challenge-card"
@@ -2017,7 +2021,7 @@ overflow: "hidden",
                     const isExpanded = expandedPosts.has(post.id);
                     const canDeletePost = userId === post.user_id;
 
-                    return (
+                    if (!accessChecked) return null; return (
                       <article
                         key={post.id}
                         data-feed-card="true"
@@ -2345,7 +2349,7 @@ overflow: "hidden",
                                   const canDeleteComment =
                                     userId === c.user_id || userId === post.user_id;
 
-                                  return (
+                                  if (!accessChecked) return null; return (
                                     <li
                                       key={c.id}
                                       style={{ display: "flex", gap: 8 }}
@@ -2787,7 +2791,7 @@ overflow: "hidden",
                       const isChallengeCheckin = Boolean(item.challenge_id);
                       const isMine = item.user_id === userId;
 
-                      return (
+                      if (!accessChecked) return null; return (
                         <article
                           key={item.id}
                           style={{
@@ -3106,7 +3110,7 @@ overflow: "hidden",
                   const isTopThree = index < 3;
                   const rankLabel = index === 0 ? "🥇 #1" : index === 1 ? "🥈 #2" : index === 2 ? "🥉 #3" : `#${index + 1}`;
 
-                  return (
+                  if (!accessChecked) return null; return (
                     <div
                       key={row.user_id}
                       style={{
@@ -3205,6 +3209,7 @@ overflow: "hidden",
     </>
   );
 }
+
 
 
 
