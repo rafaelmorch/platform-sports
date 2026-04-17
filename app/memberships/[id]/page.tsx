@@ -61,6 +61,38 @@ export default function MembershipCommunityPage() {
 
       const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
+      const { data: membership } = await supabase
+        .from("app_membership_requests")
+        .select("status, subscription_status")
+        .eq("community_id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (
+        membership &&
+        membership.status === "active" &&
+        membership.subscription_status === "active"
+      ) {
+        router.replace(`/memberships/${id}/inside`);
+        return;
+      }
+
+      const { data: membership } = await supabase
+        .from("app_membership_requests")
+        .select("status, subscription_status")
+        .eq("community_id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (
+        membership &&
+        membership.status === "active" &&
+        membership.subscription_status === "active"
+      ) {
+        router.replace(`/memberships/${id}/inside`);
+        return;
+      }
+
       const { data } = await supabase
         .from("app_membership_communities")
         .select("*")
@@ -295,6 +327,10 @@ export default function MembershipCommunityPage() {
     </>
   );
 }
+
+
+
+
 
 
 
