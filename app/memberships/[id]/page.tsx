@@ -75,7 +75,7 @@ export default function MembershipCommunityPage() {
   }, [params, supabase]);
 
   async function handleJoin() {
-    if (!community?.checkout_url) return;
+
 
     try {
       setJoining(true);
@@ -123,7 +123,6 @@ export default function MembershipCommunityPage() {
 
       console.log("membership request upsert success:", data);
 
-      window.open(community.checkout_url, "_blank");
       router.push(`/memberships/pending?community_id=${community.id}`);
     } catch (err: any) {
       const msg =
@@ -182,7 +181,7 @@ export default function MembershipCommunityPage() {
           />
         </div>
 
-        {community.checkout_url && (
+        {(
           <button
             onClick={handleJoin}
             disabled={joining}
@@ -280,4 +279,5 @@ export default function MembershipCommunityPage() {
     </>
   );
 }
+
 
