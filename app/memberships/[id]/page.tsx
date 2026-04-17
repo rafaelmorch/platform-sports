@@ -99,7 +99,7 @@ export default function MembershipCommunityPage() {
       }
 
       const payload = {
-        community_id: community.id,
+        community_id: community!.id,
         user_id: user.id,
         status: "pending",
       };
@@ -279,5 +279,6 @@ export default function MembershipCommunityPage() {
     </>
   );
 }
+
 
 
