@@ -254,10 +254,7 @@ export default function EditMembershipPage() {
       return;
     }
 
-    if (!cleanCheckoutUrl) {
-      setWarning("External membership link is required.");
-      return;
-    }
+    
 
     if (!cleanCheckoutButtonText) {
       setWarning("Button text is required.");
@@ -908,6 +905,7 @@ const emptyPreviewTextStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
 };
+
 
 
 
