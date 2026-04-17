@@ -320,8 +320,8 @@ export default function MembershipInsidePage() {
   const router = useRouter();
   const carouselRef = useRef<HTMLDivElement | null>(null);
 
-  const [loading, setLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
-  const [allowed, setAllowed] = useState(false); const [accessChecked, setAccessChecked] = useState(false);false);
+  const [loading, setLoading] = useState(true);
+  const [allowed, setAllowed] = useState(false);
   const [communityId, setCommunityId] = useState<string | null>(null);
   const [communityName, setCommunityName] = useState<string | null>(null);
   const [canManageHighlights, setCanManageHighlights] = useState(false); const [accessChecked, setAccessChecked] = useState(false);false);
@@ -3209,6 +3209,7 @@ overflow: "hidden",
     </>
   );
 }
+
 
 
 
