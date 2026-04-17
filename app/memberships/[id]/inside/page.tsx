@@ -333,7 +333,7 @@ export default function MembershipInsidePage() {
 
   const [highlights, setHighlights] = useState<HighlightRow[]>([]);
   const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [feedLoading, setFeedLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
+  const [feedLoading, setFeedLoading] = useState(true);
 
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [commentText, setCommentText] = useState<Record<string, string>>({});
@@ -3209,6 +3209,7 @@ overflow: "hidden",
     </>
   );
 }
+
 
 
 
