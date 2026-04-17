@@ -123,7 +123,7 @@ export default function MembershipCommunityPage() {
 
       console.log("membership request upsert success:", data);
 
-      router.push(`/memberships/pending?community_id=${community.id}`);
+      router.push(`/memberships/pending?community_id=${community!.id}`);
     } catch (err: any) {
       const msg =
         err?.message ||
@@ -279,6 +279,7 @@ export default function MembershipCommunityPage() {
     </>
   );
 }
+
 
 
 
