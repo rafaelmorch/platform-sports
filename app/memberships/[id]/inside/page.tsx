@@ -801,7 +801,7 @@ const typedCommunity = community as CommunityRow;
           request.subscription_status === "active";
 
         if (!hasValidAccess) {
-          router.replace(`/memberships/${id}`);
+          router.replace(`/memberships/pending?community_id=${id}`);
           return;
         }
       }
@@ -3209,6 +3209,7 @@ overflow: "hidden",
     </>
   );
 }
+
 
 
 
