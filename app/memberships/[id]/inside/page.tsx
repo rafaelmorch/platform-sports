@@ -324,9 +324,9 @@ export default function MembershipInsidePage() {
   const [allowed, setAllowed] = useState(false);
   const [communityId, setCommunityId] = useState<string | null>(null);
   const [communityName, setCommunityName] = useState<string | null>(null);
-  const [canManageHighlights, setCanManageHighlights] = useState(false); const [accessChecked, setAccessChecked] = useState(false);false);
-  const [isAdmin, setIsAdmin] = useState(false); const [accessChecked, setAccessChecked] = useState(false);false);
-  const [hasVideos, setHasVideos] = useState(false); const [accessChecked, setAccessChecked] = useState(false);false);
+  const [canManageHighlights, setCanManageHighlights] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [hasVideos, setHasVideos] = useState(false);
 
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
@@ -3209,6 +3209,7 @@ overflow: "hidden",
     </>
   );
 }
+
 
 
 
