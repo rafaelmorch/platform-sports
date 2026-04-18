@@ -354,15 +354,15 @@ export default function MembershipInsidePage() {
   const [openCheckinImages, setOpenCheckinImages] = useState<Set<string>>(new Set());
   const [checkinActionId, setCheckinActionId] = useState<string | null>(null);
 
-  const [rankingLoading, setRankingLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
+  const [rankingLoading, setRankingLoading] = useState(false);
   const [rankingRows, setRankingRows] = useState<RankingRow[]>([]);
 
-  const [leaderLoading, setLeaderLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
+  const [leaderLoading, setLeaderLoading] = useState(false);
   const [leaderRow, setLeaderRow] = useState<LeaderRow | null>(null);
 
-  const [myStreak, setMyStreak] = useState(false); const [accessChecked, setAccessChecked] = useState(false);0);
+  const [myStreak, setMyStreak] = useState(false);
 
-  const [challengesLoading, setChallengesLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
+  const [challengesLoading, setChallengesLoading] = useState(false);
   const [challenges, setChallenges] = useState<ChallengeRow[]>([]);
   const [openChallenges, setOpenChallenges] = useState<Set<string>>(new Set());
 
@@ -3209,6 +3209,8 @@ overflow: "hidden",
     </>
   );
 }
+
+
 
 
 
