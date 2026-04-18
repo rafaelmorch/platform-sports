@@ -882,7 +882,7 @@ const typedCommunity = community as CommunityRow;
     container.addEventListener("scroll", updateActiveCard, { passive: true });
     window.addEventListener("resize", updateActiveCard);
 
-    if (!accessChecked) return null; return () => {
+    return () => {
       container.removeEventListener("scroll", updateActiveCard);
       window.removeEventListener("resize", updateActiveCard);
     };
@@ -3209,6 +3209,7 @@ overflow: "hidden",
     </>
   );
 }
+
 
 
 
