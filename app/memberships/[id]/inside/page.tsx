@@ -1154,7 +1154,7 @@ const typedCommunity = community as CommunityRow;
 
   const orderedRanking = rankingRows;
 
-  if (!accessChecked) return null; return (
+  return (
     <>
       <style jsx global>{`
         html,
@@ -1557,7 +1557,7 @@ overflow: "hidden",
                   const isOpen = openChallenges.has(challenge.id);
                   const expired = isChallengeExpired(challenge.deadline);
 
-                  if (!accessChecked) return null; return (
+                  return (
                     <article
                       key={challenge.id}
                       className="membership-challenge-card"
@@ -2021,7 +2021,7 @@ overflow: "hidden",
                     const isExpanded = expandedPosts.has(post.id);
                     const canDeletePost = userId === post.user_id;
 
-                    if (!accessChecked) return null; return (
+                    return (
                       <article
                         key={post.id}
                         data-feed-card="true"
@@ -2349,7 +2349,7 @@ overflow: "hidden",
                                   const canDeleteComment =
                                     userId === c.user_id || userId === post.user_id;
 
-                                  if (!accessChecked) return null; return (
+                                  return (
                                     <li
                                       key={c.id}
                                       style={{ display: "flex", gap: 8 }}
@@ -2791,7 +2791,7 @@ overflow: "hidden",
                       const isChallengeCheckin = Boolean(item.challenge_id);
                       const isMine = item.user_id === userId;
 
-                      if (!accessChecked) return null; return (
+                      return (
                         <article
                           key={item.id}
                           style={{
@@ -3110,7 +3110,7 @@ overflow: "hidden",
                   const isTopThree = index < 3;
                   const rankLabel = index === 0 ? "🥇 #1" : index === 1 ? "🥈 #2" : index === 2 ? "🥉 #3" : `#${index + 1}`;
 
-                  if (!accessChecked) return null; return (
+                  return (
                     <div
                       key={row.user_id}
                       style={{
@@ -3209,6 +3209,8 @@ overflow: "hidden",
     </>
   );
 }
+
+
 
 
 
