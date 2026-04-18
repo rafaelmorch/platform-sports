@@ -348,9 +348,9 @@ export default function MembershipInsidePage() {
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
-  const [checkinsLoading, setCheckinsLoading] = useState(false); const [accessChecked, setAccessChecked] = useState(false);true);
+  const [checkinsLoading, setCheckinsLoading] = useState(true);
   const [recentCheckins, setRecentCheckins] = useState<CheckinRow[]>([]);
-  const [checkinTotalCount, setCheckinTotalCount] = useState(false); const [accessChecked, setAccessChecked] = useState(false);0);
+  const [checkinTotalCount, setCheckinTotalCount] = useState(0);
   const [openCheckinImages, setOpenCheckinImages] = useState<Set<string>>(new Set());
   const [checkinActionId, setCheckinActionId] = useState<string | null>(null);
 
@@ -3209,6 +3209,7 @@ overflow: "hidden",
     </>
   );
 }
+
 
 
 
