@@ -360,7 +360,7 @@ export default function MembershipInsidePage() {
   const [leaderLoading, setLeaderLoading] = useState(false);
   const [leaderRow, setLeaderRow] = useState<LeaderRow | null>(null);
 
-  const [myStreak, setMyStreak] = useState(false);
+  const [myStreak, setMyStreak] = useState(0);
 
   const [challengesLoading, setChallengesLoading] = useState(false);
   const [challenges, setChallenges] = useState<ChallengeRow[]>([]);
@@ -3209,6 +3209,7 @@ overflow: "hidden",
     </>
   );
 }
+
 
 
 
