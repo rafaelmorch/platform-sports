@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 const BUTTONS = [
@@ -12,15 +12,13 @@ const BUTTONS = [
 
 export default function IntroPage() {
   const router = useRouter();
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [showButtons, setShowButtons] = useState(false);
-  const [videoReady, setVideoReady] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.play().catch(() => {});
     }
-
     const timer = window.setTimeout(() => {
       setShowButtons(true);
     }, 2000);
@@ -30,7 +28,7 @@ export default function IntroPage() {
 
   const handleNavigate = (href: string) => {
     try {
-      localStorage.setItem("intro_last_seen", Date.now().toString());
+      localStorage.setItem("intro_seen", "true");
     } catch {}
 
     router.push(href);
@@ -44,37 +42,32 @@ export default function IntroPage() {
         width: "100vw",
         height: "100vh",
         overflow: "hidden",
-        background: "#ffffff", // 🔥 fundo branco
+        background: "#000",
       }}
     >
-      <video
-        ref={videoRef}
+      <video ref={videoRef}
         autoPlay
         muted
         playsInline
         loop
         preload="auto"
-        onLoadedData={() => setVideoReady(true)}
         style={{
           position: "absolute",
           inset: 0,
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          opacity: videoReady ? 1 : 0,
-          transition: "opacity 250ms ease",
         }}
       >
         <source src="/intro.mp4" type="video/mp4" />
       </video>
 
-      {/* OVERLAY AJUSTADO PARA FUNDO CLARO */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(to top, rgba(255,255,255,0.4), rgba(255,255,255,0.1), rgba(255,255,255,0.3))",
+            "linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.2), rgba(0,0,0,0.4))",
         }}
       />
 
@@ -137,11 +130,11 @@ export default function IntroPage() {
                 e.currentTarget.style.transform = "scale(1)";
               }}
               style={{
-                border: "1px solid rgba(0,0,0,0.2)", // 🔥 borda escura leve
+                border: "1px solid rgba(255,255,255,0.8)",
                 borderRadius: "10px",
                 padding: "28px 16px",
-                background: "rgba(255,255,255,0.6)", // 🔥 glass claro
-                color: "#000000", // 🔥 texto preto (melhor no branco)
+                background: "rgba(255,255,255,0.08)",
+                color: "#ffffff", // 🔥 azul marinho
                 fontSize: "24px",
                 fontWeight: 900,
                 textAlign: "center",
@@ -150,7 +143,7 @@ export default function IntroPage() {
                 minHeight: "120px",
                 backdropFilter: "blur(6px)",
                 WebkitBackdropFilter: "blur(6px)",
-                boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
                 transition: "all 0.15s ease",
               }}
             >
