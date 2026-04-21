@@ -19,7 +19,6 @@ type MembershipCommunity = {
   gallery_urls: string[] | null;
   checkout_url: string | null;
   checkout_button_text: string | null;
-  created_by?: string | null;
 };
 
 function formatPrice(priceCents: number | null, billingInterval: string | null): string {
@@ -51,13 +50,6 @@ export default function MembershipCommunityPage() {
 
   useEffect(() => {
     async function load() {
-      const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
-
-      if (!id) {
-        setLoading(false);
-        return;
-      }
-
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -67,46 +59,40 @@ export default function MembershipCommunityPage() {
         return;
       }
 
-      const [{ data: communityData }, { data: profileData }, { data: membershipData }] =
-        await Promise.all([
-          supabase
-            .from("app_membership_communities")
-            .select("*")
-            .eq("id", id)
-            .single(),
-          supabase
-            .from("profiles")
-            .select("is_admin")
-            .eq("id", user.id)
-            .maybeSingle(),
-          supabase
-            .from("app_membership_requests")
-            .select("status, subscription_status")
-            .eq("community_id", id)
-            .eq("user_id", user.id)
-            .maybeSingle(),
-        ]);
+      const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
-      const isGlobalAdmin = profileData?.is_admin === true;
-      const isCreator = communityData?.created_by === user.id;
-      const hasApprovedAccess =
-        membershipData?.status === "approved" ||
-        membershipData?.status === "active" ||
-        membershipData?.subscription_status === "active";
+      const { data: membership } = await supabase
+        .from("app_membership_requests")
+        .select("status, subscription_status")
+        .eq("community_id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-      if (isGlobalAdmin || isCreator || hasApprovedAccess) {
+      if (
+        membership &&
+        membership.status === "active" &&
+        membership.subscription_status === "active"
+      ) {
         router.replace(`/memberships/${id}/inside`);
         return;
       }
 
-      setCommunity(communityData);
+      const { data } = await supabase
+        .from("app_membership_communities")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      setCommunity(data);
       setLoading(false);
     }
 
     load();
-  }, [params, router, supabase]);
+  }, [params, supabase]);
 
   async function handleJoin() {
+
+
     try {
       setJoining(true);
       setJoinError(null);
@@ -168,6 +154,7 @@ export default function MembershipCommunityPage() {
       }
 
       console.log("membership request upsert success:", data);
+
       router.push(`/memberships/pending?community_id=${community!.id}`);
     } catch (err: any) {
       const msg =
@@ -226,43 +213,45 @@ export default function MembershipCommunityPage() {
           />
         </div>
 
-        <button
-          onClick={handleJoin}
-          disabled={joining}
-          style={{
-            width: "100%",
-            maxWidth: "720px",
-            border: 0,
-            background: "transparent",
-            padding: 0,
-            cursor: joining ? "not-allowed" : "pointer",
-            marginBottom: "28px",
-          }}
-        >
-          <div
+        {(
+          <button
+            onClick={handleJoin}
+            disabled={joining}
             style={{
-              padding: "2px",
-              borderRadius: "14px",
-              background: "linear-gradient(135deg, #ff2d55, #ff9500, #ffd60a)",
+              width: "100%",
+              maxWidth: "720px",
+              border: 0,
+              background: "transparent",
+              padding: 0,
+              cursor: joining ? "not-allowed" : "pointer",
+              marginBottom: "28px",
             }}
           >
             <div
               style={{
-                padding: "18px 0",
-                borderRadius: "12px",
-                background: "black",
-                color: "white",
-                textAlign: "center",
-                fontSize: "1.25rem",
-                fontWeight: 700,
+                padding: "2px",
+                borderRadius: "14px",
+                background: "linear-gradient(135deg, #ff2d55, #ff9500, #ffd60a)",
               }}
             >
-              {joining
-                ? "PROCESSING..."
-                : community.checkout_button_text || "JOIN MEMBERSHIP"}
+              <div
+                style={{
+                  padding: "18px 0",
+                  borderRadius: "12px",
+                  background: "black",
+                  color: "white",
+                  textAlign: "center",
+                  fontSize: "1.25rem",
+                  fontWeight: 700,
+                }}
+              >
+                {joining
+                  ? "PROCESSING..."
+                  : community.checkout_button_text || "JOIN MEMBERSHIP"}
+              </div>
             </div>
-          </div>
-        </button>
+          </button>
+        )}
 
         {joinError && (
           <div
@@ -301,11 +290,34 @@ export default function MembershipCommunityPage() {
             fontFamily: "Calibri, Arial, sans-serif",
           }}
         >
-          <h2 style={{ color: "#000", marginTop: 0 }}>{community.name}</h2>
-          <p style={{ fontWeight: 700, marginBottom: "18px" }}>{priceLabel}</p>
-          <div>{community.full_description || "No description available yet."}</div>
+          <h2 style={{ color: "#ff3b30", textAlign: "center" }}>
+            {community.name}
+          </h2>
+
+          <p style={{ textAlign: "center", fontWeight: 700 }}>
+            {priceLabel}
+          </p>
+
+          <div
+            dangerouslySetInnerHTML={{
+              __html:
+                community.full_description_rich?.html ||
+                community.full_description ||
+                "",
+            }}
+          />
         </div>
       </main>
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
