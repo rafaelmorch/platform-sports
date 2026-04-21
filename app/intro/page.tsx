@@ -139,7 +139,7 @@ export default function IntroPage() {
                 border: "1px solid rgba(255,255,255,0.9)", // 🔥 borda branca fina
                 borderRadius: "10px",
                 padding: "28px 16px",
-                background: "rgba(255,255,255,0.03)", // 🔥 mais transparente (~5%)
+                background: "rgba(120,120,120,0.40)", // 🔥 mais transparente (~5%)
                 color: "#ffffff",
                 fontSize: "24px",
                 fontWeight: 900,
