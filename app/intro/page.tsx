@@ -44,7 +44,7 @@ export default function IntroPage() {
         width: "100vw",
         height: "100vh",
         overflow: "hidden",
-        background: "#ffffff", // 🔥 fundo branco
+        background: "#ffffff",
       }}
     >
       <video
@@ -68,13 +68,12 @@ export default function IntroPage() {
         <source src="/intro.mp4" type="video/mp4" />
       </video>
 
-      {/* OVERLAY AJUSTADO PARA FUNDO CLARO */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(to top, rgba(255,255,255,0.4), rgba(255,255,255,0.1), rgba(255,255,255,0.3))",
+            "linear-gradient(to top, rgba(255,255,255,0.3), rgba(255,255,255,0.1), rgba(255,255,255,0.2))",
         }}
       />
 
@@ -108,7 +107,7 @@ export default function IntroPage() {
           display: "flex",
           alignItems: "flex-end",
           justifyContent: "center",
-          padding: "40px 24px 180px",
+          padding: "40px 24px 140px", // 🔥 desce um pouco
           opacity: showButtons ? 1 : 0,
           transform: showButtons ? "translateY(0)" : "translateY(20px)",
           transition: "opacity 500ms ease, transform 500ms ease",
@@ -137,11 +136,11 @@ export default function IntroPage() {
                 e.currentTarget.style.transform = "scale(1)";
               }}
               style={{
-                border: "1px solid rgba(0,0,0,0.2)", // 🔥 borda escura leve
+                border: "1px solid rgba(255,255,255,0.9)", // 🔥 borda branca fina
                 borderRadius: "10px",
                 padding: "28px 16px",
-                background: "rgba(255,255,255,0.6)", // 🔥 glass claro
-                color: "#000000", // 🔥 texto preto (melhor no branco)
+                background: "rgba(255,255,255,0.03)", // 🔥 mais transparente (~5%)
+                color: "#ffffff",
                 fontSize: "24px",
                 fontWeight: 900,
                 textAlign: "center",
@@ -150,7 +149,7 @@ export default function IntroPage() {
                 minHeight: "120px",
                 backdropFilter: "blur(6px)",
                 WebkitBackdropFilter: "blur(6px)",
-                boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.25)",
                 transition: "all 0.15s ease",
               }}
             >
