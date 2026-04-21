@@ -147,9 +147,9 @@ export default function NewMembershipChallengePage() {
           </div>
 
           <div style={{ display: "grid", gap: 12 }}>
-            <div>
-              <label
-                style={{
+            <div style={{ minWidth: 0 }}>
+                <label
+                  style={{
                   display: "block",
                   fontSize: 13,
                   fontWeight: 700,
@@ -169,14 +169,13 @@ export default function NewMembershipChallengePage() {
                   borderRadius: 12,
                   border: "1px solid #cbd5e1",
                   fontSize: 14,
-                  outline: "none",
-                }}
+                  outline: "none",                  boxSizing: "border-box",                }}
               />
             </div>
 
-            <div>
-              <label
-                style={{
+            <div style={{ minWidth: 0 }}>
+                <label
+                  style={{
                   display: "block",
                   fontSize: 13,
                   fontWeight: 700,
@@ -198,14 +197,13 @@ export default function NewMembershipChallengePage() {
                   border: "1px solid #cbd5e1",
                   fontSize: 14,
                   outline: "none",
-                  resize: "vertical",
-                }}
+                  resize: "vertical",                  boxSizing: "border-box",                }}
               />
             </div>
 
-            <div>
-              <label
-                style={{
+            <div style={{ minWidth: 0 }}>
+                <label
+                  style={{
                   display: "block",
                   fontSize: 13,
                   fontWeight: 700,
@@ -237,9 +235,9 @@ export default function NewMembershipChallengePage() {
               </select>
             </div>
 
-            <div>
-              <label
-                style={{
+            <div style={{ minWidth: 0 }}>
+                <label
+                  style={{
                   display: "block",
                   fontSize: 13,
                   fontWeight: 700,
@@ -261,14 +259,13 @@ export default function NewMembershipChallengePage() {
                   border: "1px solid #cbd5e1",
                   fontSize: 14,
                   outline: "none",
-                  resize: "vertical",
-                }}
+                  resize: "vertical",                  boxSizing: "border-box",                }}
               />
             </div>
 
-            <div>
-              <label
-                style={{
+            <div style={{ minWidth: 0 }}>
+                <label
+                  style={{
                   display: "block",
                   fontSize: 13,
                   fontWeight: 700,
@@ -288,19 +285,17 @@ export default function NewMembershipChallengePage() {
                   borderRadius: 12,
                   border: "1px solid #cbd5e1",
                   fontSize: 14,
-                  outline: "none",
-                }}
+                  outline: "none",                  boxSizing: "border-box",                }}
               />
             </div>
 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 12,
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",                gap: 12,                alignItems: "start",
               }}
             >
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <label
                   style={{
                     display: "block",
@@ -323,12 +318,11 @@ export default function NewMembershipChallengePage() {
                     borderRadius: 12,
                     border: "1px solid #cbd5e1",
                     fontSize: 14,
-                    outline: "none",
-                  }}
+                    outline: "none",                  boxSizing: "border-box",                }}
                 />
               </div>
 
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <label
                   style={{
                     display: "block",
@@ -351,8 +345,7 @@ export default function NewMembershipChallengePage() {
                     borderRadius: 12,
                     border: "1px solid #cbd5e1",
                     fontSize: 14,
-                    outline: "none",
-                  }}
+                    outline: "none",                  boxSizing: "border-box",                }}
                 />
               </div>
             </div>
@@ -412,3 +405,6 @@ export default function NewMembershipChallengePage() {
     </main>
   );
 }
+
+
+
